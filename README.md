@@ -1,2 +1,2 @@
 # Penetration-Testing
-Documentation of my study notes on penetration testing.
+Documentation of my study notes in penetration testing.
