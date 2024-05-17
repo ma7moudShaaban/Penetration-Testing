@@ -8,3 +8,8 @@ Logging is a method that developers use for tracing the code and watching warnin
             `adb logcat pidof -s package-name`
     Alternatively, directly specify the package name to obtain the PID:
             `adb logcat --pid=$(adb shell pidof -s package-name)`
+
+- To know which code execute this activity 
+            `adb shell dumpsys window | grep mCurrentFocus`
+            `adb shell dumpsys window | grep mFocusedApp`
+            `adb shell dumpsys activity activities | grep mResumed`
