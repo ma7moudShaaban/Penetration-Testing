@@ -30,7 +30,7 @@ Now, any request to port 31415 on Kali will communicate with the Drozer agent on
 This image summarizes almost all Drozer commands:
 
 
-![Drozer Commands](E:\Knowledge\Security Meter Intern\Session - Mobile\Drozer.png "Drozer")
+![Drozer Commands](../../images/Drozer.png "Drozer")
 
 
 
