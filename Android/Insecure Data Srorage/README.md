@@ -1,7 +1,7 @@
 # Insecure Data Storage
 - There are 3 general states from which data may be accessible: 
     - At rest - the data is sitting in a file or data store
-    - In use- an app has loaded the data into its address space
+    - In use - an app has loaded the data into its address space
     - In transit - data has been exchanged between mobile app and enpoint or consuming processes on the 
         device, e.g., during IPC
 
