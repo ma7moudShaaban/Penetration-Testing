@@ -1,11 +1,14 @@
-# Scanning 
+# Scanning
+
 Firstly, it is essential to familiarize yourself with various network protocols such as TCP and UDP, with particular attention to the Three-Way Handshake process.
+
 ## Nmap
+
 Nmap (Network Mapper) is a free and open-source utility designed for network discovery and security auditing.
 
-1. # Host Scan 
- Host scan is used by penetration tester to identify active host in a network by sending ARP request packets to all system in that network. As result it will show a message “Host is up” by receiving MAC address from each active host. 
+### Host Scan
 
+Host scan is used by penetration testers to identify active hosts in a network by sending ARP request packets to all systems in that network. As a result, it will show a message “Host is up” by receiving the MAC address from each active host.
 
 `nmap -Pn 192.168.1.1-225`
  
@@ -14,19 +17,22 @@ Nmap (Network Mapper) is a free and open-source utility designed for network dis
     Nmap uses the –Pn/-sn flag for host scan and broadcast ARP request packet to identify IP allocated to particular host machine.
     It will broadcast ARP request for a particular IP [suppose 192.168.1.100] in that network which can be the part of IP range [192.168.1.1-225] or CIDR [192.168.1.1/24 for class C] is used to indicate that we want to scan all the 256 IPs in our network. After then active host will unicast ARP packet by sending its MAC address as reply which gives a message Host is up.
 
-2. # Port Scan
- If penetration testers want to identify open or close state of a particular port on target machine then they should go with nmap port scan.
-Port Status: After scanning, you may see some results with a port status like filtered, open, closed, etc. Let me explain this.
+### Port Scan
+If penetration testers want to identify the open or closed state of a particular port on a target machine, they should go with an nmap port scan.
 
-• Open: This indicates that an application is listening for connections on this port.
-• Closed: This indicates that the probes were received but there is no application listening on this port.
-• Filtered: This indicates that the probes were not received and the state could not be established. It also indicates that the probes are being dropped by some kind of filtering.
-• Unfiltered: During ACK Scan in order to detect firewall and means that the port is accessible, but it cannot be determined whether it is open or closed.
-• Open/Filtered: This indicates that the port was filtered or open but Nmap couldn’t establish the state.
-• Closed/Filtered: During Idle scan and indicates that it was impossible to determine if the scanned port is closed or filtered by a firewall.
+#### Port Status:
+After scanning, you may see some results with port status like filtered, open, closed, etc. Let me explain this:
+
+- Open: This indicates that an application is listening for connections on this port.
+- Closed: This indicates that the probes were received but there is no application listening on this port.
+- Filtered: This indicates that the probes were not received and the state could not be established. It also indicates that the probes are being dropped by some kind of filtering.
+- Unfiltered: During an ACK Scan in order to detect a firewall and means that the port is accessible, but it cannot be determined whether it is open or closed.
+- Open/Filtered: This indicates that the port was filtered or open but Nmap couldn’t establish the state.
+- Closed/Filtered: During an Idle scan and indicates that it was impossible to determine if the scanned port is closed or filtered by a firewall.
 
 ## Types of port scan 
 It is important to note that Metasploit scanning modules may offer more accurate results when performing scans. Below are the different types of port scans and their corresponding Nmap commands:
+
 - TCP Full Scan (Noisy):
             `-sT`
 - Stealth Scan (Attempts to Bypass IPS or IDS):
@@ -64,7 +70,7 @@ It is important to note that Metasploit scanning modules may offer more accurate
                 •  T3: normal
                 •  T4: aggressive
                 •  T5: insane
-3. # Service Scanning & Enumeration
+## Service Scanning & Enumeration
 - Scan using Nmap:
     - OS Detection Scan:
             `-O`
@@ -74,4 +80,27 @@ It is important to note that Metasploit scanning modules may offer more accurate
             this option enables additional advanced and aggressive options. Presently this enables OS detection (-O), version scanning (-sV), script scanning (-sC) and traceroute (–traceroute). This option only enables features, and not timing options (such as -T4) or verbosity options (-v) that you might want as well.
                 `-A`
 - Enumeration:
+        - NetBIOS:
+                * nbtscan: it is worth noting that nbtscan is also able to scan multiple  addresses.For example we can instruct the tool to scan all  the IP addresses in our target network 
+                        `nbtscan 192.168.1.1/24`
+        - SMB:
+               * Windows 2000 and higher allow us to run SMB directly over TCP/IP (direct hosting), without the need to run over NetBIOS sessions. To do this, the TCP port 445 is used. Since SMB provides several features such as manipulating files, sharing, messaging, Interprocess Communication (IPC), and more, it is one of the most attractive services to explore during our enumeration phase.
+               * enum4linux is a tool for enumerating information from Windows and Samba systems:
+                        `enum4linux -a IP` 
+               * smbmap - smbclient - nmap smb script engines
+        - SNMP:
+                * SNMP is based on UDP, a simple, stateless protocol.
+                * `snmp-check IP `
+        - NFS: 
+                * Network File System. this is an RPC-based file sharing protocol often found configured on  Unix-like systems, is typically used to provide access to shared resources,  and can be found listening on TCP and/or UDP port 2049. Nmap can  easily identify a system running NFS.
+                * we can use the built-in `showmount` command with  the -e or --exports switches to show any exports that would be  available to us as well.
+                * nmap script engines > nfs-ls, nfs-showmount, nfs-statfs
+        - SMTP: 
+                * nmap script engines > smtp-enum-users.nse, smtp-commands.nse, smtp-ntlm-info.nse
+ 
+        - SSH: 
+                * Anonymous login, Hydra , paramiko script 
+
+
+
 
