@@ -80,8 +80,8 @@ It is important to note that Metasploit scanning modules may offer more accurate
             this option enables additional advanced and aggressive options. Presently this enables OS detection (-O), version scanning (-sV), script scanning (-sC) and traceroute (–traceroute). This option only enables features, and not timing options (such as -T4) or verbosity options (-v) that you might want as well.
                 `-A`
 - Enumeration:
-        - NetBIOS:
-                * nbtscan: it is worth noting that nbtscan is also able to scan multiple  addresses.For example we can instruct the tool to scan all  the IP addresses in our target network 
+       - NetBIOS:
+        * nbtscan: it is worth noting that nbtscan is also able to scan multiple  addresses.For example we can instruct the tool to scan all  the IP addresses in our target network 
                         `nbtscan 192.168.1.1/24`
         - SMB:
                * Windows 2000 and higher allow us to run SMB directly over TCP/IP (direct hosting), without the need to run over NetBIOS sessions. To do this, the TCP port 445 is used. Since SMB provides several features such as manipulating files, sharing, messaging, Interprocess Communication (IPC), and more, it is one of the most attractive services to explore during our enumeration phase.
@@ -89,17 +89,17 @@ It is important to note that Metasploit scanning modules may offer more accurate
                         `enum4linux -a IP` 
                * smbmap - smbclient - nmap smb script engines
         - SNMP:
-                * SNMP is based on UDP, a simple, stateless protocol.
-                * `snmp-check IP `
+        * SNMP is based on UDP, a simple, stateless protocol.
+         `snmp-check IP `
         - NFS: 
-                * Network File System. this is an RPC-based file sharing protocol often found configured on  Unix-like systems, is typically used to provide access to shared resources,  and can be found listening on TCP and/or UDP port 2049. Nmap can  easily identify a system running NFS.
-                * we can use the built-in `showmount` command with  the -e or --exports switches to show any exports that would be  available to us as well.
-                * nmap script engines > nfs-ls, nfs-showmount, nfs-statfs
+         * Network File System. this is an RPC-based file sharing protocol often found configured on  Unix-like systems, is typically used to provide access to shared resources,  and can be found listening on TCP and/or UDP port 2049. Nmap can  easily identify a system running NFS.
+        * we can use the built-in `showmount` command with  the -e or --exports switches to show any exports that would be  available to us as well.
+        * nmap script engines > nfs-ls, nfs-showmount, nfs-statfs
         - SMTP: 
-                * nmap script engines > smtp-enum-users.nse, smtp-commands.nse, smtp-ntlm-info.nse
+         * nmap script engines > smtp-enum-users.nse, smtp-commands.nse, smtp-ntlm-info.nse
  
-        - SSH: 
-                * Anonymous login, Hydra , paramiko script 
+  - SSH: 
+          * Anonymous login, Hydra , paramiko script 
 
 
 
