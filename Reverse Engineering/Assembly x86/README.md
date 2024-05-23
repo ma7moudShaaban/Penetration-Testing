@@ -212,11 +212,11 @@ END main
 ```
 
 ### Basic DataTypes
-BYTE, SBYTE: 8-bit Unsigned & Signed integers
-WORD, SWORD: 16-bit Unsigned & Signed integers
-DWORD, SWORD: 32-bit Unsigned & Signed integers
-QWORD: 64-bit integer | Not signed / unsigned 
-TBYTE: 80-bit (Ten byte) integer
+- BYTE, SBYTE: 8-bit Unsigned & Signed integers
+- WORD, SWORD: 16-bit Unsigned & Signed integers
+- DWORD, SWORD: 32-bit Unsigned & Signed integers
+- QWORD: 64-bit integer | Not signed / unsigned 
+- TBYTE: 80-bit (Ten byte) integer
 
 ### Define variable
 e.g.
