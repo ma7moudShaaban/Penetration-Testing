@@ -1,5 +1,5 @@
 # Insecure Data Storage
-## Common persistenet storage that should be tested:
+## Common persistent storage that should be tested:
 - [ ] Shared preferences
 - [ ] SQLite Databases
 - [ ] Firebase Databases
@@ -14,9 +14,9 @@
 
  ## 2. SQLite Databases
  ### Unencrypted
- - Once the activity that stores data has been called, the database file will be created with the data and stored in a clear text file at /databases/ directory
+ - Once the activity that stores data has been called, the database file will be created with the data and stored in a clear text file at directory /databases/ 
  ### Encrypted
- - [ ] Check if PIN or Password stord improperly in the device.
+ - [ ] Check if PIN or Password stord improperly on the device.
 
 ## 3. Firebase Real-Time Databases
 - The data is stored as JSON and is synchronized in real-time to every connected client and also remains available even when the application goes offline
@@ -25,7 +25,7 @@
 
 ## 4. Realm Databases
 - The database and its contents can be encrypted with a key stored in the configuration file
-- [ ] Check if the key is hardcoded or stored unecrypted in an insecure location
+- [ ] Check if the key is hardcoded or stored unencrypted in an insecure location
 - If an attacker has sufficient access to the device (e.g. root access) or can repackage the app, he can still retrieve encryption keys at runtime using tools like Frida. The following Frida script demonstrates how to intercept the Realm encryption key and access the contents of the encrypted database:
 ```
 'use strict';
