@@ -52,6 +52,7 @@
 - Trusts: A trust is used to establish forest-forest or domain-domain authentication, allowing users to access resources in (or administer) another domain outside of the domain their account resides in. A trust creates a link between the authentication systems of two domains.
 
 - There are several trust types.
+
 | Trust Type |	Description|
 |------------|------------:|
 |Parent-child|Domains within the same forest. The child domain has a two-way transitive trust with the parent domain.|
