@@ -52,8 +52,8 @@
 - Trusts: A trust is used to establish forest-forest or domain-domain authentication, allowing users to access resources in (or administer) another domain outside of the domain their account resides in. A trust creates a link between the authentication systems of two domains.
 
 - There are several trust types.
-| Trust Type |	Description    |
-|------------|----------------:|
+| Trust Type |	Description|
+|------------|------------:|
 |Parent-child|Domains within the same forest. The child domain has a two-way transitive trust with the parent domain.|
 |Cross-link|A trust between child domains to speed up authentication.|
 |External|A non-transitive trust between two separate domains in separate forests which are not already joined by a forest trust. This type of trust utilizes SID filtering.|
@@ -65,3 +65,5 @@
     - A transitive trust means that trust is extended to objects that the child domain trusts.
 
     - In a non-transitive trust, only the child domain itself is trusted.
+
+## Active Directory Protocols
