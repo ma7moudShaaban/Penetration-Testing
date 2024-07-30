@@ -53,7 +53,7 @@
 
 - There are several trust types.
 
-| Trust Type |	Description|
+| Trust Type |Description|
 |------------|------------:|
 |Parent-child|Domains within the same forest. The child domain has a two-way transitive trust with the parent domain.|
 |Cross-link|A trust between child domains to speed up authentication.|
@@ -68,3 +68,26 @@
     - In a non-transitive trust, only the child domain itself is trusted.
 
 ## Active Directory Protocols
+### Kerberos
+- Kerberos has been the default authentication protocol for domain accounts since Windows 2000. 
+- Kerberos is a stateless authentication protocol based on tickets instead of transmitting user passwords over the network. 
+- Domain Controllers have a Kerberos Key Distribution Center (KDC) that issues tickets. 
+- The Kerberos protocol uses port 88 (both TCP and UDP).
+### DNS
+- Active Directory Domain Services (AD DS) uses DNS to allow clients (workstations, servers, and other systems that communicate with the domain) to locate Domain Controllers and for Domain Controllers that host the directory service to communicate amongst themselves. 
+- DNS uses TCP and UDP port 53. UDP port 53 is the default, but it falls back to TCP when no longer able to communicate and DNS messages are larger than 512 bytes.
+
+### LDAP 
+- LDAP uses port 389, and LDAP over SSL (LDAPS) communicates over port 636.
+- An LDAP session begins by first connecting to an LDAP server, also known as a Directory System Agent. The Domain Controller in AD actively listens for LDAP requests, such as security authentication requests.
+
+### NTLM Authentication
+- LAN Manager (LM or LANMAN) hashes are the oldest password storage mechanism used by the Windows operating system.
+> [!NOTE]
+> Windows operating systems prior to Windows Vista and Windows Server 2008 (Windows NT4, Windows 2000, Windows 2003, Windows XP) stored both the LM hash and the NTLM hash of a user's password by default. 
+> Neither LANMAN nor NTLM uses a salt.
+- The NTLM protocol performs a challenge/response between a server and client using the NT hash. NTLMv1 uses both the NT and the LM hash.
+- NTLMv1 was the building block for modern NTLM authentication.
+- Domain Cached Credentials (MSCache2) : solve the potential issue of a domain-joined host being unable to communicate with a domain controller (i.e., due to a network outage or other technical issue). Hosts save the last ten hashes for any domain users that successfully log into the machine in the HKEY_LOCAL_MACHINE\SECURITY\Cache registry key.
+
+## Users & Groups
