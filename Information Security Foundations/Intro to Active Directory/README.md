@@ -84,10 +84,41 @@
 ### NTLM Authentication
 - LAN Manager (LM or LANMAN) hashes are the oldest password storage mechanism used by the Windows operating system.
 > [!NOTE]
+
 > Windows operating systems prior to Windows Vista and Windows Server 2008 (Windows NT4, Windows 2000, Windows 2003, Windows XP) stored both the LM hash and the NTLM hash of a user's password by default. 
+
 > Neither LANMAN nor NTLM uses a salt.
 - The NTLM protocol performs a challenge/response between a server and client using the NT hash. NTLMv1 uses both the NT and the LM hash.
 - NTLMv1 was the building block for modern NTLM authentication.
 - Domain Cached Credentials (MSCache2) : solve the potential issue of a domain-joined host being unable to communicate with a domain controller (i.e., due to a network outage or other technical issue). Hosts save the last ten hashes for any domain users that successfully log into the machine in the HKEY_LOCAL_MACHINE\SECURITY\Cache registry key.
 
 ## Users & Groups
+
+### Local Accounts
+
+- Administrator: this account has the SID S-1-5-domain-500 and is the first account created with a new Windows installation.Windows 10 and Server 2016 hosts disable the built-in administrator account by default and create another local account in the local administrator's group during setup.
+
+- Guest: this account is disabled by default. The purpose of this account is to allow users without an account on the computer to log in temporarily with limited access rights. 
+
+- SYSTEM: The SYSTEM (or NT AUTHORITY\SYSTEM) account on a Windows host is the default account installed and used by the operating system to perform many of its internal functions.
+
+- Network Service: This is a predefined local account used by the Service Control Manager (SCM) for running Windows services. When a service runs in the context of this particular account, it will present credentials to remote services.
+
+- Local Service: This is another predefined local account used by the Service Control Manager (SCM) for running Windows services. It is configured with minimal privileges on the computer and presents anonymous credentials to the network.
+
+### Domain Users
+
+- Domain users differ from local users in that they are granted rights from the domain
+    - One account to keep in mind is the KRBTGT account, however. This is a type of local account built into the AD infrastructure. This account acts as a service account for the Key Distribution service providing authentication and access for domain resources. 
+
+## User Naming Attributes
+
+- UserPrincipalName (UPN): This is the primary logon name for the user. By convention, the UPN uses the email address of the user.
+
+- ObjectGUID: This is a unique identifier of the user. In AD, the ObjectGUID attribute name never changes and remains unique even if the user is removed
+
+- SAMAccountName: This is a logon name that supports the previous version of Windows clients and servers.
+
+- objectSID: The user's Security Identifier (SID). This attribute identifies a user and its group memberships during security interactions with the server.
+
+- sIDHistory: This contains previous SIDs for the user object if moved from another domain and is typically seen in migration scenarios from domain to domain. After a migration occurs, the last SID will be added to the sIDHistory property, and the new SID will become its objectSID.
