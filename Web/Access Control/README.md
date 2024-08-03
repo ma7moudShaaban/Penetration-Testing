@@ -6,7 +6,7 @@
 ## Horizontal Privilege Escalation
 - Horizontal privilege escalation occurs if a user is able to gain access to resources belonging to another user, instead of their own resources of that type.
 
-
+### Testing:
 - [ ]  Parameter Pollution
 - [ ]  Try different verbs on every function
 - [ ]  Always check source code and robots.txt file
