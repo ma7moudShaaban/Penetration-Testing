@@ -1,5 +1,4 @@
-# Web View
-
+# WebViews
 
 ## File Access in WebViews
 - By default, WebViews permit file access. This functionality is controlled by the `setAllowFileAccess()` method, available since Android API level 3 (Cupcake 1.5). Applications with the `android.permission.READ_EXTERNAL_STORAGE` permission can read files from external storage using a file URL scheme (file://path/to/file).
