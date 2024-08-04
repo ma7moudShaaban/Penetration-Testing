@@ -12,10 +12,10 @@
   - [ ] **Check for `WebView.setAllowFileAccessFromFileURLs(true)`**: File Access From File URLs > This feature, also deprecated, controlled access to content from other file scheme URLs. Like universal access, its default is disabled for enhanced security.
 
 - **WebViewAssetLoader (Mitigation):**
-- The WebViewAssetLoader class is the modern approach for loading local files. It uses http(s) URLs for accessing local assets and resources, aligning with the Same-Origin policy, thus facilitating CORS management.
+  - The WebViewAssetLoader class is the modern approach for loading local files. It uses http(s) URLs for accessing local assets and resources, aligning with the Same-Origin policy, thus facilitating CORS management.
 
 - **Javascript Bridge**
-- A feature is provided by Android that enables JavaScript in a WebView to invoke native Android app functions. This is achieved by utilizing the `addJavascriptInterface` method, which integrates JavaScript with native Android functionalities, termed as a WebView JavaScript bridge. Caution is advised as this method allows all pages within the WebView to access the registered JavaScript Interface object, posing a security risk if sensitive information is exposed through these interfaces.
+  - A feature is provided by Android that enables JavaScript in a WebView to invoke native Android app functions. This is achieved by utilizing the `addJavascriptInterface` method, which integrates JavaScript with native Android functionalities, termed as a WebView JavaScript bridge. Caution is advised as this method allows all pages within the WebView to access the registered JavaScript Interface object, posing a security risk if sensitive information is exposed through these interfaces.
 
     - Extreme caution is required for apps targeting Android versions below 4.2 due to a vulnerability allowing remote code execution through malicious JavaScript, exploiting reflection.
   - [ ] **Check for `WebView.addJavascriptInterface("OBJECT_OF_JAVA_CLASS", "OBJECT_OF_JAVASCRIPT_CLASS")`**: This setting creates an interface between JavaScript in the WebView and Java code defined in the interface. From the JavaScript object, public functions from the Java object class can be called.
@@ -46,5 +46,4 @@ xhr.send();
 
 ## Resources
 - [Web view Check list](https://blog.oversecured.com/Android-security-checklist-webview/)
-- [Hack Tricks - Web View ] (https://book.hacktricks.xyz/mobile-pentesting/android-app-pentesting/webview-attacks
-)
+- [HackTricks - WebView](https://book.hacktricks.xyz/mobile-pentesting/android-app-pentesting/webview-attacks)

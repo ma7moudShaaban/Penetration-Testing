@@ -25,4 +25,4 @@ This guide provides steps to reverse native libraries in an Android APK. The pri
 - This will help in identifying and analyzing the desired function in the decompiled code.
 
 ## Additional Information
-- For more detailed information on using apktool and other reverse engineering tools, please refer to the official [apktool documentation] (https://apktool.org/).
+- For more detailed information on using apktool and other reverse engineering tools, please refer to the official [apktool documentation](https://apktool.org/).
