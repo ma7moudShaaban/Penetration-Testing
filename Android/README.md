@@ -21,3 +21,6 @@ Follow these steps to set up your environment:
 
 # Resources: 
 - https://github.com/OWASP/owasp-mastg/blob/master/Document/0x05b-Android-Security-Testing.md
+- Useful writups:
+    - https://medium.com/@jooelsaka/an-interesting-bug-that-i-found-in-android-mobile-application-becf25c8c4d8
+    -  https://medium.com/@amolbhavar/how-i-get-1000-bounty-for-discovering-account-takeover-in-android-application-3c4f54fbde39
