@@ -1,14 +1,29 @@
-# SSL Pinning
-- `android:debuggable="true"` as this allows an attacker to debug the application
-and expose internal architecture during runtime.
+## SSL Pinning
 
-1. First Approach
-- network_security_config (NSC file) => contains the trusted certificates developer provided to intercept the application running https , you need to modify the trusted cert in network_security_config.xml file in xml in res in the application code. you need to patch the nsc file to trust the user certs not system only. you need to check in the AndroidManifest.xml for android:networkSecurityConfig that mention xml/network_security_config file. Once you modified the code, you need to build the app again, use apktool for that.
-- `apktool b indeed/ -o indeed_patched.apk`
-use [uber-apk-signer](https://github.com/patrickfav/uber-apk-signer/releases) to sign apk release certificate to build the app to sign the app, download the jar release with curl /link.
-``` 
-java -jar /jar_name --apks indeed_patched.apk --out indeed_signed.apk
-cd indeed_signed.apk
-adb install indeed_patched_aligned-debugSigned.apk
-``` 
-2. Second Approach: Hooking (Dynamic instrumentation) => Monitor and edit application during runtime 
+### Overview
+SSL pinning is a security technique used in Android applications to prevent man-in-the-middle attacks by ensuring that the app only trusts a specific certificate or set of certificates. However, improper configurations and certain techniques can expose the application to vulnerabilities.
+
+### Security Consideration
+- Ensure `android:debuggable="false"` in your `AndroidManifest.xml` to prevent attackers from debugging the application and exposing its internal architecture during runtime.
+
+### Approaches to Bypass SSL Pinning
+
+#### 1. Network Security Configuration (NSC) File Modification
+The `network_security_config.xml` file defines the trusted certificates for the application when running HTTPS. To intercept the app’s HTTPS traffic, you need to modify the NSC file to trust user certificates in addition to system certificates.
+
+**Steps:**
+
+1. Locate the `network_security_config.xml` file in the `res/xml` directory of the application's code.
+2. Modify the trusted certificates in this file to include the user’s certificates.
+3. Ensure that the `AndroidManifest.xml` references the correct `network_security_config` file using the `android:networkSecurityConfig` attribute.
+4. Rebuild the application using `apktool`:
+   ```bash
+   apktool b <app_directory>/ -o <app_name>_patched.apk
+
+5. Sign the APK using the [Uber APK Signer](https://github.com/patrickfav/uber-apk-signer/releases):
+`java -jar <jar_name>.jar --apks <app_name>_patched.apk --out <app_name>_signed.apk`
+
+6. Install the patched APK:`adb install <app_name>_signed.apk`
+
+#### 2. Dynamic Instrumentation (Hooking)
+Hooking allows for monitoring and editing the application during runtime. This approach can be used to bypass SSL pinning by dynamically modifying the app's behavior while it’s running.

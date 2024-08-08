@@ -1,13 +1,27 @@
 # Frida
 
-## overview
-- we can inject javascript code in application during runtime
-## Installation 
+## Overview
+Frida allows you to inject JavaScript code into applications during runtime, making it a powerful tool for dynamic analysis and debugging.
 
-- In kali linux `pip3 install frida-tools ` `pip3 install frida`
+## Installation
+
+1. Install Frida tools on Kali Linux:
+   ```bash
+   pip3 install frida-tools
+   pip3 install frida
+
 > [!Note] 
-> Know CPU architecture using adb `adb shell getprop ro.product.cpu.abi`
+>  Determine your CPU architecture using ADB: `adb shell getprop ro.product.cpu.abi`
 
-- Install [frida server](https://github.com/frida/frida/releases) that match frida version in kali and your emulator architecture, Then push it to emulator using adb.
+2. Download the appropriate [Frida server](https://github.com/frida/frida/releases) version that matches both the Frida version on Kali and your emulator's architecture.
 
-- I prefer push to /data/local/tmp and run it using `./frida-server`
+3. Push the Frida server to your emulator using ADB:
+`adb push /path/to/frida-server /data/local/tmp`
+
+4. Start the Frida server on the emulator:
+
+```
+adb shell
+cd /data/local/tmp
+./frida-server
+```
