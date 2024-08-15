@@ -42,7 +42,7 @@
 ## Active Directory Functionality
 
 |    Roles    | Description|
-|-------------|-----------:|
+|:-------------|:-----------|
 |Schema Master|This role manages the read/write copy of the AD schema, which defines all attributes that can apply to an object in AD.|
 |Domain Naming Master|Manages domain names and ensures that two domains of the same name are not created in the same forest.|
 |Relative ID (RID) Master|The RID Master assigns blocks of RIDs to other DCs within the domain that can be used for new objects. The RID Master helps ensure that multiple objects are not assigned the same SID. Domain object SIDs are the domain SID combined with the RID number assigned to the object to make the unique SID.|
@@ -54,7 +54,7 @@
 - There are several trust types.
 
 | Trust Type |Description|
-|------------|------------:|
+|:------------:|:------------|
 |Parent-child|Domains within the same forest. The child domain has a two-way transitive trust with the parent domain.|
 |Cross-link|A trust between child domains to speed up authentication.|
 |External|A non-transitive trust between two separate domains in separate forests which are not already joined by a forest trust. This type of trust utilizes SID filtering.|
