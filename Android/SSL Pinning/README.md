@@ -27,3 +27,9 @@ The `network_security_config.xml` file defines the trusted certificates for the 
 
 #### 2. Dynamic Instrumentation (Hooking)
 Hooking allows for monitoring and editing the application during runtime. This approach can be used to bypass SSL pinning by dynamically modifying the app's behavior while it’s running.
+
+- To verify that the application uses `TrustManager`, follow these steps:
+
+1. Open the application in **jadx-gui**.
+2. Search for the keyword **'trust'** in the decompiled Java code.
+3. Inspect the results to confirm the presence and implementation of the `TrustManager` class.

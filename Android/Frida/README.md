@@ -56,13 +56,15 @@ Java.perform(function() {
 
 ```
 ### Example 2: Hooking Overloaded Functions
-For an application with overloaded functions, hook the overloaded function and manipulate the string argument, then check logs using ADB:
+For an application with overloaded functions, hook the overloaded function and manipulate the non-primitive data type like string, then check logs using ADB:
 ```
 Java.perform(function() {
     var my_cls = Java.use("com.example.allx256.frida_test.my_activity");
     my_cls.fun.overload("java.lang.String").implementation = function(x) {
-        var ret = this.fun("HOoKed_SUcCess4ullY...!!!");
-        return ret;
+      var stringCls = Java.use("java.lang.String");
+      var myStr = stringCls.$new("HOoKed_SUcCess4ullY...!!!")
+      var ret = this.fun(myStr);
+      return ret;
     };
 });
 
