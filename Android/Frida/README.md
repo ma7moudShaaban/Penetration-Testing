@@ -6,9 +6,10 @@ Frida allows you to inject JavaScript code into applications during runtime, mak
 ## Installation
 
 1. Install Frida tools on Kali Linux:
-   ```bash
+```bash
    pip3 install frida-tools
    pip3 install frida
+```
 
 > [!NOTE] 
 >  Determine your CPU architecture using ADB: `adb shell getprop ro.product.cpu.abi`
@@ -29,74 +30,90 @@ cd /data/local/tmp
 ./frida-server
 ```
 ## Interaction with Frida
-- `frida-ps -Uai` U for USB connected devices , a for running applications and i for all installed applications.
+- List running applications and installed packages on USB-connected devices:
+- `frida-ps -Uai`
+   - `-U`: USB connected devices 
+   - `-a`: Running applications 
+   - `-i`: All installed applications
 
-- Spawn application with frida `frida -U -f PACKAGE_NAME -l ATTACHED_SCRIPT`. Now, we can see Repl shell.
-   - REPL interface is Frida CLI that aims to emulate a lot of the nice features of IPython (or Cycript), which tries to get you closer to your code for rapid prototyping and easy debugging.
+- Spawn an application with Frida and attach a script:
 
-- Example: We have simple application contains a sum function x+y, we will hook the function to sum the values we want and check the logs with adb.
+ ```
+ frida -U -f PACKAGE_NAME -l ATTACHED_SCRIPT
+ ``` 
+   - This opens the REPL shell, a Frida CLI interface that emulates IPython/Cycript for rapid prototyping and debugging.
+
+### Example 1: Hooking a Function
+In a simple application with a sum function `x + y`, hook the function to sum custom values and check logs using ADB:
 ```
-Java.perform( function(){
-   var my_cls = Java.use("com.example.allx256.frida_test.my_activity");
-   my_cls.fun.implementation = function(x, y){
-      var ret = this.fun(2,5);
-      return ret;
-      }
+Java.perform(function() {
+    var my_cls = Java.use("com.example.allx256.frida_test.my_activity");
+    my_cls.fun.implementation = function(x, y) {
+        var ret = this.fun(2, 5);
+        return ret;
+    };
 });
 
 ```
-- Example: We have the same application but conatins overloaded functions, we will hook the overloaded function and the argument string value passes with and check logs with adb.
+### Example 2: Hooking Overloaded Functions
+For an application with overloaded functions, hook the overloaded function and manipulate the string argument, then check logs using ADB:
 ```
-Java.perform(
-   var my_cls = Java.use("com.example.allx256.frida_test.my_activity");
-   my_cls.fun.overload("java.lang.String").implementation = function (x){
-      var ret = this.fun("HOoKed_SUcCess4ullY...!!!");
-      return ret;
-   }
-);
+Java.perform(function() {
+    var my_cls = Java.use("com.example.allx256.frida_test.my_activity");
+    my_cls.fun.overload("java.lang.String").implementation = function(x) {
+        var ret = this.fun("HOoKed_SUcCess4ullY...!!!");
+        return ret;
+    };
+});
+
 ```
 
-- Example: We have application contains dead code, we will utilize `Java.choose` to accomplish that.
-- `Java.choose`: Search in Memory about instance of the class. Once found, implement Instance of it and execute call-back functions `OnMatch` `OnComplete` as we will see:
-```
-Java.perform(function(){
+### Example 3: Using `Java.choose` for Dead Code Analysis
+In an application with dead code, use Java.choose to find an instance of a class and execute its methods:
 
-   Java.choose("com.example.allx256.frida_test.my_activity",{
-      onMatch: function (instance) {
-      console.log("[+] Found instance: " + instance);
-      console.log("[+] Result of secret func: " + instance.secret());
-      },
-      onComplete: funcction () { }
-   });
+```
+Java.perform(function() {
+    Java.choose("com.example.allx256.frida_test.my_activity", {
+        onMatch: function(instance) {
+            console.log("[+] Found instance: " + instance);
+            console.log("[+] Result of secret func: " + instance.secret());
+        },
+        onComplete: function() { }
+    });
 });
 
 ```
 >[!NOTE]
-> The previous code doesn't output any result in the Ripl shell, because our code loaded more fast than loading process of the application in the memory and the function `Java.choose` run one time.
-> The solution that frida offers a feature give us the ability to attack the script on an already running process using the following command: `frida -U -p PROCESS_ID -l ATTACHED_SCRIPT`.
+> The previous code may not output results in the REPL shell because it executes before the application is fully loaded into memory. To solve this, use Frida's ability to attach a script to an already running process:
+```
+frida -U -p PROCESS_ID -l ATTACHED_SCRIPT
 
-- For excessive control on calling functions in the application, we will use python bindings offers Interfacing between python and javascript. 
+```
+
+### Example 4: Using Python Bindings for Extended Control
+For greater control over function calls, use Python bindings to interface between Python and JavaScript.
 - hook.js:
 
 ```
-function CallSecretFunction(){
-      Java.perform(function(){
-
-         Java.choose("com.example.allx256.frida_test.my_activity",{
-            onMatch: function (instance) {
-               console.log("[+] found instance: " + instance);
-               console.log("[+] Result of secret func: " + instance.secret());
-               },
-            onComplete: function () { }
-            });
-      });
+function CallSecretFunction() {
+    Java.perform(function() {
+        Java.choose("com.example.allx256.frida_test.my_activity", {
+            onMatch: function(instance) {
+                console.log("[+] Found instance: " + instance);
+                console.log("[+] Result of secret func: " + instance.secret());
+            },
+            onComplete: function() { }
+        });
+    });
 }
-rpc.exports = { callsecretfrompython : CallSecretFunction};
+rpc.exports = { callsecretfrompython: CallSecretFunction };
+
 ```
 
 - hook.py:
 ```
 import frida, time
+
 device = frida.get_usb_device()
 pid = device.spawn(["com.example.allx256.frida_test"])
 device.resume(pid)
@@ -104,16 +121,15 @@ time.sleep(5)
 session = device.attach(pid)
 script = session.create_script(open("hook.js").read())
 script.load()
+
 while True:
-cmd = str(input("1: CallSecretFunction\n2. Exit\n -->"))
-if cmd == "1":
- script.exports.callsecretfrompython()
-elif cmd == "2":
-break
+    cmd = str(input("1: CallSecretFunction\n2. Exit\n--> "))
+    if cmd == "1":
+        script.exports.callsecretfrompython()
+    elif cmd == "2":
+        break
+
 ```
-
-
-
 
 ## Additional Resources
 - [Frida](https://www.infosec-blog.com/categories/#frida)
