@@ -135,3 +135,4 @@ while True:
 
 ## Additional Resources
 - [Frida](https://www.infosec-blog.com/categories/#frida)
+- [Frida CodeShare](https://codeshare.frida.re/)

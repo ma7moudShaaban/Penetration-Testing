@@ -27,3 +27,4 @@ Follow these steps to set up your environment:
 
 ## Labs
 - Investigator Lab Hack the box
+- SeeTheSharpFlag Hack the box
