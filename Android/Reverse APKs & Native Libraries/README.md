@@ -1,10 +1,24 @@
-# Reverse Native Libraries
+# Reverse APKs & Native Libraries
 
 ## Overview
 
 This guide provides steps to reverse native libraries in an Android APK. The primary tool used is `apktool`, which helps in decompiling the APK file. Additionally, you can search for specific functions within the decompiled code.
 
-## Steps
+## Reverse APKs 
+- Java Applications:
+   - Just open the apk using `jadx-gui` 
+
+- Xamarin Applications:
+   1. Decompile the apk using `apktool` 
+   2. Investigate dll files in `/unknown/assemblies`, then we found the dll with APPLICATION_NAME.dll
+   3. Decompress the dll files using [XALZ](https://github.com/x41sec/tools/blob/master/Mobile/Xamarin/Xamarin_XALZ_decompress.py)
+   4. Decompile the dll file using dnspy
+
+
+
+
+## Reverse Native Libraries
+### Steps
 
 1. **Decompile the APK:**
 

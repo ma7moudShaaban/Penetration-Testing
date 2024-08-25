@@ -33,3 +33,5 @@ Hooking allows for monitoring and editing the application during runtime. This a
 1. Open the application in **jadx-gui**.
 2. Search for the keyword **'trust'** in the decompiled Java code.
 3. Inspect the results to confirm the presence and implementation of the `TrustManager` class.
+
+- We can abuse the Trust Manager to trust our certificate `burp` using frida scripts e.g. multiple-unpinner frida script.
