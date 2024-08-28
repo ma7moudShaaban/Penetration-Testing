@@ -1,37 +1,40 @@
-# Scanning
+# In-Depth Scanning
+- [Host Discovery & Port Scanning](#host-discovery--port-scanning)
+        - [Port Scanning](#port-scanning)
+        - [Types of Port Scanning](#types-of-port-scanning)
 
-Firstly, it is essential to familiarize yourself with various network protocols such as TCP and UDP, with particular attention to the Three-Way Handshake process.
 
-## Nmap
 
-Nmap (Network Mapper) is a free and open-source utility designed for network discovery and security auditing.
+## Host Discovery & Port Scanning
+- Discover running hosts in the network
+```
+sudo nmap 10.129.2.0/24 -sn -oA -PE tnet | grep for | cut -d" " -f5
+sudo nmap -Pn 192.168.1.1-225 -oA tnet
+```
 
-### Host Scan
+- `-iL`: Performs defined scans against targets in provided 'hosts.lst' list.
+- Disable the ICMP echo requests `-Pn`, Port scan `-sn`, DNS resolution `-n`, and ARP ping scan `--disable-arp-ping`
+- `-oA` to save the results in all formats. 
+- Convert xml output to html `xsltproc target.xml -o target.html`
+- `--packet-trace`: Shows all packets sent and received.
+- `--reason`: Displays the reason a port is in a particular state.	
+### Port Scanning
+- There are a total of 6 different states for a scanned port we can obtain:
+|State|Description|
+|:----|:----------|
+|open|This indicates that the connection to the scanned port has been established. These connections can be TCP connections, UDP datagrams as well as SCTP associations.|
+|closed|When the port is shown as closed, the TCP protocol indicates that the packet we received back contains an RST flag. This scanning method can also be used to determine if our target is alive or not.|
+|filtered|Nmap cannot correctly identify whether the scanned port is open or closed because either no response is returned from the target for the port or we get an error code from the target.|
+|unfiltered|This state of a port only occurs during the TCP-ACK scan and means that the port is accessible, but it cannot be determined whether it is open or closed.|
+|open-filtered|If we do not get a response for a specific port, Nmap will set it to that state. This indicates that a firewall or packet filter may protect the port.|
+|closed-filtered|This state only occurs in the IP ID idle scans and indicates that it was impossible to determine if the scanned port is closed or filtered by a firewall.|
+>[!NOTE]
+> `-sT` TCP scan is default of scanning , `-sS` SYN scan is set only to default when we run it as root.
 
-Host scan is used by penetration testers to identify active hosts in a network by sending ARP request packets to all systems in that network. As a result, it will show a message “Host is up” by receiving the MAC address from each active host.
+- `--top-ports=10`  get from the Nmap database that have been signed as most frequent.
 
-`nmap -Pn 192.168.1.1-225`
- 
- 
- * How it Works ? 
-    Nmap uses the –Pn/-sn flag for host scan and broadcast ARP request packet to identify IP allocated to particular host machine.
-    It will broadcast ARP request for a particular IP [suppose 192.168.1.100] in that network which can be the part of IP range [192.168.1.1-225] or CIDR [192.168.1.1/24 for class C] is used to indicate that we want to scan all the 256 IPs in our network. After then active host will unicast ARP packet by sending its MAC address as reply which gives a message Host is up.
+#### Types of Port Scanning
 
-### Port Scan
-If penetration testers want to identify the open or closed state of a particular port on a target machine, they should go with an nmap port scan.
-
-#### Port Status:
-After scanning, you may see some results with port status like filtered, open, closed, etc. Let me explain this:
-
-- Open: This indicates that an application is listening for connections on this port.
-- Closed: This indicates that the probes were received but there is no application listening on this port.
-- Filtered: This indicates that the probes were not received and the state could not be established. It also indicates that the probes are being dropped by some kind of filtering.
-- Unfiltered: During an ACK Scan in order to detect a firewall and means that the port is accessible, but it cannot be determined whether it is open or closed.
-- Open/Filtered: This indicates that the port was filtered or open but Nmap couldn’t establish the state.
-- Closed/Filtered: During an Idle scan and indicates that it was impossible to determine if the scanned port is closed or filtered by a firewall.
-
-## Types of port scan 
-It is important to note that Metasploit scanning modules may offer more accurate results when performing scans. Below are the different types of port scans and their corresponding Nmap commands:
 
 - TCP Full Scan (Noisy):
             `-sT`
