@@ -3,6 +3,8 @@
 - [Host Discovery & Port Scanning](#host-discovery--port-scanning)
     - [Port Scanning](#port-scanning)
     - [Types of Port Scanning](#types-of-port-scanning)
+- [Service Enumeration](#service-enumeration)
+    - [ ]
 
 
 ## Host Discovery & Port Scanning
@@ -76,7 +78,7 @@ sudo nmap -Pn 192.168.1.1-225 -oA tnet
                 •  T3: normal
                 •  T4: aggressive
                 •  T5: insane
-## Service Scanning & Enumeration
+## Service Enumeration
 - Scan using Nmap:
     - OS Detection Scan:
             `-O`
@@ -85,6 +87,12 @@ sudo nmap -Pn 192.168.1.1-225 -oA tnet
     - Aggressive Scan:
             this option enables additional advanced and aggressive options. Presently this enables OS detection (-O), version scanning (-sV), script scanning (-sC) and traceroute (–traceroute). This option only enables features, and not timing options (such as -T4) or verbosity options (-v) that you might want as well.
                 `-A`
+
+    - Default Script engines in Nmap: `-sC`
+
+
+
+
 - Enumeration:
 1. NetBIOS:
 * nbtscan: it is worth noting that nbtscan is also able to scan multiple  addresses.For example we can instruct the tool to scan all  the IP addresses in our target network 
