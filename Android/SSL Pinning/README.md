@@ -4,7 +4,7 @@
 SSL pinning is a security technique used in Android applications to prevent man-in-the-middle attacks by ensuring that the app only trusts a specific certificate or set of certificates. However, improper configurations and certain techniques can expose the application to vulnerabilities.
 
 ### Security Consideration
-- Ensure `android:debuggable="false"` in your `AndroidManifest.xml` to prevent attackers from debugging the application and exposing its internal architecture during runtime.
+- Ensure `android:debuggable="false"` in your `AndroidManifest.xml` to prevent attackers from debugging the application and exposing its internal architecture.
 
 ### Approaches to Bypass SSL Pinning
 
