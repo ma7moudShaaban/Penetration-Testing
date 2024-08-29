@@ -1,8 +1,8 @@
 # In-Depth Scanning
-- [Host Discovery & Port Scanning](#host-discovery--port-scanning)
-      - [Port Scanning](#port-scanning)
-      - [Types of Port Scanning](#types-of-port-scanning)
 
+- [Host Discovery & Port Scanning](#host-discovery--port-scanning)
+    - [Port Scanning](#port-scanning)
+    - [Types of Port Scanning](#types-of-port-scanning)
 
 
 ## Host Discovery & Port Scanning
@@ -20,8 +20,8 @@ sudo nmap -Pn 192.168.1.1-225 -oA tnet
 - `--reason`: Displays the reason a port is in a particular state.	
 ### Port Scanning
 - There are a total of 6 different states for a scanned port we can obtain:
-| State           | Description                                                                                                                                                      |
-|:----------------|:-----------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| State|Description                                                                          |
+|:----------------|:-------------------------------------------------------------------------|
 | open            | This indicates that the connection to the scanned port has been established. These connections can be TCP connections, UDP datagrams as well as SCTP associations. |
 | closed          | When the port is shown as closed, the TCP protocol indicates that the packet we received back contains an RST flag. This scanning method can also be used to determine if our target is alive or not. |
 | filtered        | Nmap cannot correctly identify whether the scanned port is open or closed because either no response is returned from the target for the port or we get an error code from the target. |
