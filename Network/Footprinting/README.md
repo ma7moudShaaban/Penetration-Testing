@@ -1,7 +1,7 @@
 # FootPrinting
 - [FTP](#ftp)
 - [SMB](#smb)
-
+- [NFS](#nfs)
 
 
 
@@ -83,21 +83,22 @@ telnet TARGET_IP 21
 
 >[!TIP]
 >Brute Forcing User RIDs
->`for i in $(seq 500 1100);do rpcclient -N -U "" TARGET_IP -c "queryuser 0x$(printf '%x\n' $i)" | grep "User Name\|user_rid\|group_rid" && echo "";done`
+>`for i in $(seq 500 1100);do rpcclient -N -U "" TARGET_IP -c "queryuser 0x$(printf '%x\n' $i)" | grep "User Name\|user_rid\|group_rid" && echo "";done`.
 > We can also use Python script from Impacket called [samrdump.py](https://github.com/fortra/impacket/blob/master/examples/samrdump.py).
 > `samrdump.py TARGET_IP`
 
 - Alternatives for RPCclient are [SMBmap](https://github.com/ShawnDEvans/smbmap) , [CrackMapExec](https://github.com/byt3bl33d3r/CrackMapExec) and [enum4linux-ng](https://github.com/cddmp/enum4linux-ng) 
 
-- `smbmap -H TARGET_IP`
-- `crackmapexec smb TARGET_IP --shares -u '' -p ''`
-- `./enum4linux-ng.py TARGET_IP -A`
+    - `smbmap -H TARGET_IP`
+    - `crackmapexec smb TARGET_IP --shares -u '' -p ''`
+    - `./enum4linux-ng.py TARGET_IP -A`
 
 
 
 - [ ] Check for Null session 
 - [ ] RPCclient
     - [ ] `rpcclient -U "" TARGET_IP`
+- [ ] enum4linux-ng 
 - [ ] Nmap
     - [ ] Scanning 139,445 ports `sudo nmap TARGET_IP -sV -sC -p139,445`
     - [ ] Scanning with Nmap Scripts `find / -type f -name smb* 2>/dev/null | grep scripts`
@@ -105,57 +106,7 @@ telnet TARGET_IP 21
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-- Enumeration:
-1. NetBIOS:
-* nbtscan: it is worth noting that nbtscan is also able to scan multiple  addresses.For example we can instruct the tool to scan all  the IP addresses in our target network 
-                        `nbtscan 192.168.1.1/24`
-2. SMB:
-* Windows 2000 and higher allow us to run SMB directly over TCP/IP (direct hosting), without the need to run over NetBIOS sessions. To do this, the TCP port 445 is used. Since SMB provides several features such as manipulating files, sharing, messaging, Interprocess Communication (IPC), and more, it is one of the most attractive services to explore during our enumeration phase.
-* enum4linux is a tool for enumerating information from Windows and Samba systems:
-                        `enum4linux -a IP` 
-* smbmap - smbclient - nmap smb script engines
-3. SNMP:
-* SNMP is based on UDP, a simple, stateless protocol.
-         `snmp-check IP `
-4. NFS: 
-* Network File System. this is an RPC-based file sharing protocol often found configured on  Unix-like systems, is typically used to provide access to shared resources,  and can be found listening on TCP and/or UDP port 2049. Nmap can  easily identify a system running NFS.
-* we can use the built-in `showmount` command with  the -e or --exports switches to show any exports that would be  available to us as well.
-* nmap script engines > nfs-ls, nfs-showmount, nfs-statfs
-5. SMTP: 
-* nmap script engines > smtp-enum-users.nse, smtp-commands.nse, smtp-ntlm-info.nse
- 
-6. SSH: 
-* Anonymous login, Hydra , paramiko script 
-
+## NFS
 
 
 
