@@ -4,7 +4,7 @@
     - [Port Scanning](#port-scanning)
     - [Types of Port Scanning](#types-of-port-scanning)
 - [Service Enumeration](#service-enumeration)
-    - [ ]
+- [Firewall and IDS/IPS Evasion](#firewall-and-idsips-evasion)
 
 
 ## Host Discovery & Port Scanning
@@ -39,7 +39,7 @@ sudo nmap -Pn 192.168.1.1-225 -oA tnet
 
 - `--top-ports=10`  get from the Nmap database that have been signed as most frequent.
 
-#### Types of Port Scanning
+### Types of Port Scanning
 
 
 - TCP Full Scan (Noisy):
@@ -67,9 +67,7 @@ sudo nmap -Pn 192.168.1.1-225 -oA tnet
     2. Confirm the Host Is Idle:
         - Ensure that the host remains idle during the scan to avoid interference.
 
-- Decoy Scan:
-            `-D IP,IP,IP,IP`
-            `-D RND:5`
+
 - Timing Template Scan:
             `-T`
                 •  T0: paranoid
@@ -91,30 +89,15 @@ sudo nmap -Pn 192.168.1.1-225 -oA tnet
     - Default Script engines in Nmap: `-sC`
 
 
+## Firewall and IDS/IPS Evasion
+- `-sA`: Perform ACK scan so when a port is closed or open, the host must respond with an RST flag.
 
+- Decoy Scan:
+            `-D IP,IP,IP,IP`
+            `-D RND:5`
 
-- Enumeration:
-1. NetBIOS:
-* nbtscan: it is worth noting that nbtscan is also able to scan multiple  addresses.For example we can instruct the tool to scan all  the IP addresses in our target network 
-                        `nbtscan 192.168.1.1/24`
-2. SMB:
-* Windows 2000 and higher allow us to run SMB directly over TCP/IP (direct hosting), without the need to run over NetBIOS sessions. To do this, the TCP port 445 is used. Since SMB provides several features such as manipulating files, sharing, messaging, Interprocess Communication (IPC), and more, it is one of the most attractive services to explore during our enumeration phase.
-* enum4linux is a tool for enumerating information from Windows and Samba systems:
-                        `enum4linux -a IP` 
-* smbmap - smbclient - nmap smb script engines
-3. SNMP:
-* SNMP is based on UDP, a simple, stateless protocol.
-         `snmp-check IP `
-4. NFS: 
-* Network File System. this is an RPC-based file sharing protocol often found configured on  Unix-like systems, is typically used to provide access to shared resources,  and can be found listening on TCP and/or UDP port 2049. Nmap can  easily identify a system running NFS.
-* we can use the built-in `showmount` command with  the -e or --exports switches to show any exports that would be  available to us as well.
-* nmap script engines > nfs-ls, nfs-showmount, nfs-statfs
-5. SMTP: 
-* nmap script engines > smtp-enum-users.nse, smtp-commands.nse, smtp-ntlm-info.nse
- 
-6. SSH: 
-* Anonymous login, Hydra , paramiko script 
-
-
-
+- `-S`: Scans the target by using different source IP address.
+- `--dns-server`:  Specify DNS servers ourselves
+- `--source-port`: Specify source port for our scans (e.g. TCP Port 53)
+- **Connect to the filtered port**: `ncat -nv -p SOURCE_PORT TARGET_IP DEST_PORT`
 
