@@ -48,6 +48,9 @@ telnet TARGET_IP 21
     - When we pass SMB commands over Samba to an older NetBIOS service, it usually connects to the Samba server over `TCP ports 137, 138, 139`
     - CIFS uses `TCP port 445`
     - Default Configuration file `/etc/samba/smb.conf`
+    - Connecting to the server's share with null session `smbclient -N -L //TARGET_IP`
+    - Shares that ended with `$` are already included by default in the basic setting
+    - We can see who, from which host, and which share the client is connected `sudo smbstatus`
 
 ### **Dangerous Settings**
 
@@ -63,6 +66,42 @@ telnet TARGET_IP 21
 |logon script = script.sh|	What script needs to be executed on the user's login?|
 |magic script = script.sh|	Which script should be executed when the script gets closed?|
 |magic output = script.out|	Where the output of the magic script needs to be stored?|
+
+
+- Smbclient allows us to execute local system commands using an exclamation mark at the beginning (!<cmd>)
+- **RPCclient**: is a tool to perform MS-RPC functions. RPCclient important functions:
+
+|Query|	Description|
+|:----|:-----------|
+|srvinfo|	Server information.|
+|enumdomains|	Enumerate all domains that are deployed in the network.|
+|querydominfo|	Provides domain, server, and user information of deployed domains.|
+|netshareenumall|	Enumerates all available shares.|
+|netsharegetinfo <share>|	Provides information about a specific share.|
+|enumdomusers|	Enumerates all domain users.|
+|queryuser <RID>|	Provides information about a specific user.|
+
+>[!TIP]
+>Brute Forcing User RIDs
+>`for i in $(seq 500 1100);do rpcclient -N -U "" TARGET_IP -c "queryuser 0x$(printf '%x\n' $i)" | grep "User Name\|user_rid\|group_rid" && echo "";done`
+> We can also use Python script from Impacket called [samrdump.py](https://github.com/fortra/impacket/blob/master/examples/samrdump.py).
+> `samrdump.py TARGET_IP`
+
+- Alternatives for RPCclient are [SMBmap](https://github.com/ShawnDEvans/smbmap) , [CrackMapExec](https://github.com/byt3bl33d3r/CrackMapExec) and [enum4linux-ng](https://github.com/cddmp/enum4linux-ng) 
+
+- `smbmap -H TARGET_IP`
+- `crackmapexec smb TARGET_IP --shares -u '' -p ''`
+- `./enum4linux-ng.py TARGET_IP -A`
+
+
+
+- [ ] Check for Null session 
+- [ ] RPCclient
+    - [ ] `rpcclient -U "" TARGET_IP`
+- [ ] Nmap
+    - [ ] Scanning 139,445 ports `sudo nmap TARGET_IP -sV -sC -p139,445`
+    - [ ] Scanning with Nmap Scripts `find / -type f -name smb* 2>/dev/null | grep scripts`
+
 
 
 
