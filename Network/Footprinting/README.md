@@ -51,6 +51,7 @@ telnet TARGET_IP 21
     - Connecting to the server's share with null session `smbclient -N -L //TARGET_IP`
     - Shares that ended with `$` are already included by default in the basic setting
     - We can see who, from which host, and which share the client is connected `sudo smbstatus`
+- Smbclient allows us to execute local system commands using an exclamation mark at the beginning (!<cmd>)
 
 ### **Dangerous Settings**
 
@@ -68,7 +69,6 @@ telnet TARGET_IP 21
 |magic output = script.out|	Where the output of the magic script needs to be stored?|
 
 
-- Smbclient allows us to execute local system commands using an exclamation mark at the beginning (!<cmd>)
 - **RPCclient**: is a tool to perform MS-RPC functions. RPCclient important functions:
 
 |Query|	Description|
@@ -107,6 +107,30 @@ telnet TARGET_IP 21
 
 
 ## NFS
+- NFS has the same purpose as SMB. Its purpose is to access file systems over a network as if they were local.
+- NFS is used between Linux and Unix systems.
+- NFSv4 uses only one UDP or `TCP port 2049` to run the service.
+- Default configuration file `/etc/exports`
+- `insecure` option is dangerous because users can use ports above 1024. The first 1024 ports can only be used by root.
+
+### **Dangerous Settings**
+
+|Option|	Description        |
+|:------|:---------------------|
+|rw|	Read and write permissions.|
+|insecure|	Ports above 1024 will be used.|
+|nohide|	If another file system was mounted below an exported directory, this directory is exported by its own exports entry.|
+|no_root_squash|	All files created by root are kept with the UID/GID 0.|
 
 
 
+- [ ] Check available NFS shares `showmount -e TARGET_IP`
+    - [ ] Mount availabe shares if found
+    ```
+    mkdir target-NFS
+    sudo mount -t nfs TARGET_IP:/ ./target-NFS/ -o nolock
+    ```
+    - [ ] After we have done we can unmount the NFS share `sudo umount ./target-NFS`
+- [ ] Nmap
+    - [ ] `sudo nmap TARGET_IP -p111,2049 -sV -sC`
+    - [ ] `sudo nmap --script nfs* TARGET_IP -sV -p111,2049`
