@@ -3,7 +3,7 @@
 - [SMB](#smb)
 - [NFS](#nfs)
 - [DNS](#DNS)
-
+- [SMTP](#smtp)
 
 
 
@@ -160,8 +160,8 @@ telnet TARGET_IP 21
 
 
 >[!TIP]
->Subdomain Brute forcing `for sub in $(cat /opt/useful/SecLists/Discovery/DNS/subdomains-top1million-110000.txt);do dig $sub.inlanefreight.htb @TARGET_IP | grep -v ';\|SOA' | sed -r '/^\s*$/d' | grep $sub | tee -a subdomains.txt;done`. 
->Another tool work in the same way: `dnsenum --dnsserver TARGET_IP --enum -p 0 -s 0 -o subdomains.txt -f /opt/useful/SecLists/Discovery/DNS/subdomains-top1million-110000.txt inlanefreight.htb`
+>Subdomain Brute forcing `for sub in $(cat /usr/share/seclists/Discovery/DNS/subdomains-top1million-110000.txt);do dig $sub.inlanefreight.htb @TARGET_IP | grep -v ';\|SOA' | sed -r '/^\s*$/d' | grep $sub | tee -a subdomains.txt;done`. 
+>Another tool work in the same way: `dnsenum --dnsserver TARGET_IP --enum -p 0 -s 0 -o subdomains.txt -f /usr/share/seclists/Discovery/DNS/subdomains-top1million-110000.txt inlanefreight.htb`
 
 
 - [ ] dig
@@ -170,3 +170,13 @@ telnet TARGET_IP 21
     - [ ] `dig any inlanefreight.htb @TARGET_IP`
     - [ ] `dig axfr inlanefreight.htb @TARGET_IP`
 
+## SMTP
+- SMTP is often combined with the IMAP or POP3 protocols.
+- SMTP servers accept connection requests on `port 25`.Newer SMTP servers also use other ports such as `TCP port 587`.
+- Default configuration file `/etc/postfix/main.cf`
+- To interact with the SMTP server, we can use the telnet tool to initialize a TCP connection with the SMTP server.
+- `telnet TARGET_IP 25`
+
+- [ ] Nmap 
+    - [ ] `sudo nmap TARGET_IP -sC -sV -p25` 
+    - [ ] `sudo nmap TARGET_IP -p25 --script smtp-open-relay -v`
