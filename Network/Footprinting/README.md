@@ -2,6 +2,7 @@
 - [FTP](#ftp)
 - [SMB](#smb)
 - [NFS](#nfs)
+- [DNS](#DNS)
 
 
 
@@ -134,3 +135,38 @@ telnet TARGET_IP 21
 - [ ] Nmap
     - [ ] `sudo nmap TARGET_IP -p111,2049 -sV -sC`
     - [ ] `sudo nmap --script nfs* TARGET_IP -sV -p111,2049`
+
+## DNS 
+- DNS servers work with three different types of configuration files:
+    - local DNS configuration files
+    - zone files
+    - reverse name resolution files
+
+- The DNS server Bind9 is very often used on Linux-based distributions. 
+    -  Its local configuration file `/etc/bind/named.conf`
+    -  The local configuration files are usually:
+        - named.conf.local
+        - named.conf.options
+        - named.conf.log
+
+### **Dangerous Settings**
+
+|Option|	Description|
+|:-------|:--------------|
+|allow-query|	Defines which hosts are allowed to send requests to the DNS server.|
+|allow-recursion|	Defines which hosts are allowed to send recursive requests to the DNS server.|
+|allow-transfer|	Defines which hosts are allowed to receive zone transfers from the DNS server.|
+|zone-statistics|	Collects statistical data of zones.|
+
+
+>[!TIP]
+>Subdomain Brute forcing `for sub in $(cat /opt/useful/SecLists/Discovery/DNS/subdomains-top1million-110000.txt);do dig $sub.inlanefreight.htb @TARGET_IP | grep -v ';\|SOA' | sed -r '/^\s*$/d' | grep $sub | tee -a subdomains.txt;done`. 
+>Another tool work in the same way: `dnsenum --dnsserver TARGET_IP --enum -p 0 -s 0 -o subdomains.txt -f /opt/useful/SecLists/Discovery/DNS/subdomains-top1million-110000.txt inlanefreight.htb`
+
+
+- [ ] dig
+    - [ ] `dig ns inlanefreight.htb @TARGET_IP`
+    - [ ]  Query a DNS server's version `dig CH TXT version.bind TARGET_IP`
+    - [ ] `dig any inlanefreight.htb @TARGET_IP`
+    - [ ] `dig axfr inlanefreight.htb @TARGET_IP`
+
