@@ -26,5 +26,6 @@ Follow these steps to set up your environment:
     -  https://medium.com/@amolbhavar/how-i-get-1000-bounty-for-discovering-account-takeover-in-android-application-3c4f54fbde39
 
 ## Labs
-- Investigator Lab Hack the box
+- Investigator Hack the box
 - SeeTheSharpFlag Hack the box
+- SuperMarket Hack the box

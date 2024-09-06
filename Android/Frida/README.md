@@ -1,4 +1,8 @@
 # Frida
+- [Overview](#overview)
+- [Installation](#installation)
+- [Interaction with Frida](#interaction-with-frida)
+- [Frida Gadget](#frida-gadget)
 
 ## Overview
 Frida allows you to inject JavaScript code into applications during runtime, making it a powerful tool for dynamic analysis and debugging.
@@ -132,7 +136,33 @@ while True:
         break
 
 ```
+## Frida Gadget
+
+- If root detection is extreme, we can use **Frida Gadget**, which can be considered as a Frida server injected into the application.
+- We can inject Frida Gadget into the application and sign it using the [Frida Injector](https://github.com/Shapa7276/Frida-Injector) tool:
+
+    ```bash
+    python3 Frida-Injector.py -i TARGET_APK -m 1
+    ```
+
+- Once injected, we can connect to the application using either Frida:
+
+    ```bash
+    frida -U -f Gadget -l ATTACHED_SCRIPT
+    ```
+
+  or the [Objection](https://github.com/sensepost/objection) Framework.
+
+> [!NOTE]  
+> Ensure the application is open before starting Objection.
+
+### Objection Commands:
+- `objection -g Gadget explore`: Connect to the Gadget.
+- `android sslpinning disable`: Bypass SSL pinning.
+- `android hooking watch class_method FUNCTION_NAME --dump-args --dump-return`: Hook and inspect the results from the function.
+
 
 ## Additional Resources
 - [Frida](https://www.infosec-blog.com/categories/#frida)
 - [Frida CodeShare](https://codeshare.frida.re/)
+- [Fridump](https://github.com/Nightbringer21/fridump)

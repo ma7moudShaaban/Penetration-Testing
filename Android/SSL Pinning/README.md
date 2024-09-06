@@ -1,15 +1,18 @@
-## SSL Pinning
+# SSL Pinning
 
-### Overview
+## Overview
 SSL pinning is a security technique used in Android applications to prevent man-in-the-middle attacks by ensuring that the app only trusts a specific certificate or set of certificates. However, improper configurations and certain techniques can expose the application to vulnerabilities.
 
-### Security Consideration
+## Security Consideration
 - Ensure `android:debuggable="false"` in your `AndroidManifest.xml` to prevent attackers from debugging the application and exposing its internal architecture.
 
-### Approaches to Bypass SSL Pinning
+## Approaches to Bypass SSL Pinning
 
-#### 1. Network Security Configuration (NSC) File Modification
+### 1. Network Security Configuration (NSC) File Modification
 The `network_security_config.xml` file defines the trusted certificates for the application when running HTTPS. To intercept the app’s HTTPS traffic, you need to modify the NSC file to trust user certificates in addition to system certificates.
+
+>[!TIP]
+>We can confirm app uses NCS file from: `android:networkSecurityConfig` in xml file (Manifest.xm.)
 
 **Steps:**
 
@@ -25,7 +28,7 @@ The `network_security_config.xml` file defines the trusted certificates for the 
 
 6. Install the patched APK:`adb install <app_name>_signed.apk`
 
-#### 2. Dynamic Instrumentation (Hooking)
+### 2. Dynamic Instrumentation (Hooking)
 Hooking allows for monitoring and editing the application during runtime. This approach can be used to bypass SSL pinning by dynamically modifying the app's behavior while it’s running.
 
 - To verify that the application uses `TrustManager`, follow these steps:
@@ -35,3 +38,9 @@ Hooking allows for monitoring and editing the application during runtime. This a
 3. Inspect the results to confirm the presence and implementation of the `TrustManager` class.
 
 - We can abuse the Trust Manager to trust our certificate `burp` using frida scripts e.g. multiple-unpinner frida script.
+
+### 3. Flutter & Xamarin Apps (Non-proxy aware applications)
+- Using [Reflutter](https://github.com/Impact-I/reFlutter) tool that make the proxy hardcoded into the application
+
+- [Xamarin Traffic Interception](https://notes.akenofu.me/pentest/Mobile%20Application%20Testing/Xamarin%20-%20Android/)
+
