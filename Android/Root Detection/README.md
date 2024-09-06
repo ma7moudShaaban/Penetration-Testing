@@ -11,7 +11,7 @@
 
 - If the previous bypasses fail, we can use **Frida Gadget** to continue the penetration testing process.
 
-- **SecureFlag**: Prevents taking screenshots or sharing the screen within the app. We can use Frida scripts to bypass this restriction.
+- **[SecureFlag](https://gist.github.com/su-vikas/36410f67c9e0127961ae344010c4c0ef)**: Prevents taking screenshots or sharing the screen within the app. We can use Frida scripts to bypass this restriction.
 
 ## Resources
 - [SafetyNet - MSTG](https://github.com/MobSF/owasp-mstg/blob/master/Document/0x05j-Testing-Resiliency-Against-Reverse-Engineering.md)
