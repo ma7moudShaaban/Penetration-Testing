@@ -40,6 +40,9 @@ Hooking allows for monitoring and editing the application during runtime. This a
 - We can abuse the Trust Manager to trust our certificate `burp` using frida scripts e.g. multiple-unpinner frida script.
 
 ### 3. Flutter & Xamarin Apps (Non-proxy aware applications)
+
+>[!NOTE]
+> You can identify that the app using Flutter by the 'io' file and Xamarin by the 'xamarin.android.net' file.
 - Using [Reflutter](https://github.com/Impact-I/reFlutter) tool that make the proxy hardcoded into the application
 
 - [Xamarin Traffic Interception](https://notes.akenofu.me/pentest/Mobile%20Application%20Testing/Xamarin%20-%20Android/)
