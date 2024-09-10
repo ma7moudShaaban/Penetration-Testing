@@ -91,9 +91,9 @@
 ### NTLM Authentication
 - LAN Manager (LM or LANMAN) hashes are the oldest password storage mechanism used by the Windows operating system.
 > [!NOTE]
-
+>
 > Windows operating systems prior to Windows Vista and Windows Server 2008 (Windows NT4, Windows 2000, Windows 2003, Windows XP) stored both the LM hash and the NTLM hash of a user's password by default. 
-
+>
 > Neither LANMAN nor NTLM uses a salt.
 - The NTLM protocol performs a challenge/response between a server and client using the NT hash. NTLMv1 uses both the NT and the LM hash.
 - NTLMv1 was the building block for modern NTLM authentication.
