@@ -129,3 +129,31 @@
 - objectSID: The user's Security Identifier (SID). This attribute identifies a user and its group memberships during security interactions with the server.
 
 - sIDHistory: This contains previous SIDs for the user object if moved from another domain and is typically seen in migration scenarios from domain to domain. After a migration occurs, the last SID will be added to the sIDHistory property, and the new SID will become its objectSID.
+
+
+### Groups 
+#### Types of Groups 
+- There are two main types: security and distribution groups.
+    - The Security groups type is primarily for ease of assigning permissions and rights to a collection of users instead of one at a time. They simplify management and reduce overhead when assigning permissions and rights for a given resource. 
+    - The Distribution groups type is used by email applications such as Microsoft Exchange to distribute messages to group members. This type of group cannot be used to assign permissions to resources in a domain environment.
+#### Group Scopes
+- There are three different group scopes that can be assigned when creating a new group.
+
+1. Domain Local Group
+2. Global Group
+3. Universal Group
+
+- **Domain Local Group**: Domain local groups can only be used to manage permissions to domain resources in the domain where it was created. Local groups cannot be used in other domains but CAN contain users from OTHER domains. Local groups can be nested into (contained within) other local groups but NOT within global groups.
+- **Global Group**: Global groups can be used to grant access to resources in another domain. A global group can only contain accounts from the domain where it was created. Global groups can be added to both other global groups and local groups.
+- **Universal Group**: The universal group scope can be used to manage resources distributed across multiple domains and can be given permissions to any object within the same forest. They are available to all domains within an organization and can contain users from any domain.
+
+>[!WARNING]
+>Group scopes can be changed, but there are a few caveats:
+>
+>   - A Global Group can only be converted to a Universal Group if it is NOT part of another Global Group.
+
+>   - A Domain Local Group can only be converted to a Universal Group if the Domain Local Group does NOT contain any other Domain Local Groups as members.
+
+>   - A Universal Group can be converted to a Domain Local Group without any restrictions.
+
+>   - A Universal Group can only be converted to a Global Group if it does NOT contain any other Universal Groups as members.
