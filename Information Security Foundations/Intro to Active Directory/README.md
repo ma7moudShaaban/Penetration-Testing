@@ -157,3 +157,16 @@
 >   - A Universal Group can be converted to a Domain Local Group without any restrictions.
 >
 >   - A Universal Group can only be converted to a Global Group if it does NOT contain any other Universal Groups as members.
+
+#### **Important Group Attributes**
+- Like users, groups have many attributes. Some of the most important group attributes include:
+
+    - cn: The cn or Common-Name is the name of the group in Active Directory Domain Services.
+
+    - member: Which user, group, and contact objects are members of the group.
+
+    - groupType: An integer that specifies the group type and scope.
+
+    - memberOf: A listing of any groups that contain the group as a member (nested group membership).
+
+    - objectSid: This is the security identifier or SID of the group, which is the unique value used to identify the group as a security principal.
