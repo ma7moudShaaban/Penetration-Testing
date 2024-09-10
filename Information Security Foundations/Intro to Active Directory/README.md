@@ -1,4 +1,17 @@
 # Active Directory
+- [Active Directory Structure](#active-directory-structure)
+- [Active Directory Terminology](#active-directoy-terminology)
+- [Active Directory Functionality](#active-directory-functionality)
+- [Active Direcotoy Protocols](#active-directory-protocols)
+- [Users & Groups](#users--groups)
+
+
+
+
+
+
+
+
 - Active Directory (AD) is a directory service for Windows network environments. It is a distributed, hierarchical structure that allows for centralized management of an organization's resources, including users, computers, groups, network devices, file shares, group policies, devices, and trusts.
 
 ![Active Directory](../../images/Active%20Directory.png)
@@ -111,7 +124,7 @@
 - Domain users differ from local users in that they are granted rights from the domain
     - One account to keep in mind is the KRBTGT account, however. This is a type of local account built into the AD infrastructure. This account acts as a service account for the Key Distribution service providing authentication and access for domain resources. 
 
-## User Naming Attributes
+### User Naming Attributes
 
 - UserPrincipalName (UPN): This is the primary logon name for the user. By convention, the UPN uses the email address of the user.
 
