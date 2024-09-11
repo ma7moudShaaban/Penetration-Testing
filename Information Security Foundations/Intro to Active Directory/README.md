@@ -4,6 +4,7 @@
 - [Active Directory Functionality](#active-directory-functionality)
 - [Active Direcotoy Protocols](#active-directory-protocols)
 - [Users & Groups](#users--groups)
+- [Active Directory Rights and Privileges](#active-directory-rights-and-privileges)
 ------------------------------------------------------------------------------------------------------
 
 - Active Directory (AD) is a directory service for Windows network environments. It is a distributed, hierarchical structure that allows for centralized management of an organization's resources, including users, computers, groups, network devices, file shares, group policies, devices, and trusts.
@@ -170,3 +171,10 @@
     - memberOf: A listing of any groups that contain the group as a member (nested group membership).
 
     - objectSid: This is the security identifier or SID of the group, which is the unique value used to identify the group as a security principal.
+
+
+## Active Directory Rights and Privileges
+-  `whoami /priv` : will give us a listing of all user rights assigned to the current user. 
+
+
+
