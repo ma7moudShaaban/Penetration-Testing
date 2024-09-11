@@ -1,9 +1,28 @@
 # Assembly x86
+- [Assembly and Machine Code](#assembly-and-machine-code)
+- [IA-32 Processor Architecture](#ia-32-processor-architecture)
+- [History of IA-32 Architecture](#history-of-ia-32-architecture)
+- [IA-32e x86 Memory Addresses](#ia-32e-x86-memory-addresses)
+  - [Address Endianness](#address-endianness)
+
 
 ## Assembly and Machine Code
 
 - When we compile a C program, the C compiler produces an assembly file. This assembly file is then converted into machine code with file extensions such as `.obj` or `.o`. Finally, during the linking phase, these object files are linked together to produce an executable (`.exe`) file, which the processor can run.
-- Note: Assembling (running MASM) does not actually create an executable program; additional steps are needed for linking.
+
+>[!NOTE] Levels of Input-Output
+>
+>   - **Level 3**: High-level language function
+>   - **Level 2**: Operating System
+>   - **Level 1**: BIOS
+>- Assembly language programs can perform input-output at each of the above levels, plus **Level 0**: Hardware
+>- Assembling (running MASM) does not actually create an executable program; additional steps are needed for linking.
+
+
+- Assemble-Link Execute Cycle
+  - If the source code is modified, Steps 2 through 4 must be repeated.
+  ![Assemble-link execute cycle](../../images/assemble-link-execute-cycle.png "Assemble-link execute cycle")
+
 
 - Instruction Set Architecture (ISA) mainly consists of the following components:
 
@@ -11,6 +30,7 @@
   - Registers
   - Memory Addresses
   - Data Types
+
 - There are two main Instruction Set Architectures that are widely used:
 
   - Complex Instruction Set Computer (CISC) - Used in Intel and AMD processors in most computers and servers.
@@ -29,6 +49,9 @@
 |Instructions supported by CPU	| Many instructions (~1500)	| Fewer instructions (~200)|
 |Power Consumption| 	High|	Very low|
 |Examples|	Intel, AMD |	ARM, Apple|
+
+
+
 ## IA-32 Processor Architecture
 
 ### Basic Program Execution Registers
@@ -37,12 +60,12 @@
 
 ### Types of Registers
 
-- **General Purpose Registers**
-- **Segment Registers**
-- **Processor Status Flags Register** (one register)
-- **Instruction Pointer**
+1. **General Purpose Registers**
+2. **Segment Registers**
+3. **Processor Status Flags Register** (one register)
+4. **Instruction Pointer**
 
-### General Purpose Registers
+1. General Purpose Registers
 
 General-purpose registers are primarily used for arithmetic and data movement operations. The following image applies to EAX, EBX, ECX, and EDX:
 
@@ -66,7 +89,7 @@ The remaining general-purpose registers have only a 16-bit name for their lower 
 | ESI, EDI | Index Registers      |
 | EBP      | Extended (Stack) Frame (Base) Pointer |
 
-#### Segment Registers
+2. Segment Registers
 
 | Register | Use            |
 |----------|----------------|
@@ -74,20 +97,21 @@ The remaining general-purpose registers have only a 16-bit name for their lower 
 | DS       | Data Segment   |
 | SS       | Stack Segment  |
 
-### Specialized Registers
-
-- **EIP (Instruction Pointer)**
-  - The address of the next instruction to be executed.
+3. Processor Status Flags Register
 - **EFlags**
   - Status and control flags.
   - Each flag is a single binary bit.
 
-### Status Flags
+- Status Flags
 
-- **Carry**: Unsigned arithmetic out of range.
-- **Overflow**: Signed arithmetic out of range.
-- **Sign**: Result is negative.
-- **Zero**: Result is zero.
+  - **Carry**: Unsigned arithmetic out of range.
+  - **Overflow**: Signed arithmetic out of range.
+  - **Sign**: Result is negative.
+  - **Zero**: Result is zero.
+
+
+4. **EIP (Instruction Pointer)**
+  - The address of the next instruction to be executed.
 
 ## History of IA-32 Architecture
 
@@ -100,55 +124,25 @@ The remaining general-purpose registers have only a 16-bit name for their lower 
      - Compatibility mode for legacy 16 and 32-bit applications.
      - 64-bit mode uses 64-bit addresses and operands.
 
-## IA-32e x86 Memory Management
+## IA-32e x86 Memory Addresses
+- x86 64-bit processors have 64-bit wide addresses that range from 0x0 to 0xffffffffffffffff
 
-### Protected Mode
+|Addressing Mode|	Description	| Example |
+|:--------------|:------------|:---------|
+|Immediate|	The value is given within the instruction	|add 2|
+|Register|	The register name that holds the value is given in the instruction	|add rax |
+|Direct|	The direct full address is given in the instruction	| call 0xffffffffaa8a25ff|
+|Indirect|	A reference pointer is given in the instruction	| call 0x44d000 or call [rax]|
+|Stack|	Address is on top of the stack	|add rsp|
 
-- Native mode for Windows and Linux.
-- Processor prevents programs from referencing memory outside their assigned segments.
-
-### Real-Address Mode
-
-- Native mode for MS-DOS.
-- Direct access to system memory and hardware devices, which can cause the OS to crash.
-
-### System Management Mode
-
-- Power management
-- System security
-- Diagnostics
-
-## Addressable Memory
-
-### Protected Mode
-
-- Memory segment up to 4 GB
-- 32-bit address
-
-### Real-Address and Virtual-8086 Modes
-
-- 1 MB space
-- 20-bit address (segment-offset)
-
-### Protected Mode Memory Models
-
-- Flat segment model
-- Multi-segment model
-- Paging
-
-## Levels of Input-Output
-
-- **Level 3**: High-level language function
-- **Level 2**: Operating System
-- **Level 1**: BIOS
-- Assembly language programs can perform input-output at each of the above levels, plus **Level 0**: Hardware
+### Address Endianness 
+- An address endianness is the order of its bytes in which they are stored or retrieved from memory. 
+- There are two types of endianness: Little-Endian and Big-Endian
+- With Little-Endian processors, the little-end byte of the address is filled/retrieved first right-to-left, while with Big-Endian processors, the big-end byte is filled/retrieved first left-to-right.
 
 
-### Assemble-Link Execute Cycle
 
-- If the source code is modified, Steps 2 through 4 must be repeated.
 
-![Assemble-link execute cycle](../../images/assemble-link-execute-cycle.png "Assemble-link execute cycle")
 
 ## Integers Constants
 
