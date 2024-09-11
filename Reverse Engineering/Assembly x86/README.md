@@ -12,11 +12,9 @@
 
 
 >[!NOTE] Levels of Input-Output
->
->**Level 3**: High-level language function
->**Level 2**: Operating System
->**Level 1**: BIOS
->
+>Level 3: High-level language function
+>Level 2: Operating System
+>Level 1: BIOS
 >Assembly language programs can perform input-output at each of the above levels, plus **Level 0**: Hardware.
 >Assembling (running MASM) does not actually create an executable program; additional steps are needed for linking.
 
