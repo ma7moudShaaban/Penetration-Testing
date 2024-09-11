@@ -5,6 +5,30 @@
 - When we compile a C program, the C compiler produces an assembly file. This assembly file is then converted into machine code with file extensions such as `.obj` or `.o`. Finally, during the linking phase, these object files are linked together to produce an executable (`.exe`) file, which the processor can run.
 - Note: Assembling (running MASM) does not actually create an executable program; additional steps are needed for linking.
 
+- Instruction Set Architecture (ISA) mainly consists of the following components:
+
+  - Instructions
+  - Registers
+  - Memory Addresses
+  - Data Types
+- There are two main Instruction Set Architectures that are widely used:
+
+  - Complex Instruction Set Computer (CISC) - Used in Intel and AMD processors in most computers and servers.
+  - Reduced Instruction Set Computer (RISC) - Used in ARM and Apple processors, in most smartphones, and some modern laptops.
+
+- **CISC vs. RISC**
+- The following table summarizes the main differences between CISC and RISC:
+
+|Area  |	CISC	|   RISC |
+|:----:|:-------:|:-------|
+|Complexity|	Favors complex instructions|	Favors simple instructions|
+|Length of instructions|	Longer instructions - Variable length 'multiples of 8-bits'|	Shorter instructions - Fixed length '32-bit/64-bit'|
+|Total instructions per program	| Fewer total instructions - Shorter code	| More total instructions - Longer code|
+|Optimization | 	Relies on hardware optimization (in CPU)	| Relies on software optimization (in Assembly)|
+|Instruction Execution Time	| Variable - Multiple clock cycles	| Fixed - One clock cycle | 
+|Instructions supported by CPU	| Many instructions (~1500)	| Fewer instructions (~200)|
+|Power Consumption| 	High|	Very low|
+|Examples|	Intel, AMD |	ARM, Apple|
 ## IA-32 Processor Architecture
 
 ### Basic Program Execution Registers
