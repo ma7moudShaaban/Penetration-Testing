@@ -10,7 +10,7 @@
 
 - When we compile a C program, the C compiler produces an assembly file. This assembly file is then converted into machine code with file extensions such as `.obj` or `.o`. Finally, during the linking phase, these object files are linked together to produce an executable (`.exe`) file, which the processor can run.
 
-> [!NOTE]: Levels of Input-Output
+>[!NOTE]: Levels of Input-Output
 >
 > - **Level 3**: High-level language function
 > - **Level 2**: Operating System
