@@ -4,7 +4,13 @@
 - [History of IA-32 Architecture](#history-of-ia-32-architecture)
 - [IA-32e x86 Memory Addresses](#ia-32e-x86-memory-addresses)
   - [Address Endianness](#address-endianness)
-- [Assembly File Structure]()
+- [Assembling & Debugging](#assembling--debugging)
+  - [Assembly File Structure](#assembly-file-structure)
+  - [Assembling & Disassembling](#assembling--disassembling)
+  - [GNU Debugger (GDB)](#gnu-debugger-gdb)
+
+
+
 
 ## Assembly and Machine Code
 
@@ -155,3 +161,78 @@ The remaining general-purpose registers have only a 16-bit name for their lower 
 > Whenever we use a variable with a certain data type or use a data type with an instruction, both operands should be of the same size.
 
 
+## Assembling & Debugging
+
+### Assembly File Structure
+![nasm_structure](../../images/nasm_structure.jpg)
+
+|Section  |	  Description  |
+|:--------|:---------------|
+|global _start|	This is a directive that directs the code to start executing at the _start label defined below.|
+|section .data|	This is the data section, which should contain all of the variables.|
+|section .text|	This is the text section containing all of the code to be executed.|
+
+- `db` for a list of bytes, `dw` for a list of words, `dd` for a list of digits.
+-  Use the `equ` instruction with the `$` token to evaluate an expression: 
+```
+section .data
+    message db "Hello World!", 0x0a
+    length  equ $-message
+```
+
+> [!NOTE]
+> The text segment within the memory is read-only, so we cannot write any variables within it. The data section, on the other hand, is read/write, which is why we write our variables to it.
+
+> [!TIP]
+> We can add comments to our assembly code with a semi-colon ;
+
+### Assembling & Disassembling
+#### Assembling
+
+> [!NOTE] 
+> Assembly files usually use the .s or the .asm extensions.
+
+- Assemble the files `nasm -f elf64 helloWorld.s`
+
+> [!NOTE]
+> The `-f elf64` flag is used to note that we want to assemble a 64-bit assembly code. If we wanted to assemble a 32-bit code, we would use `-f elf`.
+
+- ELF stands for Executable and Linkable Format.
+- After assembling, we should link our file using `ld`: `ld -o helloWorld helloWorld.o`
+
+> [!NOTE]
+> If we were to assemble a 32-bit binary, we need to add the `-m elf_i386` flag.
+
+- Simple bash script to assemble, link and run the file:
+```
+#!/bin/bash
+
+fileName="${1%%.*}" # remove .s extension
+
+nasm -f elf64 ${fileName}".s"
+ld ${fileName}".o" -o ${fileName}
+[ "$2" == "-g" ] && gdb -q ${fileName} || ./${fileName}
+```
+#### Disassembling
+- To disassemble a file, we will use the objdump tool. We can disassemble a binary using the `-D` flag.
+
+> [!NOTE]
+> We will also use the flag -M intel, so that objdump would write the instructions in the Intel syntax.
+
+- If we wanted to only show the assembly code, without machine code or addresses, we could add the `--no-show-raw-insn` `--no-addresses` flags, as follows: `objdump -M intel --no-show-raw-insn --no-addresses -d helloWorld`
+
+- The `-d` flag will only disassemble the .text section of our code. To dump any strings, we can use the `-s` flag, and add `-j .data` to only examine the .data section: `objdump -sj .data helloWorld`
+
+### GNU Debugger (GDB) 
+- GEF is a free and open-source GDB plugin that is built precisely for reverse engineering and binary exploitation.
+- To add GEF to GDB, we can use the following commands:
+```
+wget -O ~/.gdbinit-gef.py -q https://gef.blah.cat/py
+echo source ~/.gdbinit-gef.py >> ~/.gdbinit
+```
+
+- Using the previous script, we add `-g` to run the code with gdb
+- Use the `info` command to view general information about the program, like its functions or variables.
+- Use the `disassemble` or `disas` command to disassemble function 
+
+### Debugging with GDB
