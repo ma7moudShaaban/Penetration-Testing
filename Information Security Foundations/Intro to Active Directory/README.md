@@ -225,3 +225,9 @@
     - Unlock an Account `Unlock-ADAccount -Identity amasters`
     - Reset User Password `Set-ADAccountPassword -Identity 'amasters' -Reset -NewPassword (ConvertTo-SecureString -AsPlainText "NewP@ssw0rdReset!" -Force)`
     - Force Password Change `Set-ADUser -Identity amasters -ChangePasswordAtLogon $true`
+    - Create AD OU `New-ADOrganizationalUnit -Name "Security Analysts" -Path "OU=IT,OU=HQ-NYC,OU=Employees,OU=CORP,DC=INLANEFREIGHT,DC=LOCAL"`
+    - Create Security Group `New-ADGroup -Name "Security Analysts" -SamAccountName analysts -GroupCategory Security -GroupScope Global -DisplayName "Security Analysts" -Path "OU=Security Analysts,OU=IT,OU=HQ-NYC,OU=Employees,OU=Corp,DC=INLANEFREIGHT,DC=LOCAL" -Description "Members of this group are Security Analysts under the IT OU"`
+    - Add Users to the Group `Add-ADGroupMember -Identity analysts -Members ACepheus,OStarchaser,ACallisto`
+    - Duplicate the Group Policy Object `Copy-GPO -SourceName "Logon Banner" -TargetName "Security Analysts Control"`
+    - Link the GPO to an OU `New-GPLink -Name "Security Analysts Control" -Target "ou=Security Analysts,ou=IT,OU=HQ-NYC,OU=Employees,OU=Corp,dc=INLANEFREIGHT,dc=LOCAL" -LinkEnabled Yes`
+    
