@@ -5,6 +5,10 @@
 - [Active Direcotoy Protocols](#active-directory-protocols)
 - [Users & Groups](#users--groups)
 - [Active Directory Rights and Privileges](#active-directory-rights-and-privileges)
+- [Security in Active Directory](#security-in-active-directory)
+- [Group Policy](#group-policy)
+- [AD Administration](#ad-administration) 
+
 ------------------------------------------------------------------------------------------------------
 
 - Active Directory (AD) is a directory service for Windows network environments. It is a distributed, hierarchical structure that allows for centralized management of an organization's resources, including users, computers, groups, network devices, file shares, group policies, devices, and trusts.
@@ -174,7 +178,50 @@
 
 
 ## Active Directory Rights and Privileges
+- Rights are typically assigned to users or groups and deal with permissions to access an object such as a file, while privileges grant a user permission to perform an action such as run a program, shut down a system, reset passwords, etc.
 -  `whoami /priv` : will give us a listing of all user rights assigned to the current user. 
 
+## Security in Active Directory
+### General Active Directory Hardening Measures
+- The Microsoft Local Administrator Password Solution (LAPS) is used to randomize and rotate local administrator passwords on Windows hosts and prevent lateral movement.
+
+- LAPS: Accounts can be set up to have their password rotated on a fixed interval (i.e., 12 hours, 24 hours, etc.).
+- Audit Policy Settings (Logging and Monitoring): Every organization needs to have logging and monitoring setup to detect and react to unexpected changes or activities that may indicate an attack.
+- Group Policy Security Settings: 
+    - Account Policies - Manage how user accounts interact with the domain.
+    - Local Policies - These apply to a specific computer and include the security event audit policy, user rights assignments (user privileges on a host).
+    - Software Restriction Policies - Settings to control what software can be run on a host.
+    - Application Control Policies - Settings to control which applications can be run by certain users/groups. This may include blocking certain users from running all executables, Windows Installer files, scripts, etc.
+    - Advanced Audit Policy Configuration - A variety of settings that can be adjusted to audit activities such as file access or modification, account logon/logoff, policy changes, privilege usage, and more.
+- Update Management (SCCM/WSUS) - The Windows Server Update Service (WSUS) can be installed as a role on a Windows Server and can be used to minimize the manual task of patching Windows systems. System Center Configuration Manager (SCCM) is a paid solution that relies on the WSUS Windows Server role being installed and offers more features than WSUS on its own.
+- Group Managed Service Accounts (gMSA) - A gMSA is an account managed by the domain that offers a higher level of security than other types of service accounts for use with non-interactive applications, services, processes, and tasks that are run automatically
+- Security Groups 
+- Account Separation - Administrators must have two separate accounts. One for their day-to-day work and a second for any administrative tasks they must perform
+- Password Complexity Policies + Passphrases + 2FA - Ideally, an organization should be using passphrases or large randomly generated passwords using an enterprise password manager. 
+- Limiting Domain Admin Account Usage - All-powerful Domain Admin accounts should only be used to log in to Domain Controllers, not personal workstations, jump hosts, web servers, etc. 
+- Periodically Auditing and Removing Stale Users and Objects - It is important for an organization to periodically audit Active Directory and remove or disable any unused accounts.
+- Auditing Permissions and Access - Organizations should also periodically perform access control audits to ensure that users only have the level of access required for their day-to-day work.
+- Audit Policies & Logging - Visibility into the domain is a must. An organization can achieve this through robust logging and then using rules to detect anomalous activity.
+- Using Restricted Groups - Restricted Groups allow for administrators to configure group membership via Group Policy.
+- Limiting Server Roles - It is important not to install additional roles on sensitive hosts, such as installing the Internet Information Server (IIS) role on a Domain Controller.
+- Limiting Local Admin and RDP Rights - Organizations should tightly control which users have local admin rights on which computers
 
 
+## Group Policy
+- Group Policy is a Windows feature that provides administrators with a wide array of advanced settings that can apply to both user and computer accounts in a Windows environment.
+- Group Policy Objects (GPOs):
+    - A Group Policy Object (GPO) is a virtual collection of policy settings that can be applied to user(s) or computer(s).
+    - GPOs include policies such as screen lock timeout, disabling USB ports, enforcing a custom domain password policy and much more.
+    - Every GPO has a unique name and is assigned a unique identifier (a GUID).
+![GPO Precedence Order](../../images/gpo_levels.png)
+
+## AD Administration
+
+- To ADD a user into Active Directory, we First need to load the module with the "Import-Module -Name ActiveDirectory" cmdlet. The AD module can be installed via the RSAT feature pack
+- PowerShell
+    - Add a User `New-ADUser -Name "Artemis Callisto" -GivenName "Artemis" -Surname "Callisto" -DisplayName "Artemis Callisto" -EmailAddress "a.callisto@inlanefreight.local" -UserPrincipalName "a.callisto@inlanefreight.local" -AccountPassword (ConvertTo-SecureString -AsPlainText (Read-Host "Enter a secure password") -Force) -Enabled $true -OtherAttributes @{'title'="Analyst"} -ChangePasswordAtLogon $true`
+    - Validate User `Get-ADUser  Ahmed`
+    - Remove a User `Remove-ADUser -Identity pvalencia`
+    - Unlock an Account `Unlock-ADAccount -Identity amasters`
+    - Reset User Password `Set-ADAccountPassword -Identity 'amasters' -Reset -NewPassword (ConvertTo-SecureString -AsPlainText "NewP@ssw0rdReset!" -Force)`
+    - Force Password Change `Set-ADUser -Identity amasters -ChangePasswordAtLogon $true`
