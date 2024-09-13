@@ -5,7 +5,7 @@
 - [DNS](#DNS)
 - [SMTP](#smtp)
 - [IMAP / POP3](#imap--pop3)
-
+- [SNMP](#snmp)
 
 ## FTP
 - Control channel through `TCP port 21` and the data channel via `TCP port 20`.
@@ -14,7 +14,7 @@
     - TFTP uses UDP.
     - TFTP does not have directory listing functionality.
 - `vsFTPd` is one of the most used FTP servers on Linux-based distributions.
-    - Default configuration file found in `/etc/vsftpd.conf`
+    - Default configuration file `/etc/vsftpd.conf`
     - Deny users access to the FTP service by this file`/etc/ftpusers`
     - Get overview of the server's settings `ftp> status`
     - If the `hide_ids=YES` setting is present, the UID and GUID representation of the service will be overwritten.
@@ -39,8 +39,8 @@ telnet TARGET_IP 21
     - [ ] Scanning with Nmap Scripts `find / -type f -name ftp* 2>/dev/null | grep scripts`
 
 
->[!TIP]
->Trace the progress of NSE scripts at the network level if we use the `--script-trace` option
+> [!TIP]
+> Trace the progress of NSE scripts at the network level if we use the `--script-trace` option
 
 
 ## SMB 
@@ -82,9 +82,9 @@ telnet TARGET_IP 21
 |enumdomusers|	Enumerates all domain users.|
 |queryuser <RID>|	Provides information about a specific user.|
 
->[!TIP]
->Brute Forcing User RIDs
->`for i in $(seq 500 1100);do rpcclient -N -U "" TARGET_IP -c "queryuser 0x$(printf '%x\n' $i)" | grep "User Name\|user_rid\|group_rid" && echo "";done`.
+> [!TIP]
+> Brute Forcing User RIDs
+> `for i in $(seq 500 1100);do rpcclient -N -U "" TARGET_IP -c "queryuser 0x$(printf '%x\n' $i)" | grep "User Name\|user_rid\|group_rid" && echo "";done`.
 > We can also use Python script from Impacket called [samrdump.py](https://github.com/fortra/impacket/blob/master/examples/samrdump.py).
 > `samrdump.py TARGET_IP`
 
@@ -159,9 +159,9 @@ telnet TARGET_IP 21
 |zone-statistics|	Collects statistical data of zones.|
 
 
->[!TIP]
->Subdomain Brute forcing `for sub in $(cat /usr/share/seclists/Discovery/DNS/subdomains-top1million-110000.txt);do dig $sub.inlanefreight.htb @TARGET_IP | grep -v ';\|SOA' | sed -r '/^\s*$/d' | grep $sub | tee -a subdomains.txt;done`. 
->Another tool work in the same way: `dnsenum --dnsserver TARGET_IP --enum -p 0 -s 0 -o subdomains.txt -f /usr/share/seclists/Discovery/DNS/subdomains-top1million-110000.txt inlanefreight.htb`
+> [!TIP]
+> Subdomain Brute forcing `for sub in $(cat /usr/share/seclists/Discovery/DNS/subdomains-top1million-110000.txt);do dig $sub.inlanefreight.htb @TARGET_IP | grep -v ';\|SOA' | sed -r '/^\s*$/d' | grep $sub | tee -a subdomains.txt;done`. 
+> Another tool work in the same way: `dnsenum --dnsserver TARGET_IP --enum -p 0 -s 0 -o subdomains.txt -f /usr/share/seclists/Discovery/DNS/subdomains-top1million-110000.txt inlanefreight.htb`
 
 
 - [ ] dig
@@ -233,3 +233,45 @@ telnet TARGET_IP 21
 - [ ] Openssl
     - [ ] `openssl s_client -connect TARGET_IP:pop3s`
     - [ ] `openssl s_client -connect TARGET_IP:imaps`
+
+## SNMP
+- Simple Network Management Protocol (SNMP) was created to monitor network devices. 
+- It can also be used to handle configuration tasks and change settings remotely.
+- SNMP also transmits control commands using agents over UDP port `161`.
+- SNMP enables the use of so-called traps over UDP port `162`.
+- SNMPv1
+    - SNMPv1 has no built-in authentication mechanism, meaning anyone accessing the network can read and modify network data.
+    - Main flaw of SNMPv1 is that it does not support encryption, meaning that all data is sent in plain text and can be easily intercepted.
+- SNMPv2
+    - The version still exists today is v2c, and the extension c means community-based SNMP.
+- SNMPv3
+    - The security has been increased enormously for SNMPv3 by security features such as authentication using username and password
+
+- **Community strings** can be seen as passwords that are used to determine whether the requested information can be viewed or not.
+- **MIB (Management Information Base)**: A MIB is like a directory of all the things you can monitor or control on a device. It’s a text file that organizes these items in a hierarchy, and each item has a unique identifier called an OID (Object Identifier).
+
+- **OID (Object Identifier)**: This is a unique code (like a serial number) that points to specific data or settings in a device. OIDs help identify what you’re trying to monitor or control.
+
+- Default Configuration file `/etc/snmp/snmpd.conf`
+
+### Dangerous Settings
+- Some dangerous settings that the administrator can make with SNMP are:
+
+|Settings	|     Description        |
+|:----------|:-----------------------|
+|rwuser noauth|	Provides access to the full OID tree without authentication.|
+|rwcommunity <community string> <IPv4 address>|	Provides access to the full OID tree regardless of where the requests were sent from.|
+|rwcommunity6 <community string> <IPv6 address>|	Same access as with rwcommunity with the difference of using IPv6.|
+
+- We can use Onesixtyone can be used to brute-force the names of the community strings
+
+- [ ] Onesixtyone
+    - [ ] `onesixtyone -c /usr/share/seclists/Discovery/SNMP/snmp.txt TARGET_IP`
+
+> [!TIP]
+> We can use [crunch](https://secf00tprint.github.io/blog/passwords/crunch/advanced/en) to create a custom wordlist.
+> After we know community string, we can use braa tool to brute-force the individual OIDs and enumerate the information behind them: `braa <community string>@<IP>:.1.3.6.*   # Syntax`. e.g. `braa public@10.129.14.128:.1.3.6.*`
+
+- [ ] snmpwalk
+    - [ ] `snmpwalk -v2c -c public TARGET_IP`
+
