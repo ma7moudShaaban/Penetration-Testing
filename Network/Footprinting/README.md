@@ -340,6 +340,11 @@ telnet TARGET_IP 21
     - `select table_name from all_tables;`
     - `select * from user_role_privs;`
     - `select name, password from sys.user$;`
+
+- SIDs
+    - SID = the unique name of a specific database.
+    - It’s necessary for connecting to the correct database version.
+    - Admins use the SID to manage and monitor databases.
 > [!TIP]
 >  Oracle 9 has a default password `CHANGE_ON_INSTALL`. Oracle DBSNMP service also uses a default password `dbsnmp`
 
