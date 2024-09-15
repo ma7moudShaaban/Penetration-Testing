@@ -6,6 +6,8 @@
 - [SMTP](#smtp)
 - [IMAP / POP3](#imap--pop3)
 - [SNMP](#snmp)
+- [MySQL](#mysql)
+- []
 
 ## FTP
 - Control channel through `TCP port 21` and the data channel via `TCP port 20`.
@@ -275,3 +277,37 @@ telnet TARGET_IP 21
 - [ ] snmpwalk
     - [ ] `snmpwalk -v2c -c public TARGET_IP`
 
+## MySQL
+- MySQL works according to the client-server principle and consists of a MySQL server and one or more MySQL clients.
+- Configuration file `/etc/mysql/mysql.conf.d/mysqld.cnf`
+- Usually, the MySQL server runs on TCP port 3306.
+
+- **MySQL Commands**
+
+|Command  | 	Description     |
+|:--------|:--------------------|
+|mysql -u <user> -p<password> -h <IP address>|	Connect to the MySQL server. There should not be a space between the '-p' flag, and the password.|
+|show databases;|	Show all databases.|
+|use <database>;|	Select one of the existing databases.|
+|show tables;|	Show all available tables in the selected database.|
+|show columns from <table>;|	Show all columns in the selected database.|
+|select * from <table>;|	Show everything in the desired table.|
+|select * from <table> where <column> = "<string>";|	Search for needed string in the desired table.|
+
+### Dangerous Settings
+
+|Settings|	Description     |
+|:--------|:----------------|
+|user|	Sets which user the MySQL service will run as.|
+|password|	Sets the password for the MySQL user.|
+|admin_address|	The IP address on which to listen for TCP/IP connections on the administrative network interface.|
+|debug|	This variable indicates the current debugging settings|
+|sql_warnings|	This variable controls whether single-row INSERT statements produce an information string if warnings occur.|
+|secure_file_priv|	This variable is used to limit the effect of data import and export operations.|
+
+- [ ] Nmap
+    - [ ] `sudo nmap TARGET_IP -sV -sC -p3306 --script mysql*`
+
+- [ ] MySQL
+    - [ ] `mysql -u root -h TARGET_IP`
+    - [ ] `mysql -u root -pP4SSw0rd -h TARGET_IP`
