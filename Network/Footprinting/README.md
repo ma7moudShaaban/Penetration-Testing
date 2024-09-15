@@ -9,6 +9,7 @@
 - [MySQL](#mysql)
 - [MSSQL](#mssql)
 - [Oracle TNS](#oracle-tns)
+- [IPMI](#ipmi)
 
 ## FTP
 - Control channel through `TCP port 21` and the data channel via `TCP port 20`.
@@ -336,6 +337,9 @@ telnet TARGET_IP 21
 - The client-side Oracle Net Services software uses the `tnsnames.ora` file to resolve service names to network addresses, while the listener process uses the `listener.ora` file to determine the services it should listen to and the behavior of the listener.
 - Oracle databases can be protected by using so-called PL/SQL Exclusion List (PlsqlExclusionList).It is a user-created text file that needs to be placed in the `$ORACLE_HOME/sqldeveloper` directory.
 - Use sqlplus to connect to the database `sqlplus USER/PASS@TARGET_IP/XE` , `sqlplus USER/PASS@TARGET_IP/XE as sysdba`
+> [!TIP] 
+> If you come across the following error **sqlplus: error while loading shared libraries: libsqlplus.so: cannot open shared object file: No such file or directory**, please execute the below: `sudo sh -c "echo /usr/lib/oracle/12.2/client64/lib > /etc/ld.so.conf.d/oracle-instantclient.conf";sudo ldconfig`
+
 - Oracle RDBMS commands:
     - `select table_name from all_tables;`
     - `select * from user_role_privs;`
@@ -378,3 +382,35 @@ pip3 install pycryptodome
 - [ ] odat
     - [ ] `./odat.py all -s TARGET_IP`
     - [ ] File upload `./odat.py utlfile -s TARGET_IP -d XE -U USER -P PASS --sysdba --putFile C:\\inetpub\\wwwroot testing.txt ./testing.txt`
+
+## IPMI
+
+- Intelligent Platform Management Interface (IPMI) is a tool that lets system administrators manage and monitor a computer, even if it’s turned off or unresponsive. Think of it as a remote control for a computer that works independently of the operating system, BIOS, or CPU. This means admins can fix issues, restart systems, and even update software without needing to physically touch the machine.
+
+- It works directly with the hardware, so it doesn't need the operating system to be running.
+- Even if the computer is off or broken, IPMI can still be used to check things like temperature, voltage, and power supply.
+- IPMI allows admins to:
+    - Change BIOS settings before the operating system starts.
+    - Manage the system when it’s powered off.
+    - Access the system after a crash.
+
+- IPMI communicates over a network and uses port 623 (UDP).
+- **Components of IPMI:**
+    - BMC (Baseboard Management Controller): This is like the "brain" of IPMI that controls everything.
+    - IPMB (Intelligent Platform Management Bus): It helps the BMC communicate with other parts of the system.
+    - ICMB (Intelligent Chassis Management Bus): Used to manage multiple systems (like multiple computers in a rack).
+    - IPMI Memory: Stores important data such as event logs and inventory information.
+
+- Unique default passwords for BMCs
+
+|Product|	Username	| Password   |
+|:-------|:------------|:------------|
+|Dell iDRAC|	root	|calvin       | 
+|HP iLO	|   Administrator	| randomized 8-character string consisting of numbers and uppercase letters|
+|Supermicro IPMI|	ADMIN	|ADMIN|
+
+- [ ] Nmap 
+    - [ ] `sudo nmap -sU --script ipmi-version -p 623 TARGET_IP`
+- [ ] Metasploit
+    - [ ] Scanner module `auxiliary/scanner/ipmi/ipmi_version`
+    - [ ] Retrieve IPMI hashes `scanner/ipmi/ipmi_dumphashes` 
