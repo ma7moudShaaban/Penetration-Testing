@@ -7,7 +7,8 @@
 - [IMAP / POP3](#imap--pop3)
 - [SNMP](#snmp)
 - [MySQL](#mysql)
-- []
+- [MSSQL](#mssql)
+- [Oracle TNS](#oracle-tns)
 
 ## FTP
 - Control channel through `TCP port 21` and the data channel via `TCP port 20`.
@@ -311,3 +312,64 @@ telnet TARGET_IP 21
 - [ ] MySQL
     - [ ] `mysql -u root -h TARGET_IP`
     - [ ] `mysql -u root -pP4SSw0rd -h TARGET_IP`
+
+## MSSQL
+- MSSQL uses tcp port 1433.
+### **Dangerous Settings**
+- MSSQL clients not using encryption to connect to the MSSQL server
+- The use of self-signed certificates when encryption is being used. It is possible to spoof self-signed certificates
+- The use of named pipes
+- Weak & default sa credentials. Admins may forget to disable this account
+-----------------------------------------------------------------------------------------------------
+- Connecting with Mssqlclient.py: `python3 mssqlclient.py Administrator@10.129.201.248 -windows-auth`
+- List databases `select name from sys.databases`
+
+- [ ] Nmap
+    - [ ] `sudo nmap --script ms-sql-info,ms-sql-empty-password,ms-sql-xp-cmdshell,ms-sql-config,ms-sql-ntlm-info,ms-sql-tables,ms-sql-hasdbaccess,ms-sql-dac,ms-sql-dump-hashes --script-args mssql.instance-port=1433,mssql.username=sa,mssql.password='',mssql.instance-name=MSSQLSERVER -sV -p 1433 TARGET_IP`
+- [ ] Metasploit auxiliary scanner `mssql_ping` 
+
+## Oracle TNS
+- Oracle Transparent Network Substrate (TNS) is a communication protocol that facilitates communication between Oracle databases and applications over networks.
+
+- It uses default port TCP/1521 
+- Configuration files `tnsnames.ora` and `listener.ora` located in the `$ORACLE_HOME/network/admin` directory
+- The client-side Oracle Net Services software uses the `tnsnames.ora` file to resolve service names to network addresses, while the listener process uses the `listener.ora` file to determine the services it should listen to and the behavior of the listener.
+- Oracle databases can be protected by using so-called PL/SQL Exclusion List (PlsqlExclusionList).It is a user-created text file that needs to be placed in the `$ORACLE_HOME/sqldeveloper` directory.
+- Use sqlplus to connect to the database `sqlplus USER/PASS@TARGET_IP/XE` , `sqlplus USER/PASS@TARGET_IP/XE as sysdba`
+- Oracle RDBMS commands:
+    - `select table_name from all_tables;`
+    - `select * from user_role_privs;`
+    - `select name, password from sys.user$;`
+> [!TIP]
+>  Oracle 9 has a default password `CHANGE_ON_INSTALL`. Oracle DBSNMP service also uses a default password `dbsnmp`
+
+- Run the following bash script before enumerating the service to download a few packages and tools for our Pwnbox instance in case it does not have these already: 
+```
+#!/bin/bash
+
+sudo apt-get install libaio1 python3-dev alien -y
+git clone https://github.com/quentinhardy/odat.git
+cd odat/
+git submodule init
+git submodule update
+wget https://download.oracle.com/otn_software/linux/instantclient/2112000/instantclient-basic-linux.x64-21.12.0.0.0dbru.zip
+unzip instantclient-basic-linux.x64-21.12.0.0.0dbru.zip
+wget https://download.oracle.com/otn_software/linux/instantclient/2112000/instantclient-sqlplus-linux.x64-21.12.0.0.0dbru.zip
+unzip instantclient-sqlplus-linux.x64-21.12.0.0.0dbru.zip
+export LD_LIBRARY_PATH=instantclient_21_12:$LD_LIBRARY_PATH
+export PATH=$LD_LIBRARY_PATH:$PATH
+pip3 install cx_Oracle
+sudo apt-get install python3-scapy -y
+sudo pip3 install colorlog termcolor passlib python-libnmap
+sudo apt-get install build-essential libgmp-dev -y
+pip3 install pycryptodome
+```
+
+
+- [ ] Nmap
+    - [ ] `sudo nmap -p1521 -sV TARGET_IP --open`
+    - [ ] `sudo nmap -p1521 -sV TARGET_IP --open --script oracle-sid-brute`
+
+- [ ] odat
+    - [ ] `./odat.py all -s TARGET_IP`
+    - [ ] File upload `./odat.py utlfile -s TARGET_IP -d XE -U USER -P PASS --sysdba --putFile C:\\inetpub\\wwwroot testing.txt ./testing.txt`
