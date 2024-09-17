@@ -8,6 +8,12 @@
   - [Assembly File Structure](#assembly-file-structure)
   - [Assembling & Disassembling](#assembling--disassembling)
   - [GNU Debugger (GDB)](#gnu-debugger-gdb)
+    - [Break](#break)
+    - [Examine](#examine)
+    - [Step](#step)
+    - [Modify](#modify)
+- [Basic Instructions](#basic-instructions)
+  - [Data Movement](#data-movement)
 
 
 
@@ -236,3 +242,54 @@ echo source ~/.gdbinit-gef.py >> ~/.gdbinit
 - Use the `disassemble` or `disas` command to disassemble function 
 
 ### Debugging with GDB
+- Debugging consists mainly of four steps:
+
+|Step	  |  Description  |
+|:------|:------------|
+|Break	|  Setting breakpoints at various points of interest|
+|Examine|	Running the program and examining the state of the program at these points|
+|Step|	Moving through the program to examine how it acts with each instruction and with user input|
+|Modify|	Modify values in specific registers or addresses at specific breakpoints, to study how it would affect the execution|
+
+#### Break
+
+- We can use the `break` or `b` command along with the address or function name we want to break at.
+- We can set a breakpoint at a certain address, like _start+10, we can either `b *_start+10` or `b *0x40100a`
+- The * tells GDB to break at the instruction stored in 0x40100a.
+- If we want to see what breakpoints we have at any point of the execution, we can use the` info breakpoint` command. We can also `disable, enable, or delete` any breakpoint
+
+#### Examine
+
+- We can use the `x` command in the format of `x/FMT ADDRESS`
+- Use the `registers`command to print out the current value of all registers:
+-  The examine format FMT can have three parts:
+
+|Argument	| Description	 |  Example   |
+|:--------|:-------------|:-----------|
+|Count|	The number of times we want to repeat the examine|	2, 3, 10|
+|Format|	The format we want the result to be represented in|	x(hex), s(string), i(instruction)|
+|Size	|The size of memory we want to examine	|b(byte), h(halfword), w(word), g(giant, 8 bytes)|
+
+> [!NOTE]
+> If we don't specify the Size or Format, it will default to the last one we used.
+
+
+#### Step
+- To move through the program, there are three different commands we can use: `stepi` , `step` and `si`.
+- We can repeat the `si` command by adding a number after it, e.g. `si 3`
+
+> [!NOTE]
+> There's also the next or `n` command, which will also continue until the next line, but will skip any functions called in the same line of code, instead of breaking at them like step. There's also the `nexti` or `ni`, which is similar to `si`, but skips functions calls.
+
+#### Modify
+
+- To modify values in GDB, we can use the `set` command.
+- We utilize the `patch` command in GEF to make this step much easier.We have to provide the type/size of the new value, the location to be stored, and the value we want to use, e.g. `patch string 0x402000 "Patched!\\x0a"`
+
+> [!NOTE]
+> `\x0a` for adding a new line after our string.
+
+
+
+ ## Basic Instructions
+ ### Data Movement
