@@ -3,8 +3,9 @@
     - [SSH](#ssh)
     - [Rsync](#rsync)
     - [R-Services](#r-services)
-    
-
+- [Windows Remote Management Protocols](#windows-remote-management-protocols)
+    - [RDP](#rdp)
+    - [ ]
 ## Linux Remote Management Protocols
 ### SSH
 
@@ -58,3 +59,36 @@ git clone https://github.com/jtesta/ssh-audit.git && cd ssh-audit
 
 - [ ] Nmap
     - [ ] `sudo nmap -sV -p 512,513,514 TARGET_IP`
+
+## Windows Remote Management Protocols
+- Windows servers can be managed locally using Server Manager administration tasks on remote servers. 
+- Remote management is enabled by default starting with Windows Server 2016. 
+- The main components used for remote management of Windows and Windows servers are the following:
+
+    - Remote Desktop Protocol (RDP)
+    - Windows Remote Management (WinRM)
+    - Windows Management Instrumentation (WMI)
+
+### RDP 
+- RDP uses TCP port 3389
+- [Perl script](https://github.com/CiscoCXSecurity/rdp-sec-check) can unauthentically identify the security settings of RDP servers based on the handshakes. `./rdp-sec-check.pl TARGET_IP`
+- To initiate an RDP session `xfreerdp /u:cry0l1t3 /p:"P455w0rd!" /v:TARGET_IP`
+- [ ] Nmap
+    - [ ] `nmap -sV -sC TARGET_IP -p3389 --script rdp*`
+
+### WinRM
+- WinRM uses the Simple Object Access Protocol (SOAP) to establish connections to remote hosts and their applications. 
+- WinRM must be explicitly enabled and configured starting with Windows 10.
+- WinRM relies on TCP ports 5985 and 5986 for communication, with the last port 5986 using HTTPS
+- Use [evil-winrm](https://github.com/Hackplayers/evil-winrm) to interact with this WinRM: `evil-winrm -i TARGET_IP -u USER -p PASS`
+
+- [ ] Nmap
+    - [ ] `nmap -sV -sC TARGET_IP -p5985,5986 --disable-arp-ping -n`
+
+### WMI
+- Windows Management Instrumentation (WMI) is Microsoft's implementation and also an extension of the Common Information Model (CIM), core functionality of the standardized Web-Based Enterprise Management (WBEM) for the Windows platform.
+- WMI allows read and write access to almost all settings on Windows systems.
+- WMI is typically accessed via PowerShell, VBScript, or the Windows Management Instrumentation Console (WMIC).
+- WMI is not a single program but consists of several programs and various databases, also known as repositories.
+- The initialization of the WMI communication always takes place on TCP port 135, and after the successful establishment of the connection, the communication is moved to a random port.
+- The program [wmiexec.py](https://github.com/fortra/impacket/blob/master/examples/wmiexec.py) from the Impacket toolkit can be used for this: `/usr/share/doc/python3-impacket/examples/wmiexec.py Cry0l1t3:"P455w0rD!"@TARGET_IP "hostname"`
