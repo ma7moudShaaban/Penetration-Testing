@@ -5,7 +5,8 @@
     - [R-Services](#r-services)
 - [Windows Remote Management Protocols](#windows-remote-management-protocols)
     - [RDP](#rdp)
-    - [ ]
+    - [WinRM](#winrm)
+    - [WMI](#wmi)
 ## Linux Remote Management Protocols
 ### SSH
 
