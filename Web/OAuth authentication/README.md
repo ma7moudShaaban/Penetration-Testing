@@ -15,7 +15,7 @@
 ### Authorization code grant type
 
 ![Authorization Code grant flow](../../images/Authorization%20code%20grant.jpg)
-1. Authorization request
+- **Authorization request**
 - The client application sends a request to the OAuth service's /authorization endpoint asking for permission to access specific user data.
 e.g. 
 ```
@@ -38,10 +38,19 @@ Host: oauth-authorization-server.com
 
 - The implicit grant type is more suited to single-page applications and native desktop applications, which cannot easily store the client_secret on the back-end
 
+- **Authorization request**
+The implicit flow starts in much the same way as the authorization code flow. The only major difference is that the response_type parameter must be set to token.
+```
+GET /authorization?client_id=12345&redirect_uri=https://client-app.com/callback&response_type=token&scope=openid%20profile&state=ae13d489bd00e3c24 HTTP/1.1
+Host: oauth-authorization-server.com
+```
 
-
-
-
+- **Access Token grant**
+- The same as authorization code , instead of sending a query parameter containing an authorization code, it will send the access token and other token-specific data as a URL fragment, e.g. 
+```
+GET /callback#access_token=z0y9x8w7v6u5&token_type=Bearer&expires_in=5000&scope=openid%20profile&state=ae13d489bd00e3c24 HTTP/1.1
+Host: client-app.com
+```
 
 
 
