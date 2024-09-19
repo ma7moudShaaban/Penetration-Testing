@@ -291,5 +291,24 @@ echo source ~/.gdbinit-gef.py >> ~/.gdbinit
 
 
 
- ## Basic Instructions
- ### Data Movement
+## Basic Instructions
+### Data Movement
+
+- The main Data Movement instructions are:
+
+|Instruction|	Description	|Example|
+|:---------|:------------|:-------|
+|mov|	Move data or load immediate data|	mov rax, 1 -> rax = 1|
+|lea|	Load an address pointing to the value	|lea rax, [rsp+5] -> rax = rsp+5|
+|xchg|	Swap data between two registers or addresses	|xchg rax, rbx -> rax = rbx, rbx = rax|
+
+
+- When we make `mov rax, rsp` , we won't be moving the value of `rsp` to `rax`, but we will be moving the pointer address of `rsp`.
+- To move the actual value, we will have to use square brackets `[]` like `mov rax, [rsp]` 
+- Both `mov rax, rsp` and `lea rax, [rsp]` will do the same thing of storing the pointer to message at `rax`.
+
+> [!NOTE]
+> If we wanted to load a pointer with an offset. we should use lea (i.e., `[rsp+10]`).
+> If we use `mov rax, [rsp+10]`, it will actually move the value at `[rsp+10]` to `rax`. We cannot move a pointer with an offset using `mov`.
+
+### Arithmetic Instructions
