@@ -19,6 +19,8 @@
     - [Binary Instructions](#binary-instructions)
     - [Bitwise Instructions](#bitwise-instructions)
 - [Control Instructions](#control-instructions)
+  - [Loops](#loops)
+
 
 
 
@@ -351,3 +353,9 @@ echo source ~/.gdbinit-gef.py >> ~/.gdbinit
 - `xor`ing our registers with themselves turned each of them to 0's
 
 ## Control Instructions
+### Loops
+
+
+
+
+
