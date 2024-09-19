@@ -14,6 +14,12 @@
     - [Modify](#modify)
 - [Basic Instructions](#basic-instructions)
   - [Data Movement](#data-movement)
+  - [Arithmetic Instructions](#arithmetic-instructions)
+    - [Unary Instructions](#unary-instructions)
+    - [Binary Instructions](#binary-instructions)
+    - [Bitwise Instructions](#bitwise-instructions)
+- [Control Instructions](#control-instructions)
+
 
 
 
@@ -312,3 +318,36 @@ echo source ~/.gdbinit-gef.py >> ~/.gdbinit
 > If we use `mov rax, [rsp+10]`, it will actually move the value at `[rsp+10]` to `rax`. We cannot move a pointer with an offset using `mov`.
 
 ### Arithmetic Instructions
+- We will split arithmetic instructions into two types: instructions that take only one operand (Unary), instructions that take two operands (Binary).
+
+#### Unary Instructions
+- The following are the main Unary Arithmetic Instructions (we will assume that rax starts as 1 for each instruction):
+
+|Instruction|	Description	|Example|
+|----|--------------------|---------|
+|inc|	Increment by 1|	inc rax -> rax++ or rax += 1 -> rax = 2|
+|dec|	Decrement by 1|	dec rax -> rax-- or rax -= 1 -> rax = 0|
+
+
+#### Binary Instructions
+
+|Instruction|	Description	|Example|
+|-----------|-------------|--------|
+|add|	Add both operands	|add rax, rbx -> rax = 1 + 1 -> 2|
+|sub	|Subtract Source from Destination (i.e rax = rax - rbx)|	sub rax, rbx -> rax = 1 - 1 -> 0|
+|imul|	Multiply both operands	|imul rax, rbx -> rax = 1 * 1 -> 1|
+
+
+#### Bitwise Instructions
+
+
+|Instruction|	Description|	Example|
+|-----------|------------|---------|
+|not|	Bitwise NOT (invert all bits, 0->1 and 1->0)	|not rax -> NOT 00000001 -> 11111110|
+|and|	Bitwise AND (if both bits are 1 -> 1, if bits are different -> 0)|	and rax, rbx -> 00000001 AND 00000010 -> 00000000|
+|or|	Bitwise OR (if either bit is 1 -> 1, if both are 0 -> 0)|	or rax, rbx -> 00000001 OR 00000010 -> 00000011|
+|xor|	Bitwise XOR (if bits are the same -> 0, if bits are different -> 1)|	xor rax, rbx -> 00000001 XOR 00000010 -> 00000011|
+
+- `xor`ing our registers with themselves turned each of them to 0's
+
+## Control Instructions
