@@ -3,6 +3,7 @@
 - [OAuth grant types](#oauth-grant-types)
     - [Authorization code grant type](#authorization-code-grant-type)
     - [Implicit grant type](#implicit-grant-type)
+- [Testing](#testing)
 
 ![OAuth flow diagram](../../images/OAuth%20Flow.jpg)
 
@@ -52,8 +53,18 @@ GET /callback#access_token=z0y9x8w7v6u5&token_type=Bearer&expires_in=5000&scope=
 Host: client-app.com
 ```
 
+## Testing
+
+- Once you know the hostname of the authorization server, you should always try sending a GET request to the following standard endpoints:
+```
+/.well-known/oauth-authorization-server
+/.well-known/openid-configuration
+```
+- [ ] Vulnerabilities in the client application
+    - [ ] Check Flow of Authentication whether token is tied to this user or not
 
 
+- [ ] Vulnerabilities in the OAuth service
 
 
 ## Resources
