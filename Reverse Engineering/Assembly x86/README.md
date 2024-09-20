@@ -20,6 +20,8 @@
     - [Bitwise Instructions](#bitwise-instructions)
 - [Control Instructions](#control-instructions)
   - [Loops](#loops)
+  - [Unconditional Branching](#unconditional-branching)
+  - [Conditional Branching](#conditional-branching)
 
 
 
@@ -355,7 +357,47 @@ echo source ~/.gdbinit-gef.py >> ~/.gdbinit
 ## Control Instructions
 ### Loops
 
+- Types of Control Instructions include:
+
+  - Loops	
+  - Branching	
+  - Function Calls
+
+#### **Loop Structure**
+  -  A loop in assembly is a set of instructions that repeat for `rcx` times.
+  - Example:
+  ```
+  exampleLoop:
+    instruction 1
+    instruction 2
+    instruction 3
+    instruction 4
+    instruction 5
+    loop exampleLoop
+  ```
+
+> [!NOTE]
+> Before we enter any loop, we should `mov` the number of loop iterations we want to the `rcx` register.
+
+### Unconditional Branching
+
+|Instruction|	Description	|Example|
+|----------|--------------|-------|
+|jmp|	Jumps to specified label, address, or location|	jmp loop|
 
 
+### Conditional Branching
 
+- The following are some of the main condition codes:
+
+|Instruction|	Condition|	Description|
+|-----------|----------|-------------|
+|jz|	D = 0|	Destination equal to Zero|
+|jnz|	D != 0|	Destination Not equal to Zero|
+|js	|D < 0|	Destination is Negative|
+|jns|	D >= 0|	Destination is Not Negative (i.e. 0 or positive)|
+|jg|	D > S|	Destination Greater than Source|
+|jge|	D >= S|	Destination Greater than or Equal Source|
+|jl|	D < S|	Destination Less than Source|
+|jle|	D <= S|	Destination Less than or Equal Source|
 
