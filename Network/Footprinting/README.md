@@ -56,7 +56,7 @@ telnet TARGET_IP 21
     - Connecting to the server's share with null session `smbclient -N -L //TARGET_IP`
     - Shares that ended with `$` are already included by default in the basic setting
     - We can see who, from which host, and which share the client is connected `sudo smbstatus`
-- Smbclient allows us to execute local system commands using an exclamation mark at the beginning (!<cmd>)
+- Smbclient allows us to execute local system commands using an exclamation mark at the beginning `(!<cmd>)`
 
 ### **Dangerous Settings**
 
@@ -78,13 +78,13 @@ telnet TARGET_IP 21
 
 |Query|	Description|
 |:----|:-----------|
-|srvinfo|	Server information.|
-|enumdomains|	Enumerate all domains that are deployed in the network.|
-|querydominfo|	Provides domain, server, and user information of deployed domains.|
-|netshareenumall|	Enumerates all available shares.|
-|netsharegetinfo <share>|	Provides information about a specific share.|
-|enumdomusers|	Enumerates all domain users.|
-|queryuser <RID>|	Provides information about a specific user.|
+|`srvinfo`|	Server information.|
+|`enumdomains`|	Enumerate all domains that are deployed in the network.|
+|`querydominfo`|	Provides domain, server, and user information of deployed domains.|
+|`netshareenumall`|	Enumerates all available shares.|
+|`netsharegetinfo <share>`|	Provides information about a specific share.|
+|`enumdomusers`|	Enumerates all domain users.|
+|`queryuser <RID>`|	Provides information about a specific user.|
 
 > [!TIP]
 > Brute Forcing User RIDs
@@ -202,7 +202,7 @@ telnet TARGET_IP 21
 | 1 LSUB "" *               | Returns a subset of names from the set of names that the user has declared as being active or subscribed. |
 | 1 SELECT INBOX            | Selects a mailbox so that messages in the mailbox can be accessed.                                |
 | 1 UNSELECT INBOX          | Exits the selected mailbox.                                                                       |
-| 1 FETCH <ID> all          | Retrieves data associated with a message in the mailbox.                                          |
+| 1 FETCH 1 BODY[]          | Retrieves data associated with a message in the mailbox.                                          |
 | 1 CLOSE                   | Removes all messages with the Deleted flag set.                                                   |
 | 1 LOGOUT                  | Closes the connection with the IMAP server.                                                       |
 
@@ -263,9 +263,9 @@ telnet TARGET_IP 21
 
 |Settings	|     Description        |
 |:----------|:-----------------------|
-|rwuser noauth|	Provides access to the full OID tree without authentication.|
-|rwcommunity <community string> <IPv4 address>|	Provides access to the full OID tree regardless of where the requests were sent from.|
-|rwcommunity6 <community string> <IPv6 address>|	Same access as with rwcommunity with the difference of using IPv6.|
+|`rwuser noauth`|	Provides access to the full OID tree without authentication.|
+|`rwcommunity <community string> <IPv4 address>`|	Provides access to the full OID tree regardless of where the requests were sent from.|
+|`rwcommunity6 <community string> <IPv6 address>`|	Same access as with rwcommunity with the difference of using IPv6.|
 
 - We can use Onesixtyone can be used to brute-force the names of the community strings
 
@@ -286,15 +286,15 @@ telnet TARGET_IP 21
 
 - **MySQL Commands**
 
-|Command  | 	Description     |
-|:--------|:--------------------|
-|mysql -u <user> -p<password> -h <IP address>|	Connect to the MySQL server. There should not be a space between the '-p' flag, and the password.|
-|show databases;|	Show all databases.|
-|use <database>;|	Select one of the existing databases.|
-|show tables;|	Show all available tables in the selected database.|
-|show columns from <table>;|	Show all columns in the selected database.|
-|select * from <table>;|	Show everything in the desired table.|
-|select * from <table> where <column> = "<string>";|	Search for needed string in the desired table.|
+|                      Command                 | 	Description      |
+|:---------------------------------------------|:--------------------|
+|`mysql -u <user> -p<password> -h <IP address>`|	Connect to the MySQL server. There should not be a space between the '-p' flag, and the password.|
+|`show databases;`                             |	Show all databases.|
+|`use <database>;`                             |	Select one of the existing databases.|
+|`show tables;`                                |	Show all available tables in the selected database.|
+|`show columns from <table>;`                  |	Show all columns in the selected database.|
+|`select * from <table>;`                      |	Show everything in the desired table.|
+|`select * from <table> where <column> = "<string>";`|	Search for needed string in the desired table.|
 
 ### Dangerous Settings
 
