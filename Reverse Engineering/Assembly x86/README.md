@@ -401,3 +401,24 @@ echo source ~/.gdbinit-gef.py >> ~/.gdbinit
 |jl|	D < S|	Destination Less than Source|
 |jle|	D <= S|	Destination Less than or Equal Source|
 
+
+- **RFLAGS Register**
+  - The RFLAGS register consists of 64-bits like any other register. However, this register does not hold values but holds flag bits instead. Each bit 'or set of bits' turns to 1 or 0 depending on the value of the last instruction.
+  - The flags we would mostly be interested in are:
+
+    - The Carry Flag CF: Indicates whether we have a float.
+    - The Parity Flag PF: Indicates whether a number is odd or even.
+    - The Zero Flag ZF: Indicates whether a number is zero.
+    - The Sign Flag SF: Indicates whether a register is negative.
+
+- **CMP**
+
+|Instruction|	Description|	Example|
+|-----------|------------|----------|
+|cmp|	Sets RFLAGS by subtracting second operand from first operand (i.e. first - second)	|cmp rax, rbx -> rax - rbx|
+
+- The main advantage of 'cmp' is that it does not affect the operands.
+
+> [!NOTE]
+> In a cmp instruction, the first operand (i.e. the Destination) must be a register, while the other can be a register, a variable, or an immediate value.
+
