@@ -22,6 +22,11 @@
   - [Loops](#loops)
   - [Unconditional Branching](#unconditional-branching)
   - [Conditional Branching](#conditional-branching)
+- [Functions](#functions)
+  - [Using the Stack](#using-the-stack)
+  - [Syscalls](#syscalls)
+  
+
 
 
 
@@ -420,5 +425,20 @@ echo source ~/.gdbinit-gef.py >> ~/.gdbinit
 - The main advantage of 'cmp' is that it does not affect the operands.
 
 > [!NOTE]
-> In a cmp instruction, the first operand (i.e. the Destination) must be a register, while the other can be a register, a variable, or an immediate value.
+> In a `cmp` instruction, the first operand (i.e. the Destination) must be a register, while the other can be a register, a variable, or an immediate value.
+
+
+## Functions
+### Using the Stack
+- The top of the stack is referred to by the Top Stack Pointer `rsp`, while the bottom is referred to by the Base Stack Pointer `rbp`.
+
+|Instruction|	Description|	Example|
+|-----------|------------|---------|
+|push	|Copies the specified register/address to the top of the stack	|push rax|
+|pop	|Moves the item at the top of the stack to the specified register/address	|pop rax|
+
+- We use them when we get into function calls.
+
+
+### Syscalls
 
