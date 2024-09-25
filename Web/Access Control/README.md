@@ -53,7 +53,8 @@
     - site.com/secret.json –> HTTP 200 OK (ruby)
     - site.com/secret.anything -> HTTP 200 OK
 - [ ]  Bypass 403 by tampering with Referer header
-- [ ]  Bypass Blocked paths
+- [ ]  Bypass Blocked paths 
+    - Try Access allowed file after disallowed file e.g. If /data is forbidden Try /data/home
     - Try using // instead of / in the path
     - Try using /uploads/ instead of /uploads
     - Try using `.` or `%2e`: /%2e/path

