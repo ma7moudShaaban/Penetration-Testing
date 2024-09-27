@@ -50,6 +50,8 @@ telnet TARGET_IP 21
 
 
 ## SMB 
+- Initially, it was designed to run on top of NetBIOS over TCP/IP (NBT) using TCP port 139 and UDP ports 137 and 138.
+- With Windows 2000, Microsoft added the option to run SMB directly over TCP/IP on port 445 without the extra NetBIOS layer.
 - Samba: is a solution that enables the use of SMB in Linux and Unix distributions and thus cross-platform communication via SMB.
     - Samba implements the Common Internet File System (CIFS) network protocol.
     - When we pass SMB commands over Samba to an older NetBIOS service, it usually connects to the Samba server over `TCP ports 137, 138, 139`
@@ -95,16 +97,24 @@ telnet TARGET_IP 21
 > `samrdump.py TARGET_IP`
 
 - Alternatives for RPCclient are [SMBmap](https://github.com/ShawnDEvans/smbmap) , [CrackMapExec](https://github.com/byt3bl33d3r/CrackMapExec) and [enum4linux-ng](https://github.com/cddmp/enum4linux-ng) 
-
-    - `smbmap -H TARGET_IP`
+- **SMBmap**:
+    - `smbmap -H TARGET_IP `
+    - We can browse the directories: `smbmap -H 10.129.14.128 -r notes`
+    - Download file: `smbmap -H 10.129.14.128 --download "notes\note.txt"`
+    - Upload file: `smbmap -H 10.129.14.128 --upload test.txt "notes\test.txt"`
+- **CrackMapExec**
     - `crackmapexec smb TARGET_IP --shares -u '' -p ''`
-    - `./enum4linux-ng.py TARGET_IP -A`
+    - Enumerating Logged-on Users: `crackmapexec smb 10.10.110.0/24 -u administrator -p 'Password123!' --loggedon-users`
+    
+
+
+- `./enum4linux-ng.py TARGET_IP -A -C`
 
 
 
 - [ ] Check for Null session 
 - [ ] RPCclient
-    - [ ] `rpcclient -U "" TARGET_IP`
+    - [ ] `rpcclient -U '%' TARGET_IP`
 - [ ] enum4linux-ng 
 - [ ] Nmap
     - [ ] Scanning 139,445 ports `sudo nmap TARGET_IP -sV -sC -p139,445`
