@@ -367,6 +367,7 @@ telnet TARGET_IP 21
 
 ## MSSQL
 - MSSQL uses tcp port 1433.
+- When MSSQL operates in a "hidden" mode, it uses the TCP/2433 port.
 ### **Dangerous Settings**
 - MSSQL clients not using encryption to connect to the MSSQL server
 - The use of self-signed certificates when encryption is being used. It is possible to spoof self-signed certificates
