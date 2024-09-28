@@ -218,12 +218,25 @@ telnet TARGET_IP 21
 > Subdomain Brute forcing `for sub in $(cat /usr/share/seclists/Discovery/DNS/subdomains-top1million-110000.txt);do dig $sub.inlanefreight.htb @TARGET_IP | grep -v ';\|SOA' | sed -r '/^\s*$/d' | grep $sub | tee -a subdomains.txt;done`. 
 > Another tool work in the same way: `dnsenum --dnsserver TARGET_IP --enum -p 0 -s 0 -o subdomains.txt -f /usr/share/seclists/Discovery/DNS/subdomains-top1million-110000.txt inlanefreight.htb`
 
+- Subdomain Enumeration: 
+    - We can use subfinder or subbrute
+    ```
+    abdeonix@htb[/htb]$ git clone https://github.com/TheRook/subbrute.git >> /dev/null 2>&1
+    abdeonix@htb[/htb]$ cd subbrute
+    abdeonix@htb[/htb]$ echo "ns1.inlanefreight.com" > ./resolvers.txt
+    abdeonix@htb[/htb]$ ./subbrute inlanefreight.com -s ./names.txt -r ./resolvers.txt
+    ```
+- Tools like [Fierce](https://github.com/mschwager/fierce) can also be used to enumerate all DNS servers of the root domain and scan for a DNS zone transfer: `fierce --domain zonetransfer.me`
+
+
 
 - [ ] dig
     - [ ] `dig ns inlanefreight.htb @TARGET_IP`
     - [ ]  Query a DNS server's version `dig CH TXT version.bind TARGET_IP`
     - [ ] `dig any inlanefreight.htb @TARGET_IP`
-    - [ ] `dig axfr inlanefreight.htb @TARGET_IP`
+    - [ ] AXFR Zone Transfer: `dig axfr inlanefreight.htb @TARGET_IP`
+- [ ] Nmap
+    - [ ] `nmap -p53 -Pn -sV -sC 10.10.110.213`
 
 ## SMTP
 - SMTP is often combined with the IMAP or POP3 protocols.
