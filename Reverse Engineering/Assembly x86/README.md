@@ -26,7 +26,9 @@
   - [Using the Stack](#using-the-stack)
   - [Syscalls](#syscalls)
     - [Linux Syscall](#linux-syscall)
-    
+  - [Procedures](#procedures)
+  - [Functions](#functions-1)
+
   
 
 
@@ -227,7 +229,7 @@ section .data
 > If we were to assemble a 32-bit binary, we need to add the `-m elf_i386` flag.
 
 - Simple bash script to assemble, link and run the file:
-```
+```bash
 #!/bin/bash
 
 fileName="${1%%.*}" # remove .s extension
@@ -373,7 +375,7 @@ echo source ~/.gdbinit-gef.py >> ~/.gdbinit
 #### **Loop Structure**
   -  A loop in assembly is a set of instructions that repeat for `rcx` times.
   - Example:
-  ```
+```bash
   exampleLoop:
     instruction 1
     instruction 2
@@ -381,7 +383,7 @@ echo source ~/.gdbinit-gef.py >> ~/.gdbinit
     instruction 4
     instruction 5
     loop exampleLoop
-  ```
+```
 
 > [!NOTE]
 > Before we enter any loop, we should `mov` the number of loop iterations we want to the `rcx` register.
@@ -487,7 +489,7 @@ echo source ~/.gdbinit-gef.py >> ~/.gdbinit
 > rax is also used for storing the return value of a syscall or a function. So, if we were expecting to get a value back from a syscall/function, it will be in rax.
 
 4. Syscall assembly instructions
-```
+```bash
 mov rax, 1       ; rax: syscall number 1
 mov rdi, 1      ; rdi: fd 1 for stdout
 mov rsi,message ; rsi: pointer to message
@@ -495,8 +497,33 @@ mov rdx, 20      ; rdx: print length of 20 bytes
 ```
 
 - **Exit Syscall**:
-```
+
+```bash
 mov rax, 60
 mov rdi, 0
 syscall
 ```
+### Procedures
+- **Defining Procedures**
+
+- Example of define procedure: 
+```bash
+printMessage:
+mov rax, 1       ; rax: syscall number 1
+mov rdi, 1      ; rdi: fd 1 for stdout
+mov rsi,message ; rsi: pointer to message
+mov rdx, 20      ; rdx: print length of 20 bytes
+syscall         ; call write syscall to the intro message
+```
+- **CALL/RET**
+  - When we want to start executing a procedure, we can call it, and it will go through its instructions. The call instruction pushes (i.e., saves) the next instruction pointer rip to the stack and then jumps to the specified procedure.
+
+  - Once the procedure is executed, we should end it with a ret instruction to return to the point we were at before jumping to the procedure. The ret instruction pops the address at the top of the stack into rip, so the program's next instruction is restored to what it was before jumping to the procedure.
+
+
+|Instruction	| Description	 | Example|
+|-------------|--------------|--------|
+|call|	push the next instruction pointer rip to the stack, then jumps to the specified procedure	|call printMessage|
+|ret|	pop the address at rsp into rip, then jump to it|	ret|
+
+### Functions
