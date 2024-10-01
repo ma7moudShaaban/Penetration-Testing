@@ -25,6 +25,8 @@
 - [Functions](#functions)
   - [Using the Stack](#using-the-stack)
   - [Syscalls](#syscalls)
+    - [Linux Syscall](#linux-syscall)
+    
   
 
 
@@ -441,4 +443,60 @@ echo source ~/.gdbinit-gef.py >> ~/.gdbinit
 
 
 ### Syscalls
+- A syscall is like a globally available function written in C, provided by the Operating System Kernel
 
+#### Linux Syscall
+- There are many available syscalls provided by the Linux Kernel, and we can find a list of them and the syscall number of each one by reading the unistd_64.h system file: `cat /usr/include/x86_64-linux-gnu/asm/unistd_64.h`
+- This file sets the syscall number for each syscall to refer to that syscall using this number.
+
+> [!NOTE]
+> With 32-bit x86 processors, the syscall numbers are in the unistd_32.h file.
+
+- [Syscalls with their numbers](https://filippo.io/linux-syscall-table/) 
+- **Syscall Function Arguments**: 
+  - To find the arguments accepted by a syscall, we can use the man -s 2 command with the syscall name from the above list: `man -s 2 write`
+
+- To call a syscall, we have to:
+
+  1. Save registers to stack
+  2. Set its syscall number in rax
+  3. Set its arguments in the registers
+  4. Use the syscall assembly instruction to call it
+
+1. We usually should save any registers we use to the stack before any function call or syscall.
+
+2. Syscall Number: Let's start by moving the syscall number to the rax register.
+
+3. Syscall Arguments:
+- All functions and syscalls should follow this standard and take their arguments from the corresponding registers.
+
+|Description	| 64-bit Register	| 8-bit Register|
+|-------------|-----------------|---------------|
+|Syscall Number/Return value|	rax|	al|
+|Callee Saved	|rbx	|bl|
+|1st arg|	rdi|	dil|
+|2nd arg|	rsi|	sil|
+|3rd arg|	rdx|	dl|
+|4th arg|	rcx|	cl|
+|5th arg|	r8|	r8b|
+|6th arg|	r9|	r9b|
+
+- As we can see, we have a register for each of the first 6 arguments. Any additional arguments can be stored in the stack (though not many syscalls use more than 6 arguments.)
+
+> [!NOTE]
+> rax is also used for storing the return value of a syscall or a function. So, if we were expecting to get a value back from a syscall/function, it will be in rax.
+
+4. Syscall assembly instructions
+```
+mov rax, 1       ; rax: syscall number 1
+mov rdi, 1      ; rdi: fd 1 for stdout
+mov rsi,message ; rsi: pointer to message
+mov rdx, 20      ; rdx: print length of 20 bytes
+```
+
+- **Exit Syscall**:
+```
+mov rax, 60
+mov rdi, 0
+syscall
+```
