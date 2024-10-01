@@ -459,7 +459,6 @@ echo source ~/.gdbinit-gef.py >> ~/.gdbinit
   - To find the arguments accepted by a syscall, we can use the man -s 2 command with the syscall name from the above list: `man -s 2 write`
 
 - To call a syscall, we have to:
-
   1. Save registers to stack
   2. Set its syscall number in rax
   3. Set its arguments in the registers
@@ -527,3 +526,56 @@ syscall         ; call write syscall to the intro message
 |ret|	pop the address at rsp into rip, then jump to it|	ret|
 
 ### Functions
+- **Functions Calling Convention**
+  - There are four main things we need to consider before calling a function:
+
+    1. Save Registers on the stack (Caller Saved)
+    2. Pass Function Arguments (like syscalls)
+    3. Fix Stack Alignment
+    4. Get Function's Return Value (in rax)
+
+- Importing libc Functions: To import an external libc function, we can use the `extern` instruction at the beginning of our code.
+
+1. Saving Registers: Define a new procedure
+```bash
+print:
+    push rax        ; push registers to stack
+    push rbx
+    ; function call
+    pop rbx         ; restore registers from stack
+    pop rax
+    ret
+```
+
+2. Function Arguments
+- We need to find out what arguments are accepted by the printf function by using `man -s 3` e.g. `man -s 3 printf`
+
+3. Stack Alignment
+- Whenever we want to make a call to a function, we must ensure that the Top Stack Pointer (rsp) is aligned by the 16-byte boundary
+- If we were in a case where we wanted to bring the boundary up to 16, we can subtract bytes from rsp, as follows:
+```
+sub rsp, 16
+call function
+add rsp, 16
+```
+
+> [!WARNING]
+> We should have 16-bytes (or a multiple of 16) on top of the stack before making a call. We can count the number of (unpoped) push instructions and (unreturned) call instructions, and we will get how many 8-bytes have been pushed to the stack.
+
+4. Function call
+```bash
+printFib:
+    push rax            ; push registers to stack
+    push rbx
+    mov rdi, outFormat  ; set 1st argument (Print Format)
+    mov rsi, rbx        ; set 2nd argument (Fib Number)
+    call printf         ; printf(outFormat, rbx)
+    pop rbx             ; restore registers from stack
+    pop rax
+    ret
+```
+- Then we can call this function like procedures from any where.
+
+### Dynamic Linker
+
+- We can now assemble our code with nasm. When we link our code with ld, we should tell it to do dynamic linking with the libc library. Otherwise, it would not know how to fetch the imported printf function. We can do so with the `-lc --dynamic-linker /lib64/ld-linux-x86-64.so.2` flags: `nasm -f elf64 fib.s &&  ld fib.o -o fib -lc --dynamic-linker /lib64/ld-linux-x86-64.so.2 && ./fib`
