@@ -28,6 +28,7 @@
     - [Linux Syscall](#linux-syscall)
   - [Procedures](#procedures)
   - [Functions](#functions-1)
+    - [Dynamic Linker](#dynamic-linker)
 
   
 
@@ -576,6 +577,7 @@ printFib:
 ```
 - Then we can call this function like procedures from any where.
 
-### Dynamic Linker
+#### Dynamic Linker
 
 - We can now assemble our code with nasm. When we link our code with ld, we should tell it to do dynamic linking with the libc library. Otherwise, it would not know how to fetch the imported printf function. We can do so with the `-lc --dynamic-linker /lib64/ld-linux-x86-64.so.2` flags: `nasm -f elf64 fib.s &&  ld fib.o -o fib -lc --dynamic-linker /lib64/ld-linux-x86-64.so.2 && ./fib`
+
