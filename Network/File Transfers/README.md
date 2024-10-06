@@ -30,10 +30,6 @@
 
 
 
-
-
-
-
 ## Windows File Transfer Methods
 ### Download Operations
 #### PowerShell Base64 Encode & Decode
