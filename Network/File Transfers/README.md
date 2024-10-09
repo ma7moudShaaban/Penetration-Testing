@@ -511,3 +511,4 @@ abdeonix@htb[/htb]$ xfreerdp /v:10.10.10.132 /d:HTB /u:administrator /p:'Passwor
 - To access the directory, we can connect to \\tsclient\, allowing us to transfer files to and from the RDP session.
 
 ![RDP file transfer](/images/RDP%20File%20transfer.jpg)
+
