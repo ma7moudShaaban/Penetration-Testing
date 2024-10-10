@@ -666,3 +666,4 @@ abdeonix@htb[/htb]$ openssl enc -aes256 -iter 100000 -pbkdf2 -in /etc/passwd -ou
 abdeonix@htb[/htb]$ openssl enc -d -aes256 -iter 100000 -pbkdf2 -in passwd.enc -out passwd      
 
 ```
+
