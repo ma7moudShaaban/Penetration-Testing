@@ -28,7 +28,7 @@
 - [Protected File Transfers](#protected-file-transfers)
     - [File Encryption on Windows](#file-encryption-on-windows)
     - [File Encryption on Linux](#file-encryption-on-linux)
-
+- [Catching Files over HTTP/S](#catching-files-over-https)
 
 
 
@@ -667,3 +667,5 @@ abdeonix@htb[/htb]$ openssl enc -d -aes256 -iter 100000 -pbkdf2 -in passwd.enc -
 
 ```
 
+## Catching Files over HTTP/S
+### Nginx - Enabling PUT
