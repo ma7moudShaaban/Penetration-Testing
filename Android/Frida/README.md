@@ -1,11 +1,13 @@
 # Frida
-- [Overview](#overview)
+- [Hooking](#hooking)
 - [Installation](#installation)
 - [Interaction with Frida](#interaction-with-frida)
+    - [Hooking a Function](#hooking-a-function)
+    - [Hooking Overloaded Functions](#hooking-overloaded-functions)
 - [Frida Gadget](#frida-gadget)
 
-## Overview
-Frida allows you to inject JavaScript code into applications during runtime, making it a powerful tool for dynamic analysis and debugging.
+## Hooking
+Hooking refers to the process of intercepting and modifying the behavior of functions or methods in an application or the Android system itself. For example, we can hook a method in our application and change its functionality by inserting our own implementation.
 
 ## Installation
 
@@ -26,9 +28,9 @@ Frida allows you to inject JavaScript code into applications during runtime, mak
 3. Push the Frida server to your emulator using ADB:
 `adb push /path/to/frida-server /data/local/tmp`
 
-4. Start the Frida server on the emulator:
+4. Start the Frida server:
 
-```
+```bash
 adb shell
 cd /data/local/tmp
 ./frida-server
@@ -42,26 +44,51 @@ cd /data/local/tmp
 
 - Spawn an application with Frida and attach a script:
 
- ```
+ ```bash
  frida -U -f PACKAGE_NAME -l ATTACHED_SCRIPT
  ``` 
    - This opens the REPL shell, a Frida CLI interface that emulates IPython/Cycript for rapid prototyping and debugging.
 
-### Example 1: Hooking a Function
-In a simple application with a sum function `x + y`, hook the function to sum custom values and check logs using ADB:
-```
+### Hooking a Function
+
+```java
 Java.perform(function() {
-    var my_cls = Java.use("com.example.allx256.frida_test.my_activity");
-    my_cls.fun.implementation = function(x, y) {
-        var ret = this.fun(2, 5);
-        return ret;
-    };
-});
+
+  var <class_reference> = Java.use("<package_name>.<class>");
+  <class_reference>.<method_to_hook>.implementation = function(<args>) {
+
+    /*
+      OUR OWN IMPLEMENTATION OF THE METHOD
+    */
+
+  }
+
+})
+```
+
+- `var <class_reference> = Java.use("<package_name>.<class>");`
+
+Here, you declare a variable `<class_reference>` to represent a Java class within the target Android application. You specify the class to be used with the Java.use function, which takes the class name as an argument. `<package_name>` represents the package name of the Android application, and `<class>` represents the class you want to interact with.
+
+- `<class_reference>.<method_to_hook>.implementation = function(<args>) {}`
+
+Within the selected class, you specify the method that you want to hook by accessing it using the `<class_reference>`.`<method_to_hook>` notation. This is where you can define your own logic to be executed when the hooked method is called.`<args>`represents the arguments passed to the function.
+
+
+### Hooking Overloaded Functions
+
+- When dealing with hooking methods that have arguments, it's important to specify the expected argument types using the `overload(arg_type)` keyword. Additionally, ensure that you include these specified arguments in your implementation when hooking the method. Here our check() function takes two integer arguments so we can specify it like this:
+
+```java
+a.check.overload(int, int).implementation = function(a, b) {
+
+  ...
+
+}
 
 ```
-### Example 2: Hooking Overloaded Functions
-For an application with overloaded functions, hook the overloaded function and manipulate the non-primitive data type like string, then check logs using ADB:
-```
+
+```java
 Java.perform(function() {
     var my_cls = Java.use("com.example.allx256.frida_test.my_activity");
     my_cls.fun.overload("java.lang.String").implementation = function(x) {
@@ -77,7 +104,7 @@ Java.perform(function() {
 ### Example 3: Using `Java.choose` for Dead Code Analysis
 In an application with dead code, use Java.choose to find an instance of a class and execute its methods:
 
-```
+```java
 Java.perform(function() {
     Java.choose("com.example.allx256.frida_test.my_activity", {
         onMatch: function(instance) {
@@ -100,7 +127,7 @@ frida -U -p PROCESS_ID -l ATTACHED_SCRIPT
 For greater control over function calls, use Python bindings to interface between Python and JavaScript.
 - hook.js:
 
-```
+```java
 function CallSecretFunction() {
     Java.perform(function() {
         Java.choose("com.example.allx256.frida_test.my_activity", {
@@ -117,7 +144,7 @@ rpc.exports = { callsecretfrompython: CallSecretFunction };
 ```
 
 - hook.py:
-```
+```python
 import frida, time
 
 device = frida.get_usb_device()
@@ -141,17 +168,17 @@ while True:
 - If root detection is extreme, we can use **Frida Gadget**, which can be considered as a Frida server injected into the application.
 - We can inject Frida Gadget into the application and sign it using the [Frida Injector](https://github.com/Shapa7276/Frida-Injector) tool:
 
-    ```bash
+```bash
     python3 Frida-Injector.py -i TARGET_APK -m 1
-    ```
+```
 
 - Once injected, we can connect to the application using either Frida:
 
-    ```bash
+```bash
     frida -U -f Gadget -l ATTACHED_SCRIPT
-    ```
+```
 
-  or the [Objection](https://github.com/sensepost/objection) Framework.
+or the [Objection](https://github.com/sensepost/objection) Framework.
 
 > [!NOTE]  
 > Ensure the application is open before starting Objection.
