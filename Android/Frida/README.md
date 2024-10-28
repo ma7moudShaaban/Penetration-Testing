@@ -4,6 +4,7 @@
 - [Interaction with Frida](#interaction-with-frida)
     - [Hooking a Function](#hooking-a-function)
     - [Hooking Overloaded Functions](#hooking-overloaded-functions)
+    - [Calling a Static Function](#calling-a-static-function)
 - [Frida Gadget](#frida-gadget)
 
 ## Hooking
@@ -100,6 +101,18 @@ Java.perform(function() {
 });
 
 ```
+### Calling a Static Function
+
+```java
+
+Java.perform(function() {
+
+    var <class_reference> = Java.use("<package_name>.<class>");
+    <class_reference>.<static_method>();
+
+})
+```
+- This is the template that we can use to call a static method. We can just use the `<class_reference>.<method>` to invoke the method.
 
 ### Example 3: Using `Java.choose` for Dead Code Analysis
 In an application with dead code, use Java.choose to find an instance of a class and execute its methods:
