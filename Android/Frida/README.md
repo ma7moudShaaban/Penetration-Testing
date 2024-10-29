@@ -3,8 +3,11 @@
 - [Installation](#installation)
 - [Interaction with Frida](#interaction-with-frida)
     - [Hooking a Function](#hooking-a-function)
+        - [Changing the value of variable](#changing-the-value-of-variable)
     - [Hooking Overloaded Functions](#hooking-overloaded-functions)
     - [Calling a Static Function](#calling-a-static-function)
+    - [Create a Class Instance](#create-a-class-instance)
+    - [Invoking methods on an existing instance or Calling Dead Code](#invoking-methods-on-an-existing-instance-or-calling-dead-code)
 - [Frida Gadget](#frida-gadget)
 
 ## Hooking
@@ -75,6 +78,15 @@ Here, you declare a variable `<class_reference>` to represent a Java class withi
 
 Within the selected class, you specify the method that you want to hook by accessing it using the `<class_reference>`.`<method_to_hook>` notation. This is where you can define your own logic to be executed when the hooked method is called.`<args>`represents the arguments passed to the function.
 
+#### Changing the value of variable
+```java
+Java.perform(function (){
+
+    var <class_reference> = Java.use("<package_name>.<class>");
+    <class_reference>.<variable>.value = <value>;
+
+})
+```
 
 ### Hooking Overloaded Functions
 
@@ -114,8 +126,54 @@ Java.perform(function() {
 ```
 - This is the template that we can use to call a static method. We can just use the `<class_reference>.<method>` to invoke the method.
 
-### Example 3: Using `Java.choose` for Dead Code Analysis
-In an application with dead code, use Java.choose to find an instance of a class and execute its methods:
+
+### Create a Class Instance 
+
+```java
+Java.perform(function() {
+
+  var <class_reference> = Java.use("<package_name>.<class>");
+  var <class_instance> = <class_reference>.$new(); // Class Object
+  <class_instance>.<method>(); // Calling the method
+
+})
+
+```
+- In Frida, to create an instance of a Java class, you can use the $new() method. This is a Frida-specific method allows you to instantiate objects of a particular class.
+
+### Invoking methods on an existing instance or Calling Dead Code 
+- For invoking methods on an existing instance can be easily done by frida. For this we will be using an two APIs.
+
+    - `Java.performNow` : function that is used to execute code within the context of the Java runtime.
+
+    - `Java.choose`: enumerates through instances of the specified Java class (provided as the first argument) at runtime.
+
+- Let me show you a template:
+
+```java
+Java.performNow(function() {
+  Java.choose('<Package>.<class_Name>', {
+    onMatch: function(instance) {
+      // TODO
+    },
+    onComplete: function() {}
+  });
+});
+```
+- There are two callbacks in this:
+
+    - onMatch
+        - The onMatch callback function is executed for each instance of the specified class found during the Java.choose operation.
+        - This callback function receives the current instance as its parameter.
+        - You can define custom actions within the `onMatch` callback to be performed on each instance.
+        - `function(instance) {}`, the instance parameter represents each matched instance of the target class. You can use any other name you want.
+    - onComplete
+        The `onComplete` callback performs actions or cleanup tasks after the `Java.choose` operation is completed. This block is optional, and you can choose to leave it empty if you don't need to perform any specific actions after the search is finished.
+
+
+
+
+- Example: In an application with dead code, use Java.choose to find an instance of a class and execute its methods:
 
 ```java
 Java.perform(function() {
@@ -129,7 +187,7 @@ Java.perform(function() {
 });
 
 ```
->[!NOTE]
+>[!TIP]
 > The previous code may not output results in the REPL shell because it executes before the application is fully loaded into memory. To solve this, use Frida's ability to attach a script to an already running process:
 ```
 frida -U -p PROCESS_ID -l ATTACHED_SCRIPT
