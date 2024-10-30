@@ -8,6 +8,10 @@
     - [Calling a Static Function](#calling-a-static-function)
     - [Create a Class Instance](#create-a-class-instance)
     - [Invoking methods on an existing instance or Calling Dead Code](#invoking-methods-on-an-existing-instance-or-calling-dead-code)
+    - [Hooking a Constructor](#hooking-a-constructor)
+    - [Using Python Bindings for Extended Control](#using-python-bindings-for-extended-control)
+    - [Hooking the native functions](#hooking-the-native-functions)
+
 - [Frida Gadget](#frida-gadget)
 
 ## Hooking
@@ -194,7 +198,25 @@ frida -U -p PROCESS_ID -l ATTACHED_SCRIPT
 
 ```
 
-### Example 4: Using Python Bindings for Extended Control
+
+### Hooking a Constructor 
+
+
+```java
+Java.perform(function() {
+  var <class_reference> = Java.use("<package_name>.<class>");
+  <class_reference>.$init.implementation = function(<args>){
+
+    /*
+
+    */
+
+  }
+});
+```
+
+
+### Using Python Bindings for Extended Control
 For greater control over function calls, use Python bindings to interface between Python and JavaScript.
 - hook.js:
 
@@ -234,6 +256,39 @@ while True:
         break
 
 ```
+
+### Hooking the native functions
+- To hook native functions, we can use the `Interceptor` API. Now, let's see the template for this.
+
+```java
+Interceptor.attach(targetAddress, {
+    onEnter: function (args) {
+        console.log('Entering ' + functionName);
+        // Modify or log arguments if needed
+    },
+    onLeave: function (retval) {
+        console.log('Leaving ' + functionName);
+        // Modify or log return value if needed
+    }
+});
+
+```
+- `Interceptor.attach`: Attaches a callback to the specified function address. The `targetAddress` should be address of the native function we want to hook.
+- `onEnter`: This callback is called when the hooked function is entered. It provides access to the function arguments (`args`).
+- `onLeave`: This callback is called when the hooked function is about to exit. It provides access to the return value (`retval`).
+
+- Now the next question is how to get the address of a particular function in frida, there are plenty of ways to do that. Let me show you some API's to do this.
+
+    - Using the frida API : `Module.enumerateExports()`
+    - Using the frida API : `Module.getExportByName()`
+    - Using the frida API : `Module.findExportByName()`
+    - Calculate the offset and `add()` it to the `Module.getBaseAddress()` address
+    - Using the frida API : `Module.enumerateImports()`
+
+- Exports refer to the functions or variables a library provides for external use, such as the functions we use daily in programming languages like Python and C. Imports are functions or variables imported by our application. For example, in our app, we import libraries like `libc.so` to access standard functions like `strcmp`
+
+
+
 ## Frida Gadget
 
 - If root detection is extreme, we can use **Frida Gadget**, which can be considered as a Frida server injected into the application.
