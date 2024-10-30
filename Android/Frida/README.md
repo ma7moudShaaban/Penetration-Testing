@@ -11,7 +11,7 @@
     - [Hooking a Constructor](#hooking-a-constructor)
     - [Using Python Bindings for Extended Control](#using-python-bindings-for-extended-control)
     - [Hooking the native functions](#hooking-the-native-functions)
-
+    - [Changing the return value of a native function](#changing-the-return-value-of-a-native-function)
 - [Frida Gadget](#frida-gadget)
 
 ## Hooking
@@ -286,6 +286,70 @@ Interceptor.attach(targetAddress, {
     - Using the frida API : `Module.enumerateImports()`
 
 - Exports refer to the functions or variables a library provides for external use, such as the functions we use daily in programming languages like Python and C. Imports are functions or variables imported by our application. For example, in our app, we import libraries like `libc.so` to access standard functions like `strcmp`
+
+- **Module.enumerateExports() :** This API enumerates all exports (symbols) from a specified module. The exported functions are used by our application in the Java space. It takes one argument, which is the name of the module (shared library or executable) for which you want to enumerate exports.
+
+- **Module.getExportByName() :** The `Module.getExportByName(modulename, exportName)` function retrieves the address of the exported symbol with the given name from the module (shared library). If you don't know in which library your exported symbol is located, you can pass `null`.
+
+- **Module.findExportByName() :** It's the same as `Module.getExportByName()`. The only difference is that Module.`getExportByName()` raises an exception if the export is not found, while `Module.findExportByName()` returns `null` if the export is not found. 
+
+- **Module.getBaseAddress() :** Sometimes if the above API's don't work we can rely on the `Module.getBaseAddress()` , This API returns the base address of the given module. if we want to find the address of a specific function, we can just add the offset. To find the offset we can use ghidra.
+  - Ghidra loads binaries with a default base address of 0x100000, so we should subtract the base address from the offset to obtain the offset: `Module.getBaseAddress(<native_lib.so>).add(<offset>)`
+
+- **Module.enumerateImports() :** Similar to `Module.enumerateExports()` we have the `Module.enumerateImports()` that will give us the imports of a module.
+
+- For reading a string from the memory using frida. We can use `Memory.readUtf8String()` API. 
+
+- Example (Dumping args and filter strings that contains HTB keyword only):
+
+```java
+var strcmp_adr = Module.findExportByName("libc.so", "strcmp");
+Interceptor.attach(strcmp_adr, {
+    onEnter: function (args) {
+        var arg0 = Memory.readUtf8String(args[0]); // first argument
+        var flag = Memory.readUtf8String(args[1]); // second argument
+        if (flag.includes("HTB")) {
+
+            console.log("Hookin the strcmp function");
+            console.log("Input " + arg0);
+            console.log("The flag is "+ flag);
+
+        }
+    },
+    onLeave: function (retval) {
+        // Modify or log return value if needed
+    }
+});
+```
+### Changing the return value of a native function
+- We can leave the `onEnter` block empty and use the `onLeave` block to change the return value. The `retval` contains the original return value. We can change this using `retval.repalce()`.
+
+```java
+var check_flag = Module.enumerateExports("libc.so")[0]['address']
+Interceptor.attach(check_flag, {
+    onEnter: function () {
+
+    },
+    onLeave: function (retval) {
+        console.log("Original return value :" + retval);
+        retval.replace(1337)  // changing the return value to 1337.
+    }
+});
+```
+### Calling a Native Function
+
+- Template:
+```java
+var native_adr = new NativePointer(<address_of_the_native_function>);
+const native_function = new NativeFunction(native_adr, '<return type>', ['argument_data_type']);
+native_function(<arguments>);
+```
+- `var native_adr = new NativePointer(<address_of_the_native_function>);` 
+  - To call a native function in frida, we need an NativePointer object. We should the pass the address of the native function we want to call to the NativePointer constructor. Next, we will create the NativeFunction object , this represents the actual native function we want to call. It creates a JavaScript wrapper around a native function, allowing us to call that native function from frida
+- `const native_function = new NativeFunction(native_adr, '<return type>', ['argument_data_type']);`
+  - The first argument should the NativePointer object, Second argument is the return type of the native function, the third argument is a list of the data types of the arguments to be passed to the native function.
+- `native_function(<arguments>);`
+  - Calling the function
 
 
 
