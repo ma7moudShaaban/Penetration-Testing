@@ -12,6 +12,8 @@
     - [Using Python Bindings for Extended Control](#using-python-bindings-for-extended-control)
     - [Hooking the native functions](#hooking-the-native-functions)
     - [Changing the return value of a native function](#changing-the-return-value-of-a-native-function)
+    - [Calling a Native Function](#calling-a-native-function)
+    - [Patching instructions using X86Writer and ARM64Writer](#patching-instructions-using-x86writer-and-arm64writer)
 - [Frida Gadget](#frida-gadget)
 
 ## Hooking
@@ -350,6 +352,9 @@ native_function(<arguments>);
   - The first argument should the NativePointer object, Second argument is the return type of the native function, the third argument is a list of the data types of the arguments to be passed to the native function.
 - `native_function(<arguments>);`
   - Calling the function
+
+### Patching instructions using X86Writer and ARM64Writer
+
 
 
 
