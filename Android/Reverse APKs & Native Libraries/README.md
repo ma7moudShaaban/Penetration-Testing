@@ -5,14 +5,19 @@
 This guide provides steps to reverse native libraries in an Android APK. The primary tool used is `apktool`, which helps in decompiling the APK file. Additionally, you can search for specific functions within the decompiled code.
 
 ## Reverse APKs 
-- Java Applications:
+- **Java Applications:**
    - Just open the apk using `jadx-gui` 
 
-- Xamarin Applications:
+- **Xamarin Applications:**
    1. Decompile the apk using `apktool` 
    2. Investigate dll files in `/unknown/assemblies`, then we found the dll with APPLICATION_NAME.dll
    3. Decompress the dll files using [XALZ](https://github.com/x41sec/tools/blob/master/Mobile/Xamarin/Xamarin_XALZ_decompress.py)
    4. Decompile the dll file using dnspy
+
+- **React Native Applications:**
+   - Disassemble Herms bytecode or Hermes JavaScript bytecode file found in assets directory using this [tool](https://github.com/P1sec/hermes-dec) 
+> [!NOTE]
+> File `index.android.bundle` is a file used in React Native development. It contains the compiled and bundled JavaScript code for your app. This file is used when you want to install the application via Android Studio without running the metro bundler.
 
 
 
