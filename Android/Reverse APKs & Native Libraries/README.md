@@ -20,7 +20,9 @@ This guide provides steps to reverse native libraries in an Android APK. The pri
 > File `index.android.bundle` is a file used in React Native development. It contains the compiled and bundled JavaScript code for your app. This file is used when you want to install the application via Android Studio without running the metro bundler.
 
 
-
+- **Games created by Godot Engine**
+   - You can identify using metadata in AndroidManifest.xml
+   - Use this [tool](https://github.com/bruvzg/gdsdecomp) to decombile the apk
 
 ## Reverse Native Libraries
 ### Steps
