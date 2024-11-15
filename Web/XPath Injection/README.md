@@ -117,3 +117,5 @@
 > [!NOTE]
 > The wildcard `*` matches any node but not any descendants like `//` does. Therefore, we need to specify the correct amount of wildcards in our query. In our example XML document, the query `/*/*/title` returns all module titles, but the query `/*/title` returns nothing.
 
+
+## Authentication Bypass

