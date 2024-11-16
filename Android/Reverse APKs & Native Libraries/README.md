@@ -35,6 +35,7 @@ This guide provides steps to reverse native libraries in an Android APK. The pri
     ```
 
 2. **Search for Functions:**
+### Dynamic Linking
 
 - You can search for specific functions using the following pattern:
 
@@ -45,5 +46,60 @@ This guide provides steps to reverse native libraries in an Android APK. The pri
    - FUNCTIONNAME: The name of the function.
 - This will help in identifying and analyzing the desired function in the decompiled code.
 
+### Static Linking
+- We must use the RegisterNatives API in order to do the pairing between the Java-declared native method and the function in the native library.
+
+> ![NOTE]
+> The `RegisterNatives` function is called from the native code, not the Java code and is most often called in the `JNI_OnLoad` function since RegisterNatives must be executed prior to calling the Java-declared native method.
+
+```C
+jint RegisterNatives(JNIEnv *env, jclass clazz, const JNINativeMethod *methods, jint nMethods);
+
+typedef struct { 
+    char *name; 
+    char *signature; 
+    void *fnPtr; 
+} JNINativeMethod;
+```
+
+- If the application is using the static linking method, we as analysts can find the `JNINativeMethod` struct that is being passed to `RegisterNatives` in order to determine which subroutine in the native library is executed when the Java-declared native method is called.
+
+- The `JNINativeMethod` struct requires a string of the Java-declared native method name and a string of the method’s signature, so we should be able to find these in our native library.
+
+- Method Signature:
+   - Z: boolean
+   - B: byte
+   - C: char
+   - S: short
+   - I: int
+   - J: long
+   - F: float
+   - D: double
+   - L fully-qualified-class ; :fully-qualified-class
+   - [ type: type[]
+   - ( arg-types ) ret-type: method type
+   - V: void
+
+- Example: For the native method
+```java
+public native String doThingsInNativeLibrary(int var0);
+```
+The type signature is 
+```
+(I)Ljava/lang/String;
+```
+
+- Here is another example:
+```java
+public native long f (int n, String s, int[] arr); 
+```
+the type signature is 
+```
+(ILjava/lang/String;[I)J
+```
+
+
+
+
 ## Additional Information
-- For more detailed information on using apktool and other reverse engineering tools, please refer to the official [apktool documentation](https://apktool.org/).
+- For more detailed information on using apktool, please refer to the official [apktool documentation](https://apktool.org/).
