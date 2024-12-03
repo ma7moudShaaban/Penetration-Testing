@@ -37,7 +37,7 @@ telnet TARGET_IP 21
 
 - [ ] Check for Anonymous Login
 - [ ] Check if we have the permissions to upload files to the FTP server
-- [ ] Try brute forcing with medusa `medusa -u fiona -P /usr/share/wordlists/rockyou.txt -h 10.129.203.7 -M ftp `
+- [ ] Try bruteforcing with medusa `medusa -u fiona -P /usr/share/wordlists/rockyou.txt -h 10.129.203.7 -M ftp `
 - [ ] Nmap
     - [ ] Scanning TCP port 21 `sudo nmap -sV -p21 -sC -A TARGET_IP`
     - [ ] Scanning with Nmap Scripts `find / -type f -name ftp* 2>/dev/null | grep scripts`
@@ -248,6 +248,11 @@ telnet TARGET_IP 21
 - [ ] Nmap 
     - [ ] `sudo nmap TARGET_IP -sC -sV -p25` 
     - [ ] `sudo nmap TARGET_IP -p25 --script smtp-open-relay -v`
+- [ ] Host
+    - [ ] `host -t MX hackthebox.eu`
+    - [ ] `host -t A mail1.inlanefreight.htb.`
+- [ ] Dig
+    - [ ] `dig mx plaintext.do | grep "MX" | grep -v ";"`
 
 ## IMAP / POP3
 - Internet Message Access Protocol (IMAP) allows online management of emails directly on the server and supports folder structures. , Post Office Protocol (POP3) only provides listing, retrieving, and deleting emails as functions at the email server.
