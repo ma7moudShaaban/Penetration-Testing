@@ -5,6 +5,8 @@
     - [Enumeration of the Domain](#enumeration-of-the-domain)
         - [Identifying Hosts](#identifying-hosts)
         - [Identifying Users](#identifying-users)
+- [Sniffing out a Foothold](#sniffing-out-a-foothold)
+    - [LLMNR/NBT-NS Poisoning - from Linux](#llmnrnbt-ns-poisoning---from-linux)
 
 
 
@@ -100,3 +102,6 @@
 
     
     ```
+
+## Sniffing out a Foothold
+### LLMNR/NBT-NS Poisoning - from Linux
