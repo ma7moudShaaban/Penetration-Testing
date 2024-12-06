@@ -105,3 +105,22 @@
 
 ## Sniffing out a Foothold
 ### LLMNR/NBT-NS Poisoning - from Linux
+- Link-Local Multicast Name Resolution (LLMNR) and NetBIOS Name Service (NBT-NS) are Microsoft Windows components that serve as alternate methods of host identification that can be used when DNS fails.
+- **LLMNR**
+    - If a machine attempts to resolve a host but DNS resolution fails, typically, the machine will try to ask all other machines on the local network for the correct host address via LLMNR.
+    - LLMNR is based upon the Domain Name System (DNS) format.
+    - It uses port `5355` over UDP natively.
+- **NBT-NS**
+    - If LLMNR fails, the NBT-NS will be used.
+    - NBT-NS identifies systems on a local network by their NetBIOS name. 
+    - NBT-NS utilizes port `137` over UDP.
+
+- Tools can be used to attempt LLMNR & NBT-NS poisoning: [Responder](https://github.com/lgandx/Responder), [Inveigh](https://github.com/Kevin-Robertson/Inveigh) and [Metasploit](https://www.metasploit.com/)
+
+
+#### Responder 
+- The use of the `-w` flag utilizes the built-in WPAD proxy server. 
+- This can be highly effective, especially in large organizations, because it will capture all HTTP requests by any users that launch Internet Explorer if the browser has Auto-detect settings enabled.
+
+
+
