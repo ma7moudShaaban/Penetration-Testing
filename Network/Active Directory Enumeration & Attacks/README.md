@@ -10,6 +10,8 @@
         - [Responder](#responder)
     - [LLMNR/NBT-NS Poisoning - from Windows](#llmnrnbt-ns-poisoning---from-windows)
         - [Remediation](#Remediation)
+- [Password Spraying](#password-spraying)
+    - [Enumerating & Retrieving Password Policies](#enumerating--retrieving-password-policies)
 
 
 
@@ -195,3 +197,81 @@ GET NTLMV2                      | get captured NTLMv2 hashes; add search string 
     ![nbts-gpo-dc](/images/nbtns_gpo_dc.jpg)
 
     
+## Password Spraying
+### Enumerating & Retrieving Password Policies
+#### Enumerating the Password Policy - from Linux - Credentialed
+- Using Crackmapexec
+```bash
+crackmapexec smb 172.16.5.5 -u avazquez -p Password123 --pass-pol
+
+```
+
+#### Enumerating the Password Policy - from Linux - SMB NULL Sessions
+```bash
+# Using rpcclient
+abdeonix@htb[/htb]$ rpcclient -U "" -N 172.16.5.5
+rpcclient $> querydominfo
+
+Domain:		INLANEFREIGHT
+Server:		
+Comment:	
+Total Users:	3650
+Total Groups:	0
+Total Aliases:	37
+Sequence No:	1
+Force Logoff:	-1
+Domain Server State:	0x1
+Server Role:	ROLE_DOMAIN_PDC
+Unknown 3:	0x1
+rpcclient $> getdompwinfo
+min_password_length: 8
+password_properties: 0x00000001
+	DOMAIN_PASSWORD_COMPLEX
+
+
+# Using enum4linux-ng
+abdeonix@htb[/htb]$ enum4linux-ng -P 172.16.5.5 -oA ilfreight
+
+```
+
+#### Enumerating Null Session - from Windows
+```bat
+# Establish a null session from windows
+C:\htb> net use \\DC01\ipc$ "" /u:""
+The command completed successfully.
+
+```
+
+#### Enumerating the Password Policy - from Linux - LDAP Anonymous Bind
+
+```bash
+# Using ldapsearch
+ldapsearch -h 172.16.5.5 -x -b "DC=INLANEFREIGHT,DC=LOCAL" -s sub "*" | grep -m 1 -B 10 pwdHistoryLength
+```
+
+#### Enumerating the Password Policy - from Windows
+```bat
+# Using net.exe
+C:\htb> net accounts
+
+```
+
+```powershell
+# Using PowerView
+
+PS C:\htb> import-module .\PowerView.ps1
+PS C:\htb> Get-DomainPolicy
+
+Unicode        : @{Unicode=yes}
+SystemAccess   : @{MinimumPasswordAge=1; MaximumPasswordAge=-1; MinimumPasswordLength=8; PasswordComplexity=1;
+                 PasswordHistorySize=24; LockoutBadCount=5; ResetLockoutCount=30; LockoutDuration=30;
+                 RequireLogonToChangePassword=0; ForceLogoffWhenHourExpire=0; ClearTextPassword=0;
+                 LSAAnonymousNameLookup=0}
+KerberosPolicy : @{MaxTicketAge=10; MaxRenewAge=7; MaxServiceAge=600; MaxClockSkew=5; TicketValidateClient=1}
+Version        : @{signature="$CHICAGO$"; Revision=1}
+RegistryValues : @{MACHINE\System\CurrentControlSet\Control\Lsa\NoLMHash=System.Object[]}
+Path           : \\INLANEFREIGHT.LOCAL\sysvol\INLANEFREIGHT.LOCAL\Policies\{31B2F340-016D-11D2-945F-00C04FB984F9}\MACHI
+                 NE\Microsoft\Windows NT\SecEdit\GptTmpl.inf
+GPOName        : {31B2F340-016D-11D2-945F-00C04FB984F9}
+GPODisplayName : Default Domain Policy
+```
