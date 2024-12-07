@@ -341,3 +341,5 @@ kerbrute userenum -d inlanefreight.local --dc 172.16.5.5 /opt/jsmith.txt
 sudo crackmapexec smb 172.16.5.5 -u htb-student -p Academy_student_AD! --users
 
 ```
+
+
