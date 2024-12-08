@@ -15,7 +15,8 @@
     - [Password Spraying - Making a Target User List](#password-spraying---making-a-target-user-list)
     - [Internal Password Spraying - from Linux](#internal-password-spraying---from-linux)
     - [Internal Password Spraying - from Windows](#internal-password-spraying---from-windows)
-    
+    - [Mitigations](#mitigations)
+
 
 
 
@@ -383,3 +384,19 @@ sudo crackmapexec smb --local-auth 172.16.5.0/23 -u administrator -H 88ad09182de
 ```
 
 ### Internal Password Spraying - from Windows
+- Also, we can use kerbrute.
+- [DomainPasswordSpray](https://github.com/dafthack/DomainPasswordSpray) tool is highly effective.
+    - If we are authenticated to the domain, the tool will automatically generate a user list from Active Directory, query the domain password policy, and exclude user accounts within one attempt of locking out.
+    - We can also supply a user list to the tool if we are on a Windows host but not authenticated to the domain.
+```powershell
+# Using DomainPasswordSpray.ps1
+PS C:\htb> Import-Module .\DomainPasswordSpray.ps1
+PS C:\htb> Invoke-DomainPasswordSpray -Password Welcome1 -OutFile spray_success -ErrorAction SilentlyContinue
+
+```
+
+### Mitigations
+- Multi-factor Authentication
+- Restricting Access: In line with the principle of least privilege, access to the application should be restricted to those who require it.
+- Reducing Impact of Successful Exploitation: A quick win is to ensure that privileged users have a separate account for any administrative activities.Network segmentation is also recommended because if an attacker is isolated to a compromised subnet, this may slow down or entirely stop lateral movement and further compromise.
+- Password Hygiene: Educating users on selecting difficult to guess passwords such as passphrases can significantly reduce the efficacy of a password spraying attack.
