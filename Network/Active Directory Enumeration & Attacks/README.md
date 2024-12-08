@@ -16,6 +16,12 @@
     - [Internal Password Spraying - from Linux](#internal-password-spraying---from-linux)
     - [Internal Password Spraying - from Windows](#internal-password-spraying---from-windows)
     - [Mitigations](#mitigations)
+- [Enumerating Security Controls](#enumerating-security-controls)
+    - [Windows Defender](#windows-defender)
+    - [AppLocker](#applocker)
+    - [PowerShell Constrained Language Mode](#powershell-constrained-language-mode)
+    - [LAPS](#laps)
+
 
 
 
@@ -400,3 +406,74 @@ PS C:\htb> Invoke-DomainPasswordSpray -Password Welcome1 -OutFile spray_success 
 - Restricting Access: In line with the principle of least privilege, access to the application should be restricted to those who require it.
 - Reducing Impact of Successful Exploitation: A quick win is to ensure that privileged users have a separate account for any administrative activities.Network segmentation is also recommended because if an attacker is isolated to a compromised subnet, this may slow down or entirely stop lateral movement and further compromise.
 - Password Hygiene: Educating users on selecting difficult to guess passwords such as passphrases can significantly reduce the efficacy of a password spraying attack.
+
+
+## Enumerating Security Controls
+### Windows Defender
+
+- We can use the built-in PowerShell cmdlet `Get-MpComputerStatus` to get the current Defender status.
+- If the `RealTimeProtectionEnabled` parameter is set to True, which means Defender is enabled on the system.
+
+
+
+### AppLocker
+- An application whitelist is a list of approved software applications or executables that are allowed to be present and run on a system.
+- AppLocker is Microsoft's application whitelisting solution and gives system administrators control over which applications and files users can run.
+
+- Organizations also often focus on blocking the PowerShell.exe executable, but forget about the other PowerShell executable locations such as `%SystemRoot%\SysWOW64\WindowsPowerShell\v1.0\powershell.exe` or `PowerShell_ISE.exe`.
+
+```powershell
+# Using Get-AppLockerPolicy cmdlet
+PS C:\htb> Get-AppLockerPolicy -Effective | select -ExpandProperty RuleCollections
+
+```
+
+### PowerShell Constrained Language Mode
+- PowerShell Constrained Language Mode locks down many of the features needed to use PowerShell effectively, such as blocking COM objects, only allowing approved .NET types, XAML-based workflows, PowerShell classes, and more.
+```powershell
+# Enumerating Language Mode
+PS C:\htb> $ExecutionContext.SessionState.LanguageMode
+
+```
+
+### LAPS 
+- The Microsoft Local Administrator Password Solution (LAPS) is used to randomize and rotate local administrator passwords on Windows hosts and prevent lateral movement.
+
+-  We can enumerate what domain users can read the LAPS password set for machines with LAPS installed and what machines do not have LAPS installed. 
+    - The [LAPSToolkit](https://github.com/leoloobeek/LAPSToolkit) greatly facilitates this with several functions.
+
+```powershell
+# Using Find-LAPSDelegatedGroups
+PS C:\htb> Find-LAPSDelegatedGroups
+
+OrgUnit                                             Delegated Groups
+-------                                             ----------------
+OU=Servers,DC=INLANEFREIGHT,DC=LOCAL                INLANEFREIGHT\Domain Admins
+OU=Servers,DC=INLANEFREIGHT,DC=LOCAL                INLANEFREIGHT\LAPS Admins
+
+```
+
+- The `Find-AdmPwdExtendedRights` checks the rights on each computer with LAPS enabled for any groups with read access and users with "All Extended Rights." Users with "All Extended Rights" can read LAPS passwords and may be less protected than users in delegated groups, so this is worth checking for.
+
+```powershell
+# Using Find-AdmPwdExtendedRights
+PS C:\htb> Find-AdmPwdExtendedRights
+
+ComputerName                Identity                    Reason
+------------                --------                    ------
+EXCHG01.INLANEFREIGHT.LOCAL INLANEFREIGHT\Domain Admins Delegated
+EXCHG01.INLANEFREIGHT.LOCAL INLANEFREIGHT\LAPS Admins   Delegated
+```
+
+- We can use the `Get-LAPSComputers` function to search for computers that have LAPS enabled when passwords expire, and even the randomized passwords in cleartext if our user has access.
+
+```powershell
+# Using Get-LAPSComputers
+PS C:\htb> Get-LAPSComputers
+
+ComputerName                Password       Expiration
+------------                --------       ----------
+DC01.INLANEFREIGHT.LOCAL    6DZ[+A/[]19d$F 08/26/2020 23:29:45
+EXCHG01.INLANEFREIGHT.LOCAL oj+2A+[hHMMtj, 09/26/2020 00:51:30
+```
+
