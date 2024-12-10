@@ -28,6 +28,16 @@
     - [Impacket Toolkit](#impacket-toolkit)
     - [Windapsearch](#windapsearch)
     - [Bloodhound.py](#bloodhoundpy)
+- [Credentialed Enumeration - from Windows](#credentialed-enumeration---from-windows)
+    - [ActiveDirectory PowerShell Module](#activedirectory-powershell-module)
+    - [PowerView](#powerview)
+    - [SharpView](#sharpview)
+    - [Snaffler](#snaffler)
+
+
+
+
+
 
 
 
@@ -724,7 +734,143 @@ INFO: Starting computer enumeration with 10 workers
 - Once the script finishes, we will see the output files in the current working directory in the format of `<date_object.json>`.
 
 - **Upload the Zip File into the BloodHound GUI**
-    - We could then type sudo neo4j start to start the neo4j service, firing up the database we'll load the data into and also run Cypher queries against.
+    - We could then type `sudo neo4j start` to start the neo4j service, firing up the database we'll load the data into and also run Cypher queries against.
     - Start bloodhound GUI, then upload the data.
     - We can either upload each JSON file one by one or zip them first with a command such as `zip -r ilfreight_bh.zip *.json` and upload the Zip file.
     - [BloodHound Cypher cheatsheet](https://hausec.com/2019/09/09/bloodhound-cypher-cheatsheet/)
+
+
+
+## Credentialed Enumeration - from Windows
+### ActiveDirectory PowerShell Module
+- The ActiveDirectory PowerShell module is a group of PowerShell cmdlets for administering an Active Directory environment from the command line.
+- The `Get-Module` cmdlet will list all available modules, their version, and potential commands for use. If the module is not loaded, run `Import-Module ActiveDirectory` to load it for use.
+
+
+```powershell
+# Get Domain Info
+PS C:\htb> Get-ADDomain
+
+```
+
+- `Get-ADUser` cmdlet, we will be filtering for accounts with the `ServicePrincipalName` property populated. This will get us a listing of accounts that may be susceptible to a Kerberoasting attack.
+
+```powershell
+# Get-ADUser
+PS C:\htb> Get-ADUser -Filter {ServicePrincipalName -ne "$null"} -Properties ServicePrincipalName
+
+# Checking For Trust Relationships
+PS C:\htb> Get-ADTrust -Filter *
+
+# Group Enumeration
+PS C:\htb> Get-ADGroup -Filter * | select name
+
+# Detailed Group Info
+PS C:\htb> Get-ADGroup -Identity "Backup Operators"
+
+# Group Membership
+PS C:\htb> Get-ADGroupMember -Identity "Backup Operators"
+
+
+```
+
+- Utilizing the ActiveDirectory module on a host can be a stealthier way of performing actions than dropping a tool onto a host or loading it into memory and attempting to use it.
+
+### PowerView
+- The table below describes some of the most useful functions PowerView offers:
+
+|Command|	Description|
+|:------|:-------------|
+|Export-PowerViewCSV|	Append results to a CSV file|
+|ConvertTo-SID|	Convert a User or group name to its SID value|
+|Get-DomainSPNTicket|	Requests the Kerberos ticket for a specified Service Principal Name (SPN) account|
+|Domain/LDAP Functions:| |	
+|Get-Domain|	Will return the AD object for the current (or specified) domain|
+|Get-DomainController|	Return a list of the Domain Controllers for the specified domain|
+|Get-DomainUser|	Will return all users or specific user objects in AD|
+|Get-DomainComputer|	Will return all computers or specific computer objects in AD|
+|Get-DomainGroup|	Will return all groups or specific group objects in AD|
+|Get-DomainOU|	Search for all or specific OU objects in AD|
+|Find-InterestingDomainAcl|	Finds object ACLs in the domain with modification rights set to non-built in objects|
+|Get-DomainGroupMember|	Will return the members of a specific domain group|
+|Get-DomainFileServer|	Returns a list of servers likely functioning as file servers|
+|Get-DomainDFSShare|	Returns a list of all distributed file systems for the current (or specified) domain|
+|GPO Functions:| |	
+|Get-DomainGPO|	Will return all GPOs or specific GPO objects in AD|
+|Get-DomainPolicy|	Returns the default domain policy or the domain controller policy for the current domain|
+|Computer Enumeration Functions:| |	
+|Get-NetLocalGroup|	Enumerates local groups on the local or a remote machine|
+|Get-NetLocalGroupMember|	Enumerates members of a specific local group|
+|Get-NetShare|	Returns open shares on the local (or a remote) machine|
+|Get-NetSession|	Will return session information for the local (or a remote) machine|
+|Test-AdminAccess|	Tests if the current user has administrative access to the local (or a remote) machine|
+|Threaded 'Meta'-Functions:	| |
+|Find-DomainUserLocation|	Finds machines where specific users are logged in|
+|Find-DomainShare|	Finds reachable shares on domain machines|
+|Find-InterestingDomainShareFile|	Searches for files matching specific criteria on readable shares in the domain|
+|Find-LocalAdminAccess|	Find machines on the local domain where the current user has local administrator access|
+|Domain Trust Functions:||	
+|Get-DomainTrust|	Returns domain trusts for the current domain or a specified domain|
+|Get-ForestTrust|	Returns all forest trusts for the current forest or a specified forest|
+|Get-DomainForeignUser|	Enumerates users who are in groups outside of the user's domain|
+|Get-DomainForeignGroupMember|	Enumerates groups with users outside of the group's domain and returns each foreign member|
+|Get-DomainTrustMapping|	Will enumerate all trusts for the current domain and any others seen.|
+
+
+```powershell
+# Domain User Information
+PS C:\htb> Get-DomainUser -Identity mmorgan -Domain inlanefreight.local | Select-Object -Property name,samaccountname,description,memberof,whencreated,pwdlastset,lastlogontimestamp,accountexpires,admincount,userprincipalname,serviceprincipalname,useraccountcontrol
+
+
+# Recursive Group Membership
+PS C:\htb>  Get-DomainGroupMember -Identity "Domain Admins" -Recurse
+
+# Trust Enumeration
+PS C:\htb> Get-DomainTrustMapping
+
+# Testing for Local Admin Access
+PS C:\htb> Test-AdminAccess -ComputerName ACADEMY-EA-MS01
+
+
+# Finding Users With SPN Set
+PS C:\htb> Get-DomainUser -SPN -Properties samaccountname,ServicePrincipalName
+
+```
+
+
+### SharpView
+- Another tool worth experimenting with is SharpView, a .NET port of PowerView. Many of the same functions supported by PowerView can be used with SharpView.
+
+```powershell
+PS C:\htb> .\SharpView.exe Get-DomainUser -Help
+
+```
+
+
+### Snaffler
+- [Snaffler](https://github.com/SnaffCon/Snaffler) is a tool that can help us acquire credentials or other sensitive data in an Active Directory environment.
+- Snaffler works by obtaining a list of hosts within the domain and then enumerating those hosts for shares and readable directories.
+- Once that is done, it iterates through any directories readable by our user and hunts for files that could serve to better our position within the assessment. 
+- Snaffler requires that it be run from a domain-joined host or in a domain-user context.
+```powershell
+# Snaffler Execution
+Snaffler.exe -s -d inlanefreight.local -o snaffler.log -v data
+
+# -s tells it to print results to the console for us 
+# -d specifies the domain to search within
+# -o tells Snaffler to write results to a logfile. 
+# -v option is the verbosity level.
+
+```
+
+
+### BloodHound
+- First, we must authenticate as a domain user from a Windows attack host positioned within the network (but not joined to the domain) or transfer the tool to a domain-joined host.
+
+```powershell
+# Running SharpHound Collector
+PS C:\htb> .\SharpHound.exe -c All --zipfilename ILFREIGHT
+
+```
+
+- For running, type bloodhound into a CMD or PowerShell console
