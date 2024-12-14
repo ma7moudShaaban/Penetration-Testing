@@ -40,6 +40,8 @@
         - [Kerberoasting - Semi Manual method](#kerberoasting---from-windows)
         - [Automated / Tool Based Route](#automated--tool-based-route)
 - [ACLs - ACEs Abuse](#acls---aces-abuse)
+    - [ACL Enumeration](#acl-enumeration)
+    
 
 
 
@@ -1263,10 +1265,17 @@ PS C:\htb> .\Rubeus.exe kerberoast /tgtdeleg /user:forend /nowrap
 - **Access Control Entries (ACEs)**
     - Access Control Lists (ACLs) contain ACE entries that name a user or group and the level of access they have over a given securable object. There are three main types of ACEs that can be applied to all securable objects in AD:
 
-|ACE	| Description|
-|:------|:-----------|
-|Access denied ACE|	Used within a DACL to show that a user or group is explicitly denied access to an object|
-|Access allowed ACE|	Used within a DACL to show that a user or group is explicitly granted access to an object|
-|System audit ACE|	Used within a SACL to generate audit logs when a user or group attempts to access an object. It records whether access was granted or not and what type of access occurred|
+    |ACE	| Description|
+    |:------|:-----------|
+    |Access denied ACE|	Used within a DACL to show that a user or group is explicitly denied access to an object|
+    |Access allowed ACE|	Used within a DACL to show that a user or group is explicitly granted access to an object|
+    |System audit ACE|	Used within a SACL to generate audit logs when a user or group attempts to access an object. It records whether access was granted or not and what type of access occurred|
 
+    - Each ACE is made up of the following four components:
 
+        - The security identifier (SID) of the user/group that has access to the object (or principal name graphically)
+        - A flag denoting the type of ACE (access denied, allowed, or system audit ACE)
+        - A set of flags that specify whether or not child containers/objects can inherit the given ACE entry from the primary or parent object
+        - An access mask which is a 32-bit value that defines the rights granted to an object
+
+### ACL Enumeration
