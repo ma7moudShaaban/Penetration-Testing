@@ -43,6 +43,7 @@
     - [ACL Enumeration](#acl-enumeration)
         - [Enumerating ACLs with PowerView](#enumerating-acls-with-powerview)
         - [Enumerating ACLs with BloodHound](#enumerating-acls-with-bloodhound)
+    - [Abusing ACLs](#abusing-acls)
 
     
 
