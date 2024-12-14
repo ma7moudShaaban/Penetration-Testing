@@ -41,6 +41,9 @@
         - [Automated / Tool Based Route](#automated--tool-based-route)
 - [ACLs - ACEs Abuse](#acls---aces-abuse)
     - [ACL Enumeration](#acl-enumeration)
+        - [Enumerating ACLs with PowerView](#enumerating-acls-with-powerview)
+        - [Enumerating ACLs with BloodHound](#enumerating-acls-with-bloodhound)
+
     
 
 
@@ -1278,4 +1281,69 @@ PS C:\htb> .\Rubeus.exe kerberoast /tgtdeleg /user:forend /nowrap
         - A set of flags that specify whether or not child containers/objects can inherit the given ACE entry from the primary or parent object
         - An access mask which is a 32-bit value that defines the rights granted to an object
 
+![ACL Attacks Graphic](/images/ACL_attacks_graphic.jpg)
+
 ### ACL Enumeration
+#### Enumerating ACLs with PowerView
+
+- Get the SID of our target user to search effectively.
+```powershell
+PS C:\htb> Import-Module .\PowerView.ps1
+PS C:\htb> $sid = Convert-NameToSid wley
+
+
+```
+
+- We can then use the `Get-DomainObjectACL` function to perform our targeted search. We are using this function to find all domain objects that our user has rights over by mapping the user's SID using the `$sid` variable to the `SecurityIdentifier` property which is what tells us who has the given right over an object.
+
+```powershell
+# Using Get-DomainObjectACL and -ResolveGUIDs Flag
+
+PS C:\htb> Get-DomainObjectACL -ResolveGUIDs -Identity * | ? {$_.SecurityIdentifier -eq $sid} 
+
+AceQualifier           : AccessAllowed
+ObjectDN               : CN=Dana Amundsen,OU=DevOps,OU=IT,OU=HQ-NYC,OU=Employees,OU=Corp,DC=INLANEFREIGHT,DC=LOCAL
+ActiveDirectoryRights  : ExtendedRight
+ObjectAceType          : User-Force-Change-Password
+ObjectSID              : S-1-5-21-3842939050-3880317879-2865463114-1176
+InheritanceFlags       : ContainerInherit
+BinaryLength           : 56
+AceType                : AccessAllowedObject
+ObjectAceFlags         : ObjectAceTypePresent
+IsCallback             : False
+PropagationFlags       : None
+SecurityIdentifier     : S-1-5-21-3842939050-3880317879-2865463114-1181
+AccessMask             : 256
+AuditFlags             : None
+IsInherited            : False
+AceFlags               : ContainerInherit
+InheritedObjectAceType : All
+OpaqueLength           : 0
+
+```
+- **Alternatives for PowerView**  
+    - Using the Get-Acl and Get-ADUser
+        1. Creating a List of Domain Users: `PS C:\htb> Get-ADUser -Filter * | Select-Object -ExpandProperty SamAccountName > ad_users.txt`
+        2. A Useful foreach Loop: `PS C:\htb> foreach($line in [System.IO.File]::ReadLines("C:\Users\htb-student\Desktop\ad_users.txt")) {get-acl  "AD:\$(Get-ADUser $line)" | Select-Object Path -ExpandProperty Access | Where-Object {$_.IdentityReference -match 'INLANEFREIGHT\\wley'}}`
+        3. Performing a Reverse Search & Mapping to a GUID Value. 
+        ```powershell
+        PS C:\htb> $guid= "00299570-246d-11d0-a768-00aa006e0529"
+        PS C:\htb> Get-ADObject -SearchBase "CN=Extended-Rights,$((Get-ADRootDSE).ConfigurationNamingContext)" -Filter {ObjectClass -like 'ControlAccessRight'} -Properties * |Select Name,DisplayName,DistinguishedName,rightsGuid| ?{$_.rightsGuid -eq $guid} | fl
+        ```
+
+
+```powershell
+# Investigating the Help Desk Level 1 Group with Get-DomainGroup
+PS C:\htb> Get-DomainGroup -Identity "Help Desk Level 1" | select memberof
+```
+
+#### Enumerating ACLs with BloodHound
+![wley_damundsen](/images/wley_damundsen.jpg)
+
+- We can set the wley user as our starting node, select the Node Info tab and scroll down to Outbound Control Rights. This option will show us objects we have control over directly, via group membership, and the number of objects that our user could lead to us controlling via ACL attack paths under Transitive Object Control. If we click on the 1 next to First Degree Object Control, we see the first set of rights that we enumerated, ForceChangePassword over the damundsen user.
+
+- If we right-click on the line between the two objects, a menu will pop up. If we select Help, we will be presented with help around abusing this ACE, including:
+
+    - More info on the specific right, tools, and commands that can be used to pull off this attack
+    - Operational Security (Opsec) considerations
+    - External references.
