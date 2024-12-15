@@ -1,5 +1,5 @@
 # Network Interception
-- [Network Security Configuration (NSC)](#network-security-configuration-nsc)
+- [Patching Network Security Config with apktool](#patching-network-security-config-with-apktool)
 - [Installing Certificate in System Store](#installing-certificate-in-system-store)
 - [Dynamic Instrumentation (Hooking)](#dynamic-instrumentation-hooking)
 - [Intercept traffic of Flutter & Xamarin Apps](#intercept-traffic-of-flutter--xamarin-apps-non-proxy-aware-applications)
@@ -7,7 +7,8 @@
 ## SSL Pinning
 - SSL pinning is a security technique used in Android applications to prevent man-in-the-middle attacks by ensuring that the app only trusts a specific certificate or set of certificates. However, improper configurations and certain techniques can expose the application to vulnerabilities.
 
-### Network Security Configuration (NSC) 
+### Patching Network Security Config with apktool
+
 - The `network_security_config.xml` file defines the trusted certificates for the application when running HTTPS. To intercept the app’s HTTPS traffic, you need to modify the NSC file to trust user certificates in addition to system certificates.
 
 - User certificates are only trusted by apps when:
@@ -25,8 +26,8 @@
 </base-config>
 ```
 
->[!TIP]
->We can confirm app uses NCS file from: `android:networkSecurityConfig` in xml file (Manifest.xml)
+> [!NOTE]
+> We can confirm app uses NCS file from: `android:networkSecurityConfig` in xml file (Manifest.xml)
 
 - **Steps:**
 
