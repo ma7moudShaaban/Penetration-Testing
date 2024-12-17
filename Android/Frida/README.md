@@ -373,7 +373,10 @@ native_function(<arguments>);
     frida -U -f Gadget -l ATTACHED_SCRIPT
 ```
 
-or the [Objection](https://github.com/sensepost/objection) Framework.
+- For easing, use the [Objection](https://github.com/sensepost/objection) Framework
+  - `objection patchapk -s apk_name.apk`: Objection will extract, patch, re-pack, align and sign the application, and so it's a very fast and easy way to get Frida running.
+
+
 
 > [!NOTE]  
 > Ensure the application is open before starting Objection.
