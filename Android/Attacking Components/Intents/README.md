@@ -5,6 +5,7 @@
 - [Returning Activity Results](#returning-activity-results)
 - [Attacks](#attacks)
     - [Intent Redirection](#intent-redirection)
+    - [Implicit Intents](#implicit-intents)
 
 
 ## Interaction with Intents
@@ -84,6 +85,7 @@ startActivity(intent1);
         }
     }
     ```
+    - Results are returned using `setResult()` in the target activity.
 
 
 ## Attacks
@@ -108,3 +110,32 @@ startActivity(intent1);
 
 > [!NOTE]
 > `FLAG_GRANT_READ_URI_PERMISSION`: If set, the recipient of this Intent will be granted permission to perform read operations on the URI in the Intent's data and any URIs specified in its ClipData.
+
+### Implicit Intents
+
+- As an attacker we rarely send implicit intents, because usually we want to explicitly target a specific vulnerable app.
+
+- But receiving implicit intents could result in typical issues. If an app uses implicit intents insecurely, for example when it transmits sensitive data, then registering a handler for this intent could exploit this.
+
+- Example:
+```java
+Intent intent = getIntent();
+Utils.showDialog(this,intent);
+if("io.hextree.attacksurface.ATTACK_ME".equals(intent.getAction())){
+    String flag = intent.getStringExtra("flag");
+    Toast.makeText(this,flag,Toast.LENGTH_LONG).show();
+}else{
+    Log.d("Flag10", "Not Received");
+}
+```
+```xml
+<activity
+    android:name=".Second_Activity"
+    android:exported="true">
+<intent-filter>
+    <action android:name="io.hextree.attacksurface.ATTACK_ME"/>
+    <category android:name="android.intent.category.DEFAULT" />
+</intent-filter>
+
+</activity>
+```
