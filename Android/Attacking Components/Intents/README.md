@@ -31,7 +31,7 @@ startActivity(intent1);
 
 ## Attacks
 ### Intent Redirection
-- If we have control intent input of startActivity() function, this can be lead to intent redirection
+- If we can control the intent input of the startActivity() function, it may lead to an intent redirection vulnerability.
 ```java
 // Redirect to flag6 Activity
 Intent intent3 = new Intent();
