@@ -1,6 +1,7 @@
 # Intents
 
 - [Interaction with Intents](#interaction-with-intents)
+- [Activity Life Cycle](#activity-life-cycle)
 - [Attacks](#attacks)
     - [Intent Redirection](#intent-redirection)
 
@@ -26,8 +27,26 @@ intent1.putExtra("android.intent.extra.INTENT",intent2);
 startActivity(intent1);
 ```
 
+## Activity Life Cycle
 
+- Scenarios When `onNewIntent()` Is Triggered
+    1. Activity Launched with `FLAG_ACTIVITY_SINGLE_TOP`:
+        - If the activity is already running at the top of the back stack, and a new intent is sent to it with the `Intent.FLAG_ACTIVITY_SINGLE_TOP` flag, the system calls `onNewIntent()` instead of creating a new instance of the activity.
+    2. Activity Configured with `launchMode="singleTop"`:
 
+        - If the activity is declared in the `AndroidManifest.xml` file with the launchMode attribute set to `singleTop`, the system calls `onNewIntent()` when the activity is already at the top of the stack and receives a new intent.
+        ```xml
+        <activity
+            android:name=".YourActivity"
+            android:launchMode="singleTop" />
+        ```
+
+    3. Activity Declared as `singleTask` or `singleInstance`:
+
+        - For activities declared with `launchMode="singleTask"` or `launchMode="singleInstance"`, `onNewIntent()` is called when the activity is already running in a task and a new intent is directed to it.
+    4. Task Reuse (`Intent.FLAG_ACTIVITY_REORDER_TO_FRONT`):
+
+        - If you launch an activity that is already in the back stack of the current task using the `FLAG_ACTIVITY_REORDER_TO_FRONT` flag, the system brings it to the front and calls `onNewIntent()`.
 
 ## Attacks
 ### Intent Redirection
