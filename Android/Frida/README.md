@@ -15,6 +15,7 @@
     - [Calling a Native Function](#calling-a-native-function)
     - [Patching instructions using X86Writer and ARM64Writer](#patching-instructions-using-x86writer-and-arm64writer)
 - [Frida Gadget](#frida-gadget)
+- [Exploring the Application](#exploring-the-application)
 
 ## Hooking
 Hooking refers to the process of intercepting and modifying the behavior of functions or methods in an application or the Android system itself. For example, we can hook a method in our application and change its functionality by inserting our own implementation.
@@ -58,6 +59,13 @@ cd /data/local/tmp
  frida -U -f PACKAGE_NAME -l ATTACHED_SCRIPT
  ``` 
    - This opens the REPL shell, a Frida CLI interface that emulates IPython/Cycript for rapid prototyping and debugging.
+
+- We can enable and disable auto-reload by doing:
+
+```bash
+%autoreload on/off
+```
+
 
 ### Hooking a Function
 
@@ -386,6 +394,29 @@ native_function(<arguments>);
 - `android sslpinning disable`: Bypass SSL pinning.
 - `android hooking watch class_method FUNCTION_NAME --dump-args --dump-return`: Hook and inspect the results from the function.
 
+## Exploring the Application
+- Tracing the active Activity:
+```JavaScript
+Java.perform(() => {
+    let ActivityClass = Java.use("android.app.Activity");
+    ActivityClass.onResume.implementation = function() {
+        console.log("Activity resumed:", this.getClass().getName());
+        // Call original onResume method
+        this.onResume();
+    }
+})
+```
+- Tracing the active Fragment:
+```JavaScript
+Java.perform(() => {
+    let FragmentClass = Java.use("androidx.fragment.app.Fragment");
+    FragmentClass.onResume.implementation = function() {
+        console.log("Fragment resumed:", this.getClass().getName());
+        // Call original onResume method
+        this.onResume();
+    }
+})
+```
 
 ## Additional Resources
 - [Frida](https://www.infosec-blog.com/categories/#frida)
