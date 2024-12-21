@@ -2,6 +2,7 @@
 
 - [Interaction with Intents](#interaction-with-intents)
 - [Activity Life Cycle](#activity-life-cycle)
+- [Returning Activity Results](#returning-activity-results)
 - [Attacks](#attacks)
     - [Intent Redirection](#intent-redirection)
 
@@ -47,6 +48,43 @@ startActivity(intent1);
     4. Task Reuse (`Intent.FLAG_ACTIVITY_REORDER_TO_FRONT`):
 
         - If you launch an activity that is already in the back stack of the current task using the `FLAG_ACTIVITY_REORDER_TO_FRONT` flag, the system brings it to the front and calls `onNewIntent()`.
+
+
+## Returning Activity Results
+1. `getCallingActivity()`
+    - `getCallingActivity()` is used to retrieve the component name of the activity that started the current activity using `startActivityForResult()`.
+    ```java
+        ComponentName callingActivity = getCallingActivity();
+        if (callingActivity != null) {
+            Log.d("Caller", "Calling activity: " + callingActivity.getClassName());
+        }
+    ```
+
+2. `startActivityForResult()`
+
+    - `startActivityForResult()` is used to start another activity with the expectation of getting a result back. The result is received in the `onActivityResult()` method.
+    ```java
+    Intent intent = new Intent(this, SecondActivity.class);
+    startActivityForResult(intent, 1); // 1 is the requestCode
+
+    ```
+
+3. `onActivityResult()`
+    - `onActivityResult()` is a callback method in the originating activity that receives the result sent back by the target activity.
+    ```java
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+
+        if (requestCode == 1) { // Matching the requestCode
+            if (resultCode == RESULT_OK) {
+                String result = data.getStringExtra("resultKey");
+                Log.d("Result", "Result from SecondActivity: " + result);
+            }
+        }
+    }
+    ```
+
 
 ## Attacks
 ### Intent Redirection
