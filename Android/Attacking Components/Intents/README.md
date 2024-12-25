@@ -6,6 +6,7 @@
 - [Attacks](#attacks)
     - [Intent Redirection](#intent-redirection)
     - [Implicit Intents](#implicit-intents)
+    - [Delegation via Pending Intents](#delegation-via-pending-intents)
 
 
 ## Interaction with Intents
@@ -139,3 +140,6 @@ if("io.hextree.attacksurface.ATTACK_ME".equals(intent.getAction())){
 
 </activity>
 ```
+
+
+### Delegation via Pending Intents
