@@ -33,6 +33,7 @@
     - [PowerView](#powerview)
     - [SharpView](#sharpview)
     - [Snaffler](#snaffler)
+    - [BloodHound](#bloodhound)
 - [Living Off the Land](#living-off-the-land)
 - [Kerberoasting](#kerberoasting)
     - [Kerberoasting - from Linux](#kerberoasting---from-linux)
@@ -46,6 +47,8 @@
     - [Abusing ACLs](#abusing-acls)
     - [DCSync](#dcsync)
 
+- [Moving laterally or vertically in AD](#moving-laterally-or-vertically-in-ad)
+    - [Privileged Access](#privileged-access)
 
     
 
@@ -1112,7 +1115,7 @@ PS C:\Users\forend.INLANEFREIGHT> dsquery * -filter "(userAccountControl:1.2.840
 
 
 > [!NOTE]
-> A prerequisite to performing Kerberoasting attacks is either domain user credentials (cleartext or just an NTLM hash if using Impacket), a shell in the context of a domain user, or account such as SYSTEM. Once we have this level of access, we can start. We must also know which host in the domain is a Domain Controller so we can query it.
+> A prerequisite to perform Kerberoasting attacks is either domain user credentials (cleartext or just an NTLM hash if using Impacket), a shell in the context of a domain user, or account such as SYSTEM. Once we have this level of access, we can start. We must also know which host in the domain is a Domain Controller so we can query it.
 
 ### Kerberoasting - from Linux
 #### Kerberoasting with GetUserSPNs.py
@@ -1550,3 +1553,6 @@ ObjectAceType         : DS-Replication-Get-Changes-All
 
     ```
     
+## Moving laterally or vertically in AD
+### Privileged Access
+- if we take over an account with local admin rights over a host, or set of hosts, we can perform a Pass-the-Hash attack to authenticate via the SMB protocol.
