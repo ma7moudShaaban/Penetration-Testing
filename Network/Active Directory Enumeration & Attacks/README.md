@@ -49,6 +49,8 @@
 
 - [Moving laterally or vertically in AD](#moving-laterally-or-vertically-in-ad)
     - [Privileged Access](#privileged-access)
+    - [Kerberos "Double Hop" Problem](#kerberos-double-hop-problem)
+
 
     
 
@@ -1697,3 +1699,63 @@ SeAssignPrimaryTokenPrivilege Replace a process level token             Disabled
 SeIncreaseQuotaPrivilege      Adjust memory quotas for a process        Disabled   
 
 ```
+
+### Kerberos "Double Hop" Problem
+![Double Hop](/images/double_hop.jpg)
+
+- When we connect to `DEV01` using a tool such as `evil-winrm`, we connect with network authentication (using Kerberos), so our credentials are not stored in memory and, therefore, will not be present on the system to authenticate to other resources on behalf of our user.
+- **Why does this happen?**
+    - Kerberos: When you authenticate with Kerberos, you don’t send your password; instead, you get a special "ticket" (TGS) from a central system (called the KDC) that says, “You’re allowed to access this machine.” But this ticket is only valid for the machine you connected to (`DEV01`). It won’t work for Machine `DC01`.
+    - NTLM: When you authenticate with a password or NTLM hash (e.g., using tools like PSExec), the hash is temporarily stored in memory on `DEV01`. This allows it to be reused to access Machine `DC01`.
+
+> [!NOTE]
+> **Exception:** Unconstrained Delegation
+> If `DEV01` has unconstrained delegation enabled, things change:
+> 
+> 1. When you log into `DEV01`, both your TGS ticket and your TGT ticket are sent and cached on the server.
+> Now, `DEV01` can act on your behalf because it has your TGT.
+> 2. It can request new TGS tickets to access other resources in the domain, like Active Directory or another server.
+> 3. In simple terms: With unconstrained delegation, the server you log into gets "full power" to impersonate you across the network. so if you find a server with unconstrained delegation, it’s a **jackpot**.
+
+- **[Workarounds](https://posts.slayerlabs.com/double-hop/)**
+    1. Workaround #1: PSCredential Object
+        - Set up a PSCredential object to pass our credentials again.
+    ```bash
+    *Evil-WinRM* PS C:\Users\backupadm\Documents> import-module .\PowerView.ps1
+
+    # Setup our authentication
+    *Evil-WinRM* PS C:\Users\backupadm\Documents> $SecPassword = ConvertTo-SecureString '!qazXSW@' -AsPlainText -Force
+
+    *Evil-WinRM* PS C:\Users\backupadm\Documents>  $Cred = New-Object System.Management.Automation.PSCredential('INLANEFREIGHT\backupadm', $SecPassword)
+    
+    # We can pass creds in commands
+    *Evil-WinRM* PS C:\Users\backupadm\Documents> get-domainuser -spn -credential $Cred | select samaccountname
+ 
+    ```
+
+    2. Workaround #2: Register PSSession Configuration
+        ```powershell
+        # Establishing WinRM session on the remote host
+        PS C:\htb> Enter-PSSession -ComputerName ACADEMY-AEN-DEV01.INLANEFREIGHT.LOCAL -Credential inlanefreight\backupadm
+
+        [ACADEMY-AEN-DEV01.INLANEFREIGHT.LOCAL]: PS C:\Users\backupadm\Documents> Import-Module .\PowerView.ps1
+
+        # Registering a new session configuration using the Register-PSSessionConfiguration cmdlet.
+        PS C:\htb> Register-PSSessionConfiguration -Name backupadmsess -RunAsCredential inlanefreight\backupadm
+
+        ```
+        - Once this is done, we need to restart the WinRM service by typing `Restart-Service WinRM` in our current PSSession.
+
+        ```powershell
+        PS C:\htb> Enter-PSSession -ComputerName DEV01 -Credential INLANEFREIGHT\backupadm -ConfigurationName  backupadmsess
+
+        ```
+
+> [!WARNING]
+> You can’t use Register-PSSessionConfiguration from an evil-winrm shell because:
+
+> - It requires a credentials popup, which isn’t possible in a shell-only session.
+> - Even if you pass credentials manually, it needs an elevated PowerShell terminal (`RunAs`), which evil-winrm doesn’t provide.
+> Additionally, running this from Linux (like Parrot or Ubuntu) often fails because Linux PowerShell doesn’t handle Kerberos credentials the same way.
+> 
+> This method is still highly effective if we use Windows attack host or compromise a machine with RDP access to act as a "jump host" for further attacks.
