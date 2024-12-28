@@ -1753,7 +1753,6 @@ SeIncreaseQuotaPrivilege      Adjust memory quotas for a process        Disabled
 
 > [!WARNING]
 > You can’t use Register-PSSessionConfiguration from an evil-winrm shell because:
-
 > - It requires a credentials popup, which isn’t possible in a shell-only session.
 > - Even if you pass credentials manually, it needs an elevated PowerShell terminal (`RunAs`), which evil-winrm doesn’t provide.
 > Additionally, running this from Linux (like Parrot or Ubuntu) often fails because Linux PowerShell doesn’t handle Kerberos credentials the same way.
