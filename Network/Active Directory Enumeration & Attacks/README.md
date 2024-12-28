@@ -1564,7 +1564,7 @@ ObjectAceType         : DS-Replication-Get-Changes-All
 
 
 
-1. Remote Desktop
+1. **Remote Desktop**
 ```powershell
 # Enumerating the Remote Desktop Users Group
 PS C:\htb> Get-NetLocalGroupMember -ComputerName ACADEMY-EA-MS01 -GroupName "Remote Desktop Users"
@@ -1584,7 +1584,7 @@ IsDomain     : UNKNOWN
     - Pre-built queries in Analysis tab `Find Workstations where Domain Users can RDP` or `Find Servers where Domain Users can RDP`
 
 
-2. WinRM
+2. **WinRM**
 ```powershell
 # Enumerating the Remote Management Users Group
 PS C:\htb> Get-NetLocalGroupMember -ComputerName ACADEMY-EA-MS01 -GroupName "Remote Management Users"
@@ -1613,9 +1613,10 @@ PS C:\htb> Enter-PSSession -ComputerName ACADEMY-EA-MS01 -Credential $cred
 ACADEMY-EA-MS01
 
 # From our Linux attack host, we can use the tool evil-winrm to connect.
+evil-winrm -i 10.129.201.234 -u forend
 ```
 
-3. SQL Server Admin
+3. **SQL Server Admin**
 - [Snaffler](#snaffler)
 - BloodHound:
     - Check for `SQL Admin Rights` in the `Node Info` tab for a given user
