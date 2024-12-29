@@ -1,8 +1,8 @@
 - [Kerberoasting](#kerberoasting)
 - [Kerberoasting - from Linux](#kerberoasting---from-linux)
 - [Kerberoasting - from Windows](#kerberoasting---from-windows)
-        - [Kerberoasting - Semi Manual method](#kerberoasting---from-windows)
-        - [Automated / Tool Based Route](#automated--tool-based-route)
+    - [Kerberoasting - Semi Manual method](#kerberoasting---from-windows)
+    - [Automated / Tool Based Route](#automated--tool-based-route)
 
 ## Kerberoasting
 - **Overview**
