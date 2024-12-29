@@ -1705,7 +1705,7 @@ SeIncreaseQuotaPrivilege      Adjust memory quotas for a process        Disabled
 
 - When we connect to `DEV01` using a tool such as `evil-winrm`, we connect with network authentication (using Kerberos), so our credentials are not stored in memory and, therefore, will not be present on the system to authenticate to other resources on behalf of our user.
 - **Why does this happen?**
-    - Kerberos: When you authenticate with Kerberos, you don’t send your password; instead, you get a special "ticket" (TGS) from a central system (called the KDC) that says, “You’re allowed to access this machine.” But this ticket is only valid for the machine you connected to (`DEV01`). It won’t work for Machine `DC01`.
+    - Kerberos: When you authenticate with Kerberos, you don't send your password; instead, you get a special "ticket" (TGS) from a central system (called the KDC) that says, "You're allowed to access this machine." But this ticket is only valid for the machine you connected to (`DEV01`). It won't work for Machine `DC01`.
     - NTLM: When you authenticate with a password or NTLM hash (e.g., using tools like PSExec), the hash is temporarily stored in memory on `DEV01`. This allows it to be reused to access Machine `DC01`.
 
 > [!NOTE]
@@ -1752,9 +1752,11 @@ SeIncreaseQuotaPrivilege      Adjust memory quotas for a process        Disabled
         ```
 
 > [!WARNING]
-> You can’t use Register-PSSessionConfiguration from an evil-winrm shell because:
-> - It requires a credentials popup, which isn’t possible in a shell-only session.
-> - Even if you pass credentials manually, it needs an elevated PowerShell terminal (`RunAs`), which evil-winrm doesn’t provide.
-> Additionally, running this from Linux (like Parrot or Ubuntu) often fails because Linux PowerShell doesn’t handle Kerberos credentials the same way.
+> You can't use Register-PSSessionConfiguration from an evil-winrm shell because:
+> - It requires a credentials popup, which isn't possible in a shell-only session.
+> - Even if you pass credentials manually, it needs an elevated PowerShell terminal (`RunAs`), which evil-winrm doesn't provide.
+> Additionally, running this from Linux (like Parrot or Ubuntu) often fails because Linux PowerShell doesn't handle Kerberos credentials the same way.
 > 
 > This method is still highly effective if we use Windows attack host or compromise a machine with RDP access to act as a "jump host" for further attacks.
+
+
