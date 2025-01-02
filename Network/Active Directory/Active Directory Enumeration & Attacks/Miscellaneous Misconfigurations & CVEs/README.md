@@ -1,14 +1,15 @@
 
-- [CVEs](#cves)
+- [Miscellaneous Misconfigurations & CVEs](#miscellaneous-misconfigurations--cves)
     - [NoPac (SamAccountName Spoofing)](#nopac-samaccountname-spoofing)
     - [PrintNightmare](#printnightmare)
     - [PetitPotam (MS-EFSRPC)](#petitpotam-ms-efsrpc)
         - [PetitPotam Mitigations](#petitpotam-mitigations)
+    - [Exchange Related Group Membership](#exchange-related-group-membership)
 
 
 
 
-# CVEs
+# Miscellaneous Misconfigurations & CVEs
 ## NoPac (SamAccountName Spoofing)
 - You're tricking the system into treating a new computer (added by you) as if it's a Domain Controller (DC), which is a very important system in the network.
 - How does it work?
@@ -179,3 +180,6 @@ mimikatz # lsadump::dcsync /user:inlanefreight\krbtgt
 - Disabling NTLM authentication for Domain Controllers
 - Disabling NTLM on AD CS servers using Group Policy
 - Disabling NTLM for IIS on AD CS servers where the Certificate Authority Web Enrollment and Certificate Enrollment Web Service services are in use
+
+
+## Exchange Related Group Membership

@@ -40,7 +40,7 @@
 - [Moving laterally or vertically in AD](#moving-laterally-or-vertically-in-ad)
     - [Privileged Access](#privileged-access)
     - [Kerberos "Double Hop" Problem](#kerberos-double-hop-problem)
-    - [CVEs](/Network/Active%20Directory/Active%20Directory%20Enumeration%20&%20Attacks/CVEs/README.md)
+    - [CVEs](/Network/Active%20Directory/Active%20Directory%20Enumeration%20&%20Attacks/Miscellaneous%20Misconfigurations%20&%20CVEs/README.md)
 
 
     
