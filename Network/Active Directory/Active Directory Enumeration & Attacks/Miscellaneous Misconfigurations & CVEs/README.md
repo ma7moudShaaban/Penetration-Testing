@@ -5,6 +5,13 @@
     - [PetitPotam (MS-EFSRPC)](#petitpotam-ms-efsrpc)
         - [PetitPotam Mitigations](#petitpotam-mitigations)
     - [Exchange Related Group Membership](#exchange-related-group-membership)
+    - [PrivExchange](#privexchange)
+    - [Printer Bug](#printer-bug)
+    - [MS14-068](#ms14-068)
+    - [Sniffing LDAP Credentials](#sniffing-ldap-credentials)
+    - [Enumerating DNS Records](#enumerating-dns-records)
+
+
 
 
 
@@ -183,3 +190,99 @@ mimikatz # lsadump::dcsync /user:inlanefreight\krbtgt
 
 
 ## Exchange Related Group Membership
+- A default installation of Microsoft Exchange within an AD environment (with no split-administration model) opens up many attack vectors, as Exchange is often granted considerable privileges within the domain (via users, groups, and ACLs). 
+- The group `Exchange Windows Permissions` is not listed as a protected group, but members are granted the ability to write a DACL to the domain object. 
+- This can be leveraged to give a user DCSync privileges. 
+- This [GitHub repo](https://github.com/gdedrouas/Exchange-AD-Privesc) details a few techniques for leveraging Exchange for escalating privileges in an AD environment.
+
+
+- The Exchange group `Organization Management` is another extremely powerful group (effectively the "Domain Admins" of Exchange) and can access the mailboxes of all domain users. It is not uncommon for sysadmins to be members of this group. This group also has full control of the OU called Microsoft Exchange Security Groups, which contains the group Exchange Windows Permissions.
+    - It is not uncommon for sysadmins to be members of this group. 
+    - This group also has full control of the OU called `Microsoft Exchange Security Groups`, which contains the group `Exchange Windows Permissions`.
+
+
+
+> [!NOTE]
+> If we can compromise an Exchange server, this will often lead to Domain Admin privileges. 
+> Additionally, dumping credentials in memory from an Exchange server will produce 10s if not 100s of cleartext credentials or NTLM hashes. 
+> This is often due to users logging in to Outlook Web Access (OWA) and Exchange caching their credentials in memory after a successful login.
+
+
+## PrivExchange
+- The PrivExchange attack results from a flaw in the Exchange Server PushSubscription feature, which allows any domain user with a mailbox to force the Exchange server to authenticate to any host provided by the client over HTTP.
+
+- The Exchange service runs as SYSTEM and is over-privileged by default (i.e., has WriteDacl privileges on the domain pre-2019 Cumulative Update). This flaw can be leveraged to relay to LDAP and dump the domain NTDS database. If we cannot relay to LDAP, this can be leveraged to relay and authenticate to other hosts within the domain. This attack will take you directly to Domain Admin with any authenticated domain user account.
+
+
+## Printer Bug
+- The Printer Bug is a flaw in the MS-RPRN protocol (Print System Remote Protocol).
+- This protocol defines the communication of print job processing and print system management between a client and a print server.
+- To leverage this flaw, any domain user can connect to the spool's named pipe with the `RpcOpenPrinter` method and use the `RpcRemoteFindFirstPrinterChangeNotificationEx` method, and force the server to authenticate to any host provided by the client over SMB.
+
+- The spooler service runs as SYSTEM and is installed by default in Windows servers running Desktop Experience. This attack can be leveraged to relay to LDAP and grant your attacker account DCSync privileges to retrieve all password hashes from AD.
+
+- We can use tools such as the `Get-SpoolStatus` module from [this](https://web.archive.org/web/20200919080216/https://github.com/cube0x0/Security-Assessment) tool (that can be found on the spawned target) or [this](https://github.com/NotMedic/NetNTLMtoSilverTicket) tool to check for machines vulnerable to the MS-PRN Printer Bug.
+
+> [!NOTE]
+> This flaw can be used to compromise a host in another forest that has Unconstrained Delegation enabled, such as a domain controller. 
+> It can help us to attack across forest trusts once we have compromised one forest.
+
+```powershell
+# Enumerating for MS-PRN Printer Bug
+PS C:\htb> Import-Module .\SecurityAssessment.ps1
+PS C:\htb> Get-SpoolStatus -ComputerName ACADEMY-EA-DC01.INLANEFREIGHT.LOCAL
+
+ComputerName                        Status
+------------                        ------
+ACADEMY-EA-DC01.INLANEFREIGHT.LOCAL   True
+```
+
+## MS14-068
+- This was a flaw in the Kerberos protocol, which could be leveraged along with standard domain user credentials to elevate privileges to Domain Admin. A Kerberos ticket contains information about a user, including the account name, ID, and group membership in the Privilege Attribute Certificate (PAC). The PAC is signed by the KDC using secret keys to validate that the PAC has not been tampered with after creation.
+
+- The vulnerability allowed a forged PAC to be accepted by the KDC as legitimate. This can be leveraged to create a fake PAC, presenting a user as a member of the Domain Administrators or other privileged group. It can be exploited with tools such as the [Python Kerberos Exploitation Kit (PyKEK)](https://github.com/SecWiki/windows-kernel-exploits/tree/master/MS14-068/pykek) or the Impacket toolkit. The only defense against this attack is patching.
+
+## Sniffing LDAP Credentials
+- Many applications and printers store LDAP credentials in their web admin console to connect to the domain. These consoles are often left with weak or default passwords. Sometimes, these credentials can be viewed in cleartext. Other times, the application has a test connection function that we can use to gather credentials by changing the LDAP IP address to that of our attack host and setting up a netcat listener on LDAP port 389. When the device attempts to test the LDAP connection, it will send the credentials to our machine, often in cleartext. Accounts used for LDAP connections are often privileged, but if not, this could serve as an initial foothold in the domain. Other times, a full LDAP server is required to pull off this attack, as detailed in this [post](https://grimhacker.com/2018/03/09/just-a-printer/).
+
+## Enumerating DNS Records
+- We can use a tool such as [adidnsdump](https://github.com/dirkjanm/adidnsdump) to enumerate all DNS records in a domain using a valid domain user account.
+
+```bash
+# Using adidnsdump
+adidnsdump -u inlanefreight\\forend ldap://172.16.5.5 
+
+Password: 
+
+[-] Connecting to host...
+[-] Binding to host
+[+] Bind OK
+[-] Querying zone for records
+[+] Found 27 records
+
+# Viewing the Contents of the records.csv File
+head records.csv 
+
+type,name,value
+?,LOGISTICS,?
+AAAA,ForestDnsZones,dead:beef::7442:c49d:e1d7:2691
+AAAA,ForestDnsZones,dead:beef::231
+A,ForestDnsZones,10.129.202.29
+A,ForestDnsZones,172.16.5.240
+A,ForestDnsZones,172.16.5.5
+AAAA,DomainDnsZones,dead:beef::7442:c49d:e1d7:2691
+AAAA,DomainDnsZones,dead:beef::231
+A,DomainDnsZones,10.129.202.29
+
+# -r flag attempt to resolve unknown records by performing an A query.
+adidnsdump -u inlanefreight\\forend ldap://172.16.5.5 -r
+
+Password: 
+
+[-] Connecting to host...
+[-] Binding to host
+[+] Bind OK
+[-] Querying zone for records
+[+] Found 27 records
+
+```
