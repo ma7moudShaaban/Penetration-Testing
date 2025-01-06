@@ -37,6 +37,7 @@
 - [Living Off the Land](/Network/Active%20Directory/Active%20Directory%20Enumeration%20&%20Attacks/Living%20Off%20the%20Land/README.md)
 - [Kerberoasting](/Network/Active%20Directory/Active%20Directory%20Enumeration%20&%20Attacks/Kerberoasting/README.md)
 - [ASREPRoasting](/Network/Active%20Directory/Active%20Directory%20Enumeration%20&%20Attacks/ASREPRoasting/README.md)
+- [Group Policy Object (GPO) Abuse](/Network/Active%20Directory/Active%20Directory%20Enumeration%20&%20Attacks/Group%20Policy%20Object%20(GPO)%20Abuse/README.md)
 - [ACLs - ACEs Abuse](/Network/Active%20Directory/Active%20Directory%20Enumeration%20&%20Attacks/ACLs%20-%20ACEs%20Abuse/README.md)
 - [Moving laterally or vertically in AD](#moving-laterally-or-vertically-in-ad)
     - [Privileged Access](#privileged-access)
