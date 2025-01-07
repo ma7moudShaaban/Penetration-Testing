@@ -6,6 +6,7 @@
         - [ExtraSids Attack - Mimikatz](#extrasids-attack---mimikatz)
         - [ExtraSids Attack - Rubeus](#extrasids-attack---rubeus)
     - [Linux](#linux)
+- [Attacking Cross-Forest Trust Abuse](#attacking-cross-forest-trust-abuse)
 
 
 ## Overview
@@ -686,3 +687,5 @@ ACADEMY-EA-DC01
 
 > [!WARNING]
 > In a client production environment, we should always be careful when running any sort of "autopwn" script like this, and always remain cautious and construct commands manually when possible.
+
+## Attacking Cross-Forest Trust Abuse
