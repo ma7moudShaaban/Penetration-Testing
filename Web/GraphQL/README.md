@@ -204,7 +204,7 @@ query IntrospectionQuery {
 - XSS vulnerabilities can occur if GraphQL responses are inserted into the HTML page without proper sanitization.
 
 - XSS vulnerabilities can also occur if invalid arguments are reflected in error messages. Let us look at the post query, which expects an integer ID as an argument. If we instead submit a string argument containing an XSS payload, we can see that the XSS payload is reflected without proper encoding in the GraphQL error message:
-[xss](/images/xss.jpg)
+![xss](/images/xss.jpg)
 
 
 ## Denial-of-Service (DoS) & Batching Attacks
@@ -361,7 +361,7 @@ fragment TypeRef on __Type {
 ```
 - From the result, we can identify a mutation registerUser, presumably allowing us to create new users. The mutation requires a RegisterUserInput object as an input:
 
-[mutation](/images/mutation.jpg)
+![mutation](/images/mutation.jpg)
 
 - We can now query all fields of the RegisterUserInput object with the following introspection query to obtain all fields that we can use in the mutation:
 ```graphql
@@ -378,7 +378,7 @@ fragment TypeRef on __Type {
 ```
 - From the result, we can identify that we can provide the new user's username, password, role, and msg:
 
-[mutation2](/images/mutation_2.png)
+![mutation2](/images/mutation_2.png)
 
 - We can now finally register a new user by running the mutation:
 ```graphql
@@ -396,7 +396,7 @@ mutation {
 
 - The result contains the fields we queried in the mutation's body so that we can check for errors:
 
-[mutation3](/images/mutation_3.png)
+![mutation3](/images/mutation_3.png)
 
 ### Exploitation with Mutations
 - To identify potential attack vectors through mutations, we need to thoroughly examine all supported mutations and their inputs. In this case, we can provide the role argument for newly registered users, which might enable us to create users with a different role than the default role, potentially allowing us to escalate privileges.
@@ -416,4 +416,4 @@ mutation {
 ```
 - In the result, we can see that the role admin is reflected, which indicates that the attack was successful:
 
-[mutation4](/images/mutation_4.png)
+![mutation4](/images/mutation_4.png)
