@@ -4,6 +4,8 @@
 - [Injection Attacks](#injection-attacks)
 - [Denial-of-Service (DoS) & Batching Attacks](#denial-of-service-dos--batching-attacks)
 - [Mutations](#mutations)
+- [Tools of the Trade](#tools-of-the-trade)
+
 
 
 
@@ -417,3 +419,27 @@ mutation {
 - In the result, we can see that the role admin is reflected, which indicates that the attack was successful:
 
 ![mutation4](/images/mutation_4.png)
+
+## Tools of the Trade
+### GraphQL-Cop
+
+- We can use the tool [GraphQL-Cop](https://github.com/dolevf/graphql-cop), a security audit tool for GraphQL APIs
+
+- We can then specify the GraphQL API's URL with the `-t` flag. GraphQL-Cop then executes multiple basic security configuration checks and lists all identified issues, which is a great baseline for further manual tests:
+```bash
+python3 graphql-cop/graphql-cop.py -t http://172.17.0.2/graphql
+
+[HIGH] Alias Overloading - Alias Overloading with 100+ aliases is allowed (Denial of Service - /graphql)
+[HIGH] Array-based Query Batching - Batch queries allowed with 10+ simultaneous queries (Denial of Service - /graphql)
+[HIGH] Directive Overloading - Multiple duplicated directives allowed in a query (Denial of Service - /graphql)
+[HIGH] Field Duplication - Queries are allowed with 500 of the same repeated field (Denial of Service - /graphql)
+[LOW] Field Suggestions - Field Suggestions are Enabled (Information Leakage - /graphql)
+[MEDIUM] GET Method Query Support - GraphQL queries allowed using the GET method (Possible Cross Site Request Forgery (CSRF) - /graphql)
+[LOW] GraphQL IDE - GraphiQL Explorer/Playground Enabled (Information Leakage - /graphql)
+[HIGH] Introspection - Introspection Query Enabled (Information Leakage - /graphql)
+[MEDIUM] POST based url-encoded query (possible CSRF) - GraphQL accepts non-JSON queries over POST (Possible Cross Site Request Forgery - /graphql)
+```
+### InQL
+- InQL is a Burp extension we can install via the BApp Store in Burp. After a successful installation, an InQL tab is added in Burp.
+
+- Furthermore, we can right-click on a GraphQL request and select `Extensions > InQL - GraphQL Scanner > Generate queries with InQL Scanner`
