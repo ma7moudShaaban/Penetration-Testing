@@ -1,4 +1,10 @@
 # GraphQL
+- [Introduction](#introduction)
+- [Introspection](#introspection)
+- [Injection Attacks](#injection-attacks)
+
+
+## Introduction
 - GraphQL queries select fields of objects. Each object is of a specific type defined by the backend. The query is structured according to GraphQL syntax, with the name of the query to run at the root. For instance, we can query the id, username, and role fields of all User objects by running the users query:
 
 ```graphql
@@ -180,3 +186,19 @@ query IntrospectionQuery {
 ```
 
 - We can visualize the schema using the tool [GraphQL-Voyager](https://github.com/graphql-kit/graphql-voyager). Also, we can use [Website](https://graphql-kit.com/graphql-voyager/)
+
+## Injection Attacks
+
+- One of the most common web vulnerabilities are injection attacks such as SQL Injection, Cross-Site Scripting (XSS), and Command Injection. Like all web applications, GraphQL implementations can also suffer from these vulnerabilities.
+- To identify if a query requires an argument, we can send the query without any arguments and analyze the response. If the backend expects an argument, the response contains an error that tells us the name of the required argument.
+
+### SQL injection
+- To identify if a query requires an argument, we can send the query without any arguments and analyze the response. If the backend expects an argument, the response contains an error that tells us the name of the required argument.
+
+- We can use [GraphQL-Voyager](https://github.com/graphql-kit/graphql-voyager) to identify required arguments
+
+### XSS
+- XSS vulnerabilities can occur if GraphQL responses are inserted into the HTML page without proper sanitization.
+
+- XSS vulnerabilities can also occur if invalid arguments are reflected in error messages. Let us look at the post query, which expects an integer ID as an argument. If we instead submit a string argument containing an XSS payload, we can see that the XSS payload is reflected without proper encoding in the GraphQL error message:
+[xss](/images/xss.jpg)
