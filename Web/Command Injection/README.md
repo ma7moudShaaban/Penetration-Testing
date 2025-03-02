@@ -96,7 +96,6 @@
 | `%HOMEPATH:~0,-17%` | Will be replaced with `\` - (CMD) |
 | `$env:HOMEPATH[0]` | Will be replaced with `\` - (PowerShell) |
 
----
 
 ### Blacklisted Command Bypass  
 
