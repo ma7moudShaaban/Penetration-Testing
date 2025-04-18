@@ -217,10 +217,10 @@
     [+] Responding with XML for: /etc/passwd
     [+] Retrieved data:
 
-    
+
     cat Logs/10.129.201.94/etc/passwd.log 
     ```
-    - 
+
 ### Remote Code Execution 
 - This exploit requires the PHP expect module to be installed and enabled.
 - If the XXE directly prints its output 'as shown in this section', then we can execute basic commands as `expect://id`, and the page should print the command output
