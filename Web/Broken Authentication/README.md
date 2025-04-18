@@ -2,7 +2,10 @@
 - [Reset Password functionality](#reset-password-functionality)
 
 
+
+
 ## Reset Password functionality
+- [Default Passwords](https://www.cirt.net/passwords)
 1. Password Reset Poisoning
     - Investigate whether the password reset functionality is vulnerable to poisoning by manipulating parameters in the request.
 2. HTTP Parameter Pollution

@@ -1,10 +1,14 @@
 # Access control and privilege Escalation
 
-## Vertical Privilege Escalation
-- If a user can gain access to functionality that they are not permitted to access then this is vertical privilege escalation. For example, if a non-administrative user can gain access to an admin page where they can delete user accounts, then this is vertical privilege escalation.
+- HTTP verb Tampering
 
-## Horizontal Privilege Escalation
-- Horizontal privilege escalation occurs if a user is able to gain access to resources belonging to another user, instead of their own resources of that type.
+|Verb|	Description|
+|:---|:------------|
+|HEAD|	Identical to a GET request, but its response only contains the headers, without the response body|
+|PUT|	Writes the request payload to the specified location|
+|DELETE|	Deletes the resource at the specified location|
+|OPTIONS|	Shows different options accepted by a web server, like accepted HTTP verbs|
+|PATCH|	Apply partial modifications to the resource at the specified location|
 
 ### Testing:
 - [ ]  Parameter Pollution
