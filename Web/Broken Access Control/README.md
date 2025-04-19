@@ -1,6 +1,9 @@
-# Access control and privilege Escalation
+# Broken Access Control
+- [HTTP Verb Tampering](#http-verb-tampering)
+- [Session Fixation](#session-fixation)
 
-- HTTP verb Tampering
+
+## HTTP verb Tampering
 
 |Verb|	Description|
 |:---|:------------|
@@ -9,6 +12,19 @@
 |DELETE|	Deletes the resource at the specified location|
 |OPTIONS|	Shows different options accepted by a web server, like accepted HTTP verbs|
 |PATCH|	Apply partial modifications to the resource at the specified location|
+
+
+
+
+## Session Fixation 
+
+1. Acquire a legitimate session token.
+
+2. Lock or "fix" that session token to a user’s session. This can occur under the following conditions:
+
+    - The session token given to the user before logging in does not change after they log in.
+    - The application accepts session tokens (like cookies or tokens in URLs or form data) from client-supplied sources such as query parameters or POST data, and continues to use them throughout the session.
+
 
 ### Testing:
 - [ ]  Parameter Pollution
