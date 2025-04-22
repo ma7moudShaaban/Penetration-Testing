@@ -30,6 +30,7 @@
     - JSON Endpoint
     ```bash
     curl http://blog.inlanefreight.com/wp-json/wp/v2/users | jq
+    curl http://blog.inlanefreight.com/?rest_route=/wp-json/wp/v2/users | jq
     ```
 
 

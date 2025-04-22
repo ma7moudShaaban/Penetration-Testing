@@ -8,17 +8,17 @@
 - [Default Passwords](https://www.cirt.net/passwords)
 1. Password Reset Poisoning
     - Investigate whether the password reset functionality is vulnerable to poisoning by manipulating parameters in the request.
-2. HTTP Parameter Pollution
-    - Test for parameter pollution by using multiple formats:
 ```
 email=victim@gmail.com&email=attacker@gmail.com
+
 email[]=victim@gmail.com&email[]=attacker@gmail.com
 email=victim@gmail.com%20email=attacker@gmail.com
 email=victim@gmail.com|email=attacker@gmail.com
 {"email":"victim@gmail.com","email":"attacker@gmail.com"}
 {"email":["victim@gmail.com","attacker@gmail.com"]}
 ```
-- Verify if it’s possible to reset the victim's password using a reset link sent to the attacker's inbox.
+2. HTTP Parameter Pollution
+    - Verify if it’s possible to reset the victim's password using a reset link sent to the attacker's inbox.
 3. IDOR (Insecure Direct Object Reference)
     - Examine the reset link for parameters vulnerable to IDOR.
     - Use tools like ParamMiner to discover hidden or additional parameters. For example, appending parameters like uid from a profile update request.
