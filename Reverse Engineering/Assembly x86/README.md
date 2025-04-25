@@ -99,7 +99,7 @@
 3. **Processor Status Flags Register** (one register)
 4. **Instruction Pointer**
 ----------------------------------------------------------------------------------------------------------
-1. General Purpose Registers
+1. **General Purpose Registers**
 
 General-purpose registers are primarily used for arithmetic and data movement operations. The following image applies to EAX, EBX, ECX, and EDX:
 
