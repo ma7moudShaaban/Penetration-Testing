@@ -192,6 +192,12 @@ query IntrospectionQuery {
 
 - We can visualize the schema using the tool [GraphQL-Voyager](https://github.com/graphql-kit/graphql-voyager). Also, we can use [Website](https://graphql-kit.com/graphql-voyager/)
 
+> [!TIP]
+> How to grab all Graphql query/mutation if introspection disabled?
+> 
+> 1. Download all js files  to directory js_files
+> 2. Run this command: `grep -Eo '(query|mutation) [a-zA-Z0-9_]+\(' js_files -R`
+
 ## Injection Attacks
 
 - One of the most common web vulnerabilities are injection attacks such as SQL Injection, Cross-Site Scripting (XSS), and Command Injection. Like all web applications, GraphQL implementations can also suffer from these vulnerabilities.
