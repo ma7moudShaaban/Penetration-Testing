@@ -79,3 +79,7 @@
     - Try using /uploads/ instead of /uploads
     - Try using `.` or `%2e`: /%2e/path
     - Try also /%252e/path (double URL encode)
+    - /api/23423423/users -> 403 forbidden, you can bypass using:
+        - /api//users
+        - /api\\users
+  

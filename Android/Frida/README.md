@@ -418,6 +418,21 @@ Java.perform(() => {
 })
 ```
 
+## Tracing with frida
+- To trace all calls on `io.hextree.*`, we can do:
+```bash
+frida-trace -U -j 'io.hextree.*!*' FridaTarget
+
+// We can execlude classes using -J flag
+
+frida-trace -U -j 'io.hextree.*!*' -J '*AnnoyingClass*!*' FridaTarget 
+```
+
+> [!TIP]
+> // Interesting \*\!\*password\*
+
+- The part before ! is the filter for the class-name, while the part after the ! is the filter for the methods!
+
 ## Additional Resources
 - [Frida](https://www.infosec-blog.com/categories/#frida)
 - [Frida CodeShare](https://codeshare.frida.re/)

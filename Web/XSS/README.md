@@ -115,7 +115,7 @@ script-src https://scripts.normal-website.com
 
 - [ ] Hidden inputs
     - [ ] Check for href in canonical link tag `<link rel="canonical" href='http://WEBSITE/?'accesskey='x'onclick='alert(1)'/>`
-    - [ ] Check forms `<input type="hidden" accesskey="x" onclick="alert(1)">`
+
 
 - [ ] Check for CSTI (Angularjs, Vuejs)
 - [ ] Check for DOM XSS (using DOM invader)
