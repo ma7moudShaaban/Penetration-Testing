@@ -16,6 +16,7 @@
     - [Patching instructions using X86Writer and ARM64Writer](#patching-instructions-using-x86writer-and-arm64writer)
 - [Frida Gadget](#frida-gadget)
 - [Exploring the Application](#exploring-the-application)
+- [Tracing with frida](#tracing-with-frida)
 
 ## Hooking
 Hooking refers to the process of intercepting and modifying the behavior of functions or methods in an application or the Android system itself. For example, we can hook a method in our application and change its functionality by inserting our own implementation.
@@ -433,6 +434,10 @@ frida-trace -U -j 'io.hextree.*!*' -J '*AnnoyingClass*!*' FridaTarget
 
 - The part before ! is the filter for the class-name, while the part after the ! is the filter for the methods!
 
+- We can also trace into native objects, by specifing the -I option:
+```bash
+frida-trace -U -I 'libhextree.so' -j 'io.hextree.*!*' FridaTarget
+```
 ## Additional Resources
 - [Frida](https://www.infosec-blog.com/categories/#frida)
 - [Frida CodeShare](https://codeshare.frida.re/)
