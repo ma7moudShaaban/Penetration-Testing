@@ -12,8 +12,11 @@
 ## Interaction with Intents
 - **Commands to interact with intents**
     - `intent.setClassName(<Package_Name>,<Class_Name>);`
-    - `startActivity(<Intent_Name>)`
     - `<Intent_Name>.setAction(<Action_Name>)`
+    - `startActivity(<Intent_Name>)`
+    - `intent.setData(Uri.parse("https://google.com"));`
+    
+
 
 - **Nested Intents**
 ```java
