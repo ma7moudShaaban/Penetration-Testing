@@ -19,6 +19,21 @@ This guide provides steps to reverse native libraries in an Android APK. The pri
 > [!NOTE]
 > File `index.android.bundle` is a file used in React Native development. It contains the compiled and bundled JavaScript code for your app. This file is used when you want to install the application via Android Studio without running the metro bundler.
 
+   - Usages: 
+   ```bash
+      # Install hermes-dec
+      pip install --upgrade git+https://github.com/P1sec/hermes-dec
+      
+      # View strings and functions name
+      hbc-file-parser assets/index.android.bundle
+
+      # Disassemble bytecode
+      hbc-disassembler assets/index.android.bundle
+
+      # Decompile into pseudo-code
+      hbc-decompiler assets/index.android.bundle
+   ```
+
 
 - **Games created by Godot Engine**
    - You can identify using metadata in AndroidManifest.xml
