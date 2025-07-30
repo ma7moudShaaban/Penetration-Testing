@@ -1,6 +1,7 @@
 # Race Condition
 - [Overview](#overview)
 - [Exploitation](#exploitation)
+- [Prevention](#prevention)
 
 
 ## Overview
@@ -12,7 +13,12 @@
         - Time of Use: The program actually does that thing.
     If there's a time gap between these two steps, an attacker can change things in that gap.
 
-
+- Scenarios:
+    - Redeeming a gift card multiple times
+    - Rating a product multiple times
+    - Withdrawing or transferring cash in excess of your account balance
+    - Reusing a single CAPTCHA solution
+    - Bypassing an anti-brute-force rate limit
     
 ## Exploitation
 - **PHP Session Files and File Locks**
@@ -63,6 +69,15 @@
         ```
     - Start the attack by clicking Attack.
         - If successful, the gift card is redeemed multiple times, increasing your balance.
+
+
+- **Send in parallel prerequisites (Burp Repeater)**
+> [!NOTE]
+> To send a group of requests in parallel, the group must meet the following criteria:
+> 
+>   - All requests in the group must use the same host, port, and transport layer protocols.
+>   - HTTP/1 keep-alive must not be enabled for the project.
+
 
 ## Prevention
 - Use SQL WRITE locks to prevent simultaneous database access:
