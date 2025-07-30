@@ -127,6 +127,15 @@ the type signature is
 
 - Here is an [HTML page](./Sheet1.html) of the C-implementation of the JNIEnv struct to know what function pointers are at the different offsets.
 
+> [!TIP]
+> There's a way to get the JNI function without doing all of this manually! In both the Ghidra and IDA Pro decompilers you can re-type the first argument in JNI functions to `JNIEnv *` type and it will automatically identify the JNI Functions being called. 
+> In IDA Pro, this work out of the box. In Ghidra, you have to load the JNI types (either the jni.h file or a Ghidra Data Types archive of the jni.h file) first. 
+> For ease, we will load the JNI types from the Ghidra Data Types archive (gdt) produced by Ayrx and available [here](https://github.com/Ayrx/JNIAnalyzer/blob/master/JNIAnalyzer/data/jni_all.gdt). 
+> To load it for use in Ghidra, in the Data Type Manager Window, click on the down arrow in the right-hand corner and select "Open File Archive".
+> Then select `jni_all.gdt` file to load. Once it's loaded, you should see jni_all in the Data Type Manager List as shown below.
+> Once this is loaded in Ghidra, you can then select any argument types in the decompiler and select "Retype Variable". Set the new type to `JNIEnv *`. This will cause the decompiler to now show the names of the JNIFunctions called rather than the offsets from the pointer.
+
+
 > [!NOTE]
 > For JNI native functions, the arguments will be shifted by 2. The first argument is always JNIEnv*. The second argument will be the object that the function should be run on. For static native methods (they have the static keyword in the Java declaration) this will be NULL.
 > Let's say you have a native Java method like this:
