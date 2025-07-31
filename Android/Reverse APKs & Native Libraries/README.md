@@ -70,7 +70,7 @@
 ### Static Linking
 - We must use the RegisterNatives API in order to do the pairing between the Java-declared native method and the function in the native library.
 
-> ![NOTE]
+> [!NOTE]
 > The `RegisterNatives` function is called from the native code, not the Java code and is most often called in the `JNI_OnLoad` function since RegisterNatives must be executed prior to calling the Java-declared native method.
 
 ```C
