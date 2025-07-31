@@ -46,16 +46,6 @@
    - Use this [tool](https://github.com/bruvzg/gdsdecomp) to decombile the apk
 
 ## Reverse Native Libraries
-### Steps
-
-1. **Decompile the APK:**
-
-   Use `apktool` to decompile the APK file. Replace `APKFILE` with the path to your APK file.
-   ```sh
-   apktool d APKFILE
-   ```
-
-2. **Search for Functions:**
 ### Dynamic Linking
 
 - You can search for specific functions using the following pattern:
