@@ -125,7 +125,7 @@ the type signature is
 | 0x28C     | `NewString` – Create a new Java string                      |
 | 0x35C     | `RegisterNatives` – Link native C functions to Java methods |
 
-- Here is an [HTML page](./Sheet1.html) of the C-implementation of the JNIEnv struct to know what function pointers are at the different offsets.
+- Here is a [PDF](./Sheet1.pdf) of the C-implementation of the JNIEnv struct to know what function pointers are at the different offsets.
 
 > [!TIP]
 > There's a way to get the JNI function without doing all of this manually! In both the Ghidra and IDA Pro decompilers you can re-type the first argument in JNI functions to `JNIEnv *` type and it will automatically identify the JNI Functions being called. 
