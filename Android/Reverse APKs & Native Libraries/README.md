@@ -146,12 +146,10 @@ the type signature is
 > - So the real arguments are "shifted by 2" because of the first two JNI-specific ones.
 > - If it's a static method, thiz becomes jclass and might be NULL.
 
-
-
 ## Additional Resources
 - For more detailed information on using apktool, please refer to the official [apktool documentation](https://apktool.org/).
 - [JNI Functions](https://docs.oracle.com/javase/7/docs/technotes/guides/jni/spec/functions.html): I always have this one open and refer to it while reversing Android native libraries
-- [Android JNI Tips](https://developer.android.com/training/articles/perf-jni): Highly suggest reading the “Native Libraries” section to start
+- [Android JNI Tips](https://developer.android.com/training/articles/perf-jni): Highly suggest reading the "Native Libraries" section to start
 - [Getting Started with the NDK](https://developer.android.com/ndk/guides/): This is guidance for how developers develop native libraries and understanding how things are built, makes it easier to reverse.
 
 
