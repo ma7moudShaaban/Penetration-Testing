@@ -64,7 +64,7 @@
 - Once we define an entity, it can be referenced in an XML document between an ampersand & and a semi-colon ; (e.g. `&company;`). Whenever an entity is referenced, it will be replaced with its value by the XML parser. 
 
 > [!TIP]
-> We may also use the `PUBLIC` keyword instead of `SYSTEM` for loading external resources, which is used with publicly declared entities and standards, such as a language code (lang="en").
+> We may also use the `PUBLIC` keyword instead of `SYSTEM` for loading external resources, which is used with publicly declared entities and standards.
 
 
 
