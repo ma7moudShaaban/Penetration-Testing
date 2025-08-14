@@ -6,8 +6,9 @@
 - [ ] **Check for `loadURL()` Function**
   - [ ] **Check for `WebView.getSettings().setJavaScriptEnabled(true)`**: This setting allows the execution of JavaScript code within the WebView. WebViews can handle the intent scheme, potentially leading to exploits if not carefully managed. An example vulnerability involved an exposed WebView parameter "url" that could be exploited to execute cross-site scripting (XSS) attacks.
 
-  > [!NOTE] 
-  > This setting alone isn't always sufficient to pose a high security risk. Additional settings need to be checked, such as the following:
+> [!NOTE] 
+> This setting alone isn't always sufficient to pose a high security risk. Additional settings need to be checked, such as the following:
+
 - **Deprecated Features: Universal and File Access From URLs**
   - [ ] **Check for `WebView.setAllowUniversalAccessFromFileURLs(true)`**: This setting removes all same-origin policy restrictions and allows the WebView to make requests from file URLs to the web. This can potentially allow an attacker to read local files using JavaScript and send them to an attacker-controlled domain.
   - [ ] **Check for `WebView.setAllowFileAccessFromFileURLs(true)`**: File Access From File URLs > This feature, also deprecated, controlled access to content from other file scheme URLs. Like universal access, its default is disabled for enhanced security.
