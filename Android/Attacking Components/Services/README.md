@@ -3,11 +3,12 @@
 - [Bindable service & Non-bindable service](#bindable-service--non-bindable-service)
 - [Message Handler Service](#message-handler-service)
 - [AIDL Service](#aidl-service)
+    - [Reverse Engineering .aidl Definitions](#reverse-engineering-aidl-definitions)
 
 
 
 ## Overview
-- Exposed Services offer another interesting threat surface for applications and in this course we will learn what it is about.
+- Exposed Services offer another interesting threat surface for applications and we will learn what it is about.
 
     - Activity: Runs in the foreground and renders the UI
     - Broadcast Receiver: Runs in the background to execute a minimal task
@@ -365,3 +366,4 @@ public class Hextree extends AppCompatActivity {
 }
 ```
  
+### Reverse Engineering .aidl Definitions

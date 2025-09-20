@@ -6,7 +6,7 @@
     - [Algorithm Confusion](#algorithm-confusion)
     - [Reusing JWT Secrets](#reusing-jwt-secrets)
     - [Exploiting jwk](#exploiting-jwk)
-    - [Tools of the Trade](#tools-of-the-trade)
+- [Tools of the Trade](#tools-of-the-trade)
 
 
 
@@ -14,7 +14,7 @@
 - A JWT can either utilize JSON Web Signature (JWS) or JSON Web Encryption (JWE) for protection of the data contained within the JWT
 - Two additional standards comprise JWTs. These are JSON Web Key (JWK) and JSON Web Algorithm (JWA). While JWK defines a JSON data structure for cryptographic keys, JWA defines cryptographic algorithms for JWTs.
 ## Attacks on JWTs
-## Attacking Signature Verification
+### Attacking Signature Verification
 - **Missing Signature Verification**
     - We can simply manipulate that parameter in the payload, and jwt.io will automatically re-encode the JWT on the left side. This will invalidate the JWT's signature.
 
@@ -23,9 +23,10 @@
 - **None Algorithm Attack**
     - To forge a JWT with the none algorithm, we must set the alg-claim in the JWT's header to none. We can achieve this using [CyberChef](https://cyberchef.io/) by selecting the JWT Sign operation and setting the Signing algorithm to None.
 
-## Attacking the Signing Secret
+### Attacking the Signing Secret
 
-> [!NOTE] JWT supports three symmetric algorithms based on potentially guessable secrets: HS256, HS384, and HS512.
+> [!NOTE] 
+> JWT supports three symmetric algorithms based on potentially guessable secrets: HS256, HS384, and HS512.
 
 - **Cracking the Secret**
     - We will use hashcat to brute-force the JWT's secret. Hashcat's mode 16500 is for JWTs. To brute-force the secret. Save the JWT to a file: `echo -n eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyIjoiaHRiLXN0ZG50IiwiaXNBZG1pbiI6ZmFsc2UsImV4cCI6MTcxMTIwNDYzN30.r_rYB0tvuiA2scNQrmzBaMAG2rkGdMu9cGMEEl3WTW0 > jwt.txt`
@@ -58,7 +59,7 @@
     - Now that we have successfully brute-forced the JWT's signing secret, we can forge valid JWTs. After manipulating the JWT's body, we can paste the signing secret into jwt.io. The site will then compute a valid signature for our manipulated JWT.
 
 
-## Algorithm Confusion
+### Algorithm Confusion
 - Algorithm confusion is a JWT attack that forces the web application to use a different algorithm to verify the JWT's signature than the one used to create it.
 
 > [!IMPORTANT]
@@ -123,7 +124,7 @@ eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyIjogImh0Yi1zdGRudCIsICJpc0FkbWluIjo
     ![jwt-algconfution](/images/jwt_algconfusion.jpg)
 
 
-## Reusing JWT Secrets
+### Reusing JWT Secrets
 - Context: JSON Web Tokens (JWTs) are widely used for authentication in web applications.
 - Best Practice: Each web application should have a unique JWT signing secret.
 - Risk: If multiple applications share the same secret, a token from one app can potentially be used on another (token reuse).
@@ -145,7 +146,7 @@ eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyIjogImh0Yi1zdGRudCIsICJpc0FkbWluIjo
     - Issue: If both apps use the same secret, the user can:
         - Take the moderator token from socialA and present it to socialB then gain unauthorized moderator access on socialB
 
-## Exploiting jwk
+### Exploiting jwk
 - The "jwk" (JSON Web Key) Header Parameter is the public key that corresponds to the key used to digitally sign the JWS. 
 - This key is represented as a JSON Web Key. Use of this Header Parameter is OPTIONAL.
 
@@ -206,6 +207,9 @@ pip3 install -r requirements.txt
 
 ## JWT Analysis
 python3 jwt_tool/jwt_tool.py <TOKEN>
+
+## Playbook mode
+python3 jwt_tool/jwt_tool.py -t URL -rh "Authorization: Bearer <TOKEN>" -M pb
 
 ## Forging JWTs
 python3 jwt_tool/jwt_tool.py -X a -pc isAdmin -pv true -I <TOKEN>
