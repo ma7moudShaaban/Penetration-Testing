@@ -9,7 +9,7 @@
     - [Denial-of-Service](#denial-of-service)
 - [Advanced Cache Poisoning Techniques](#advanced-cache-poisoning-techniques)
     - [Fat GET](#fat-get)
-    - 
+    - [Parameter Cloaking](#parameter-cloaking)
 - [Cache Busters](#cache-busters)
 - [Remarks](#remarks)
 
@@ -112,8 +112,63 @@ Host: webcache.htb:1337
 
 ## Advanced Cache Poisoning Techniques
 ### Fat GET
+- Fat GET requests are HTTP GET requests that contain a request body. Since GET parameters are by specification sent as part of the query string, it might be weird to think that GET requests can contain a request body.
+- However, any HTTP request can contain a request body, no matter what the method is. In the case of a GET request, the message body has no meaning which is why it is never used.
+
+- Therefore, a request body is explicitly allowed, however, it should not have any effect. Thus, the following two GET requests are semantically equivalent, as the body should be neglected on the second:
+```http
+GET /index.php?param1=Hello&param2=World HTTP/1.1
+Host: fatget.wcp.htb
+
+```
+```http
+GET /index.php?param1=Hello&param2=World HTTP/1.1
+Host: fatget.wcp.htb
+Content-Length: 10
+
+param3=123
+```
+- If the web server is misconfigured or implemented incorrectly, it may parse parameters from the request body of GET requests though, which can lead to web cache poisoning attack vectors that would otherwise be unexploitable.
+
+- Example:
+    - After confirming that the reflected XSS vulnerability in the following `ref` parameter that still present, we can use web cache poisoning to escalate this into a stored XSS vulnerability:
+    ```http
+    GET /index.php?language=de HTTP/1.1
+    Host: fatget.wcp.htb
+    Content-Length: 142
+
+    ref="><script>var xhr = new XMLHttpRequest();xhr.open('GET', '/admin.php?reveal_flag=1', true);xhr.withCredentials = true;xhr.send();</script>
+    ```
+    - This should poison the cache for us. We can confirm this by sending the following request. We can see that we get a cache hit and the response contains our poisoned payload:
+    ![fatGet](/images/wcp_fatget.jpg)
 
 
+> [!NOTE]
+> fat GET requests are typically a misconfiguration in the web server software, not in the web application itself.
+
+### Parameter Cloaking
+- Just like with fat GET requests, the goal is to create a discrepancy between the web server and the web cache in a way that the web cache uses a different parameter for the cache key than the web server uses to serve the response. The idea is thus the same as with fat GET requests.
+
+- To do so we need an unkeyed parameter. In this case, we can assume that the parameter `a` is unkeyed:
+```http
+GET /?language=en&a=b;language=de HTTP/1.1
+Host: cloak.wcp.htb
+```
+- The response displays the German text, although the request contains the parameter `language=en`. 
+- The web cache sees two GET parameters: `language` with the value `en` and `a` with the value `b;language=de`. On the other hand, Bottle sees three parameters: `language` with the value `en`, `a` with the value `b`, and `language` with the value `de`
+- Since Bottle prefers the last occurrence of each parameter, the value de overrides the value for the language parameter. Thus, Bottle serves the response containing the German text. 
+- Since the parameter `a` is unkeyed, the web cache stores this response for the cache key `language=en`. 
+
+> [!IMPORTANT]
+> Since Bottle treats the semicolon as a separation character, we need to URL-encode all occurrences of the semicolon in our payload:
+> ```http
+> GET /?language=de&a=b;ref=%22%3E%3Cscript%3Evar%20xhr%20=%20new%20XMLHttpRequest()%3bxhr.open(%27GET%27,%20%27/admin?reveal_flag=1%27,%20true)%3bxhr.withCredentials%20=%20true%3bxhr.send()%3b%3C/script%3E HTTP/1.1
+> Host: cloak.wcp.htb
+> ```
+
+
+> [!NOTE]
+> To poison the cache with parameter cloaking we need to "hide" the cloaked parameter from the cache key by appending it to an unkeyed parameter.
 
 
 ## Cache Busters
