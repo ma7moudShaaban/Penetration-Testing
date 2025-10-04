@@ -12,6 +12,8 @@
     - [Parameter Cloaking](#parameter-cloaking)
 - [Cache Busters](#cache-busters)
 - [Remarks](#remarks)
+- [Tools of the Trade](#tools-of-the-trade)
+- [Resources](#resources)
 
 
 ## Overview
@@ -170,7 +172,6 @@ Host: cloak.wcp.htb
 > [!NOTE]
 > To poison the cache with parameter cloaking we need to "hide" the cloaked parameter from the cache key by appending it to an unkeyed parameter.
 
-
 ## Cache Busters
 - In real-world scenarios, we have to ensure that our poisoned response is not served to any real users of the web application. We can achieve this by adding a cache buster to all of our requests.
 - A cache buster is a unique parameter value that only we use to guarantee a unique cache key. Since we have a unique cache key, only we get served the poisoned response and no real users are affected.
@@ -198,6 +199,20 @@ Host: webcache.htb
 - However, these headers cannot be used to force the web cache to refresh the stored copy. To force our poisoned response to be cached, we need to wait until the current cache expires and then time our request correctly for it to be cached. 
 - This involves a lot of guesswork. However, in some cases, the server informs us about how long a cached resource is considered fresh. We can look for the `Cache-Control` header in the response to check how many seconds the response remains fresh.
 
+
+## Tools of the Trade
+- One of the most important tasks when searching for web cache poisoning vulnerabilities is identifying which parameters of a request are keyed and which are unkeyed. 
+- We can use the [Web-Cache-Vulnerability-Scanner (WCVS)](https://github.com/Hackmanit/Web-Cache-Vulnerability-Scanner) to help us identify web cache poisoning vulnerabilities.
+```bash
+abdeonix@htb[/htb]$ tar xzf web-cache-vulnerability-scanner_2.0.0_linux_amd64.tar.gz 
+```
+- WCVS comes with a header and parameter wordlist which it uses to find parameters that are keyed/unkeyed.
+- The tool also automatically adds a cache buster to each request, so we don't have to worry about accidentally poisoning other users' responses.
+- We can run a simple scan of a web application by specifying the URL in the `-u` parameter. Since the web application redirects us and sets the GET parameter `language=en`, we also have to specify this GET parameter with the `-sp` flag. Lastly, we want to generate a report which we can tell WCVS to do with the `-gr` flag:
+```bash
+./wcvs -u http://simple.wcp.htb/ -sp language=en -gr
+```
+- The tool can also help us identify more advanced web cache poisoning vulnerabilities that require the exploitation of fat GET requests or parameter cloaking:
 
 
 ## Resources
