@@ -5,6 +5,7 @@
 - [Detecting cached responses](#detecting-cached-responses)
 - [Exploiting static extension cache rules](#exploiting-static-extension-cache-rules)
     - [Path mapping discrepancies](#path-mapping-discrepancies)
+    - [Delimiter discrepancies](#delimiter-discrepancies)
 
 
 
@@ -72,3 +73,5 @@
 
 > [!TIP]
 > Caches may have rules based on specific static extensions. Try a range of extensions, including `.css`, `.ico`, and `.exe`.
+
+### Delimiter discrepancies
