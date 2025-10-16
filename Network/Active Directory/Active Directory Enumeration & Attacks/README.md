@@ -98,16 +98,16 @@
     ```
 
     - `pktmon.exe` (network monitoring tool built-in) was added to all editions of Windows 10.
-
-    > [!NOTE]
-    > As a note for testing, it's always a good idea to save the PCAP traffic you capture. You can review it again later to look for more hints, and it makes for great additional information to include while writing your reports.
-
     - **Responder**
         - Responder is a tool built to listen, analyze, and poison LLMNR, NBT-NS, and MDNS requests and responses.
     ```bash
     # Starting Responder
     sudo responder -I ens224 -A 
     ```
+
+> [!NOTE]
+> As a note for testing, it's always a good idea to save the PCAP traffic you capture. You can review it again later to look for more hints, and it makes for great additional information to include while writing your reports.
+
 
 - **Active Scan**
     - Fping
