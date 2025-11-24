@@ -1,6 +1,7 @@
 # WebViews
 - [@JavaScriptInterface](#javascriptinterface)
 - [SOP & WebView Settings](#sop--webview-settings)
+- [Custom Tabs](#custom-tabs)
 
 ## @JavaScriptInterface
 
@@ -115,11 +116,53 @@ function leakFileIframe(url) {
   iframe.src = url;
 }
 ```
+- WebView does not natively support intent:// URIs (used in Chrome to send intents from websites). However, developers may implement custom logic to handle these intents, making the app vulnerable if not properly secured.
 
-- [ ] Check for Remote Debugging with `WebView.setWebContentsDebuggingEnabled(true);`
-    - If enabled, anyone on the same local network can see , control the WebView and execute JavaScript code.
+- Example custom code to handle intent:// URIs:
+```java
+// https://stackoverflow.com/questions/33151246/how-to-handle-intent-on-a-webview-url
+@Override
+public boolean shouldOverrideUrlLoading(WebView view, String url) {
+    if (url.startsWith("intent://")) {
+        try {
+            Context context = view.getContext();
+            Intent intent = Intent.parseUri(url, Intent.URI_INTENT_SCHEME);
+            if (intent != null) {
+                view.stopLoading();
+                PackageManager packageManager = context.getPackageManager();
+                ResolveInfo info = packageManager.resolveActivity(intent, PackageManager.MATCH_DEFAULT_ONLY);
+                if (info != null) {
+                    context.startActivity(intent);
+                } else {
+                    String fallbackUrl = intent.getStringExtra("browser_fallback_url");
+                    view.loadUrl(fallbackUrl);
+                    // or call external broswer
+                    // Intent browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(fallbackUrl));
+                    //context.startActivity(browserIntent);
+                }
+                return true;
+            }
+        } catch (URISyntaxException e) {
+            if (GeneralData.DEBUG) {
+                Log.e(TAG, "Can't resolve intent://", e);
+            }
+        }
+    }
+    return false;
+}
+```
+## Custom Tabs
+- Custom Tabs are a different way to display web content within an app. Unlike WebViews, Custom Tabs are actually not a UI element. Instead, they rely on the browser installed on the device to provide the interface and functionality.
+```java
+// Launcha a basic CustomTab
+CustomTabsIntent customTabsIntent = new CustomTabsIntent.Builder()
+    .setToolbarColor(ContextCompat.getColor(this, R.color.colorPrimary))
+    .addDefaultShareMenuItem()
+    .build();
 
-    - You can test WebView remote debugging using chrome://inspect/#devices in Google Chrome.
+customTabsIntent.launchUrl(this, Uri.parse("https://hextree.io"));
+```
+- The code above actually sends an intent to the default Browser and the browser then displays the website.
 
 ## Resources
 - [Web view Check list](https://blog.oversecured.com/Android-security-checklist-webview/)
