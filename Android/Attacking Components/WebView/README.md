@@ -2,6 +2,8 @@
 - [@JavaScriptInterface](#javascriptinterface)
 - [SOP & WebView Settings](#sop--webview-settings)
 - [Custom Tabs](#custom-tabs)
+  - [Webview Vs CustomTab](#webview-vs-customtabs)
+  - [PostMessage()](#postmessage)
 
 ## @JavaScriptInterface
 
@@ -154,7 +156,7 @@ public boolean shouldOverrideUrlLoading(WebView view, String url) {
 ## Custom Tabs
 - Custom Tabs are a different way to display web content within an app. Unlike WebViews, Custom Tabs are actually not a UI element. Instead, they rely on the browser installed on the device to provide the interface and functionality.
 ```java
-// Launcha a basic CustomTab
+// Launch a basic CustomTab
 CustomTabsIntent customTabsIntent = new CustomTabsIntent.Builder()
     .setToolbarColor(ContextCompat.getColor(this, R.color.colorPrimary))
     .addDefaultShareMenuItem()
@@ -164,6 +166,76 @@ customTabsIntent.launchUrl(this, Uri.parse("https://hextree.io"));
 ```
 - The code above actually sends an intent to the default Browser and the browser then displays the website.
 
+### Webview VS CustomTabs
+- WebView is an actual embedded browser within your app. It is isolated from other apps, meaning a user logged into a website in their primary browser will not be logged in via the WebView.
+- Custom Tabs simply interacts with the default browser on the device (e.g., Chrome). It shares session data, cookies, and accounts with the browser, meaning users are already logged into websites they’ve accessed in the browser.
+ 
+> [!NOTE]
+> Custom Tabs is effectively a tab rendered by the user's browser
+
+- In terms of security, Custom Tabs do not have access to your app internal files or FileProviders and cannot change the Same Origin Policy behaviour.
+
+- [See also](https://web.dev/articles/web-on-android)
+
+- While apps cannot expose native Java methods in Custom Tabs, apps can still setup a postMessage() communication which could be exploited in similar ways. 
+
+- Websites can declare their association with an Android app, by creating a Digital Asset Links.
+
+- For example `.well-known/assetlinks.json` from Google shows that the app com.google.android.googlequicksearchbox is allowed to use google.com as its origin.
+```json
+{
+  "relation": ["delegate_permission/common.handle_all_urls", "delegate_permission/common.use_as_origin"],
+  "target": {
+    "namespace": "android_app",
+    "package_name": "com.google.android.googlequicksearchbox",
+    "sha256_cert_fingerprints": [
+      "F0:FD:6C:5B:41:0F:25:CB:25:C3:B5:33:46:C8:97:2F:AE:30:F8:EE:74:11:DF:91:04:80:AD:6B:2D:60:DB:83",
+      "19:75:B2:F1:71:77:BC:89:A5:DF:F3:1F:9E:64:A6:CA:E2:81:A5:3D:C1:D1:D5:9B:1D:14:7F:E1:C8:2A:FA:00"
+    ]
+  }
+}
+```
+- When using Custom Tabs, a browser like Chrome can validate that the app is associated with a website by visiting the assetlinks.json file and validate the package name and signature.
+
+- If the validation succeeds, the app gets a few more capabilities:
+  - More control over the Custom Tabs UI
+  - Adding arbitrary HTTP headers on the same origin
+  - Send and receive postMessage()
+
+### PostMessage()
+- Custom Tabs provide an Android implementation of the postMessage mechanism, enabling secure communication between an app and a website loaded in a Custom Tab. However, if not properly configured, this feature can lead to security vulnerabilities.
+
+- In order to use postMessage(), the app has to first validate its origin and then request a postMessage channel:
+```java
+customTabsSession.requestPostMessageChannel(Uri.parse("https://oak.hackstree.io"));
+```
+- The app can then override methods from the CustomTabsCallback to send and receive messages:
+```java
+@Override
+public void onMessageChannelReady(@NonNull Bundle extras) {
+    if (session != null) {
+        session.postMessage("init", null);
+    }
+}
+
+@Override
+public void onPostMessage(@NonNull String message, @NonNull Bundle extras) {
+    if (session == null) return;
+    try {
+        JSONObject jsonObject = new JSONObject(message);
+        String msg_type = jsonObject.getString("message");
+        switch(msg_type) {
+            case "init": {
+                // some code [...]
+                break;
+            }
+            // [...]
+        }
+    } catch (JSONException e) {
+        Log.e(TAG, "Error parsing JSON postMessage: " + e.getMessage());
+    }
+}
+```
 ## Resources
 - [Web view Check list](https://blog.oversecured.com/Android-security-checklist-webview/)
 - [HackTricks - WebView](https://book.hacktricks.xyz/mobile-pentesting/android-app-pentesting/webview-attacks)

@@ -21,7 +21,7 @@ Follow these steps to set up your environment:
 
 # Resources: 
 - https://github.com/OWASP/owasp-mastg/blob/master/Document/0x05b-Android-Security-Testing.md
-- Useful writups:
+- Useful writeups:
     - https://blog.oversecured.com/Android-Access-to-app-protected-components/
     -  https://medium.com/@amolbhavar/how-i-get-1000-bounty-for-discovering-account-takeover-in-android-application-3c4f54fbde39
 
