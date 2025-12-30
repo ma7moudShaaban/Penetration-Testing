@@ -4,6 +4,7 @@
 - [Custom Tabs](#custom-tabs)
   - [Webview Vs CustomTab](#webview-vs-customtabs)
   - [PostMessage()](#postmessage)
+- [Trusted Web Activites (TWA)](#trusted-web-activites-twa)
 
 ## @JavaScriptInterface
 
@@ -236,6 +237,23 @@ public void onPostMessage(@NonNull String message, @NonNull Bundle extras) {
     }
 }
 ```
+
+## Trusted Web Activites (TWA)
+- Trusted Web Activities provide another way to integrate web content into an Android app.
+- This can be confusing at first, but turns out that TWAs also just rely on Custom Tabs at their core - they abstract much of the complexity, allowing developers to create apps that are essentially wrappers around websites with minimal effort.
+
+- One interesting detail is that the default TWA LauncherActivity gets the URL from the incoming intent. Which means most TWA apps can be forced to open an arbitrary URL:
+```java
+// targeting example app: https://github.com/revoltchat/android
+Intent intet = new Intent();
+intent.setClassName("chat.revolt.app.twa", "chat.revolt.app.twa.LauncherActivity");
+intent.setData(Uri.parse("https://oak.hackstree.io/android/webview/pwn.html"));
+startActivity();
+```
+- However keep in mind that by itself this is not a security issue. 
+- Custom Tabs simply open the URL in the default browser, that is not much different from sending a VIEW intent to the browser directly. But if the app were to implement any additional custom features, that could become an issue.
+
+
 ## Resources
 - [Web view Check list](https://blog.oversecured.com/Android-security-checklist-webview/)
 - [HackTricks - WebView](https://book.hacktricks.xyz/mobile-pentesting/android-app-pentesting/webview-attacks)

