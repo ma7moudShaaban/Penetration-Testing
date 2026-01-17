@@ -32,8 +32,8 @@
   </module>
 </academy_modules>
 ```
-- An XML document usually begins with the XML declaration, which specifies the XML version and encoding.If the declaration is omitted, the XML parser assumes the version 1.0 and the encoding UTF-8.
-- The data in an XML document is formatted in a **tree structure** consisting of nodes with the top element called the root element node.Furthermore, there are different types of nodes:
+- An XML document usually begins with the XML declaration, which specifies the XML version and encoding. If the declaration is omitted, the XML parser assumes the version 1.0 and the encoding UTF-8.
+- The data in an XML document is formatted in a **tree structure** consisting of nodes with the top element called the root element node. Furthermore, there are different types of nodes:
     - Element nodes such as module and title
     - Attribute nodes such as co-author="LTNB0B" or difficulty="medium"
     - Comment nodes such as this is a comment
@@ -102,9 +102,9 @@
 
 |Query|	Explanation|
 |:----|:-----------|
-|node()|	Matches any node|
-|*|	Matches any element node|
-|@*|	Matches any attribute node|
+|`node()`|	Matches any node|
+|`*`|	Matches any element node|
+|`@*`|	Matches any attribute node|
 
 - We can use these wildcards to construct queries like so:
 
@@ -117,5 +117,10 @@
 > [!NOTE]
 > The wildcard `*` matches any node but not any descendants like `//` does. Therefore, we need to specify the correct amount of wildcards in our query. In our example XML document, the query `/*/*/title` returns all module titles, but the query `/*/title` returns nothing.
 
+- We can combine multiple XPath queries with the union operator | like so:
+
+|Query|	Explanation|
+|:----|:-----------|
+|`//module[tier=2]/title/text() \| //module[tier=3]/title/text()`| 	Select the title of all modules in tiers 2 and 3|
 
 ## Authentication Bypass

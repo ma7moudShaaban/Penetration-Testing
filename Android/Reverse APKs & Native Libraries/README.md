@@ -45,6 +45,23 @@
    - You can identify using metadata in AndroidManifest.xml
    - Use this [tool](https://github.com/bruvzg/gdsdecomp) to decombile the apk
 
+- **Unity Game Apps:**
+   1. Recover C# Structure with Il2CppDumper: `Il2CppDumper libil2cpp.so global-metadata.dat output/`
+   2. Observe:
+      - Assembly-CSharp.dll (dummy, signatures only)
+      - script.json (addresses of native methods)
+   3. Understanding RVA → Native Code Mapping
+      - From ILSpy / script.json:
+
+         |Method|	RVA|
+         |------|----|
+         |GetKey|	0x16D1838|
+         |GetIV|	0x16D18A8|
+         |GetFlag|	0x16D1918|
+         |DecryptFlag|	0x16D1988|
+
+      - These RVAs map directly inside libil2cpp.so.
+
 ## Reverse Native Libraries
 ### Dynamic Linking
 
