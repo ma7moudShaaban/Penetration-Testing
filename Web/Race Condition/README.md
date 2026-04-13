@@ -78,6 +78,8 @@
 >   - All requests in the group must use the same host, port, and transport layer protocols.
 >   - HTTP/1 keep-alive must not be enabled for the project.
 
+> [!TIP]
+> Email address confirmations, or any email-based operations, are generally a good target for single-endpoint race conditions.
 
 ## Prevention
 - Use SQL WRITE locks to prevent simultaneous database access:
