@@ -1,16 +1,21 @@
 # Attacking Common Applications
 - [Joomla](#joomla)
-    - [Enumeration](#enumeration)
+  - [Enumeration](#enumeration)
 - [Drupal](#drupal)
-    - [Enumeration](#enumeration-1)
-    - [PHP Filter Module](#php-filter-module)
-    - [Uploading a Backdoored Module](#uploading-a-backdoored-module)
-    - [Drupalgeddon](#drupalgeddon)
+  - [Enumeration](#enumeration-1)
+  - [PHP Filter Module](#php-filter-module)
+  - [Uploading a Backdoored Module](#uploading-a-backdoored-module)
+  - [Drupalgeddon](#drupalgeddon)
 - [Tomcat](#tomcat)
-    - [Enumeration](#enumeration-2)
-    - [WAR File Upload](#war-file-upload)
+  - [Enumeration](#enumeration-2)
+  - [WAR File Upload](#war-file-upload)
 - [Splunk](#splunk)
-    - [Abusing Built-In Functionality](#abusing-built-in-functionality)
+  - [Abusing Built-In Functionality](#abusing-built-in-functionality)
+- [ColdFusion](#coldfusion)
+- [IIS Tilde Enumeration](#iis-tilde-enumeration)
+- [LDAP](#ldap)
+  - [LDAP Injection](#ldap-injection)
+
 
 ## Joomla
 ### Enumeration
@@ -347,3 +352,115 @@ splunk_shell/default/inputs.conf
 > ![!TIP]
 > - If the compromised Splunk host is a deployment server, it will likely be possible to achieve RCE on any hosts with Universal Forwarders installed on them. To push a reverse shell out to other hosts, the application must be placed in the `$SPLUNK_HOME/etc/deployment-apps` directory on the compromised host. 
 > - In a Windows-heavy environment, we will need to create an application using a PowerShell reverse shell since the Universal forwarders do not install with Python like the Splunk server.
+
+## ColdFusion
+- ColdFusion is a programming language and a web application development platform based on Java.
+- It is used to build dynamic and interactive web applications that can be connected to various APIs and databases such as MySQL, Oracle, and Microsoft SQL Server. 
+- ColdFusion Markup Language (CFML) is the proprietary programming language used in ColdFusion to develop dynamic web applications.
+- For instance, the `cfquery` tag can execute SQL statements to retrieve data from a database:
+```html
+<cfquery name="myQuery" datasource="myDataSource">
+  SELECT *
+  FROM myTable
+</cfquery>
+```
+- Developers can then use the `cfloop` tag to iterate through the records retrieved from the database:
+```html
+<cfloop query="myQuery">
+  <p>#myQuery.firstName# #myQuery.lastName#</p>
+</cfloop>
+```
+- ColdFusion supports other programming languages, such as JavaScript and Java, allowing developers to use their preferred programming language within the ColdFusion environment.
+
+### Enumeration
+- ColdFusion pages typically use "`.cfm`" or "`.cfc`" file extensions. If you find pages with these file extensions, it could be an indicator that the application is using ColdFusion.
+- ColdFusion typically sets specific headers, such as "`Server: ColdFusion`" or "`X-Powered-By: ColdFusion`", that can help identify the technology being used.
+- ColdFusion creates several default files during installation, such as "`admin.cfm`" or "`CFIDE/administrator/index.cfm`". Finding these files on the web server may indicate that the web application runs on ColdFusion.
+
+## IIS Tilde Enumeration
+- [IIS-ShortName-Scanner](https://github.com/irsdl/IIS-ShortName-Scanner)
+```bash
+java -jar iis_shortname_scanner.jar 0 5 http://10.129.204.231/
+
+Picked up _JAVA_OPTIONS: -Dawt.useSystemAAFontSettings=on -Dswing.aatext=true
+Do you want to use proxy [Y=Yes, Anything Else=No]? 
+# IIS Short Name (8.3) Scanner version 2023.0 - scan initiated 2023/03/23 15:06:57
+Target: http://10.129.204.231/
+|_ Result: Vulnerable!
+|_ Used HTTP method: OPTIONS
+|_ Suffix (magic part): /~1/
+|_ Extra information:
+  |_ Number of sent requests: 553
+  |_ Identified directories: 2
+    |_ ASPNET~1
+    |_ UPLOAD~1
+  |_ Identified files: 3
+    |_ CSASPX~1.CS
+      |_ Actual extension = .CS
+    |_ CSASPX~1.CS??
+    |_ TRANSF~1.ASP
+
+
+
+egrep -r ^transf /usr/share/wordlists/* | sed 's/^[^:]*://' > /tmp/list.txt
+gobuster dir -u http://10.129.204.231/ -w /tmp/list.txt -x .aspx,.asp
+
+```
+## LDAP
+- LDAP works by using a client-server architecture. A client sends an LDAP request to a server, which searches the directory service and returns a response to the client.
+-  LDAP supports various requests, such as bind, unbind, search, compare, add, delete, modify, etc.
+- LDAP requests are messages that clients send to servers to perform operations on data stored in a directory service. An LDAP request is comprised of several components:
+
+  1. Session connection: The client connects to the server via an LDAP port (usually 389 or 636).
+  2. Request type: The client specifies the operation it wants to perform, such as bind, search, etc.
+  3. Request parameters: The client provides additional information for the request, such as the distinguished name (DN) of the entry to be accessed or modified, the scope and filter of the search query, the attributes and values to be added or changed, etc.
+  4. Request ID: The client assigns a unique identifier for each request to match it with the corresponding response from the server
+- Once the server receives the request, it processes it and sends back a response message that includes several components:
+
+  1. Response type: The server indicates the operation that was performed in response to the request.
+  2. Result code: The server indicates whether or not the operation was successful and why.
+  3. Matched DN: If applicable, the server returns the DN of the closest existing entry that matches the request.
+  4. Referral: The server returns a URL of another server that may have more information about the request, if applicable.
+  5. Response data: The server returns any additional data related to the response, such as the attributes and values of an entry that was searched or modified.
+
+- **ldapsearch**
+  - For example, ldapsearch is a command-line utility used to search for information stored in a directory using the LDAP protocol. It is commonly used to query and retrieve data from an LDAP directory service.
+```bash
+abdeonix@htb[/htb]$ ldapsearch -H ldap://ldap.example.com:389 -D "cn=admin,dc=example,dc=com" -w secret123 -b "ou=people,dc=example,dc=com" "(mail=john.doe@example.com)"
+
+# This command can be broken down as follows:
+
+# 1. Connect to the server ldap.example.com on port 389.
+# 2. Bind (authenticate) as cn=admin,dc=example,dc=com with password secret123.
+# 3. Search under the base DN ou=people,dc=example,dc=com.
+# 4. Use the filter (mail=john.doe@example.com) to find entries that have this email address.
+```
+
+- The server would process the request and send back a response, which might look something like this:
+
+```bash
+dn: uid=jdoe,ou=people,dc=example,dc=com
+objectClass: inetOrgPerson
+objectClass: organizationalPerson
+objectClass: person
+objectClass: top
+cn: John Doe
+sn: Doe
+uid: jdoe
+mail: john.doe@example.com
+
+result: 0 Success
+```
+
+### LDAP Injection
+
+|Input|	Description|
+|:----|:-----------|
+|`*`|	An asterisk * can match any number of characters.|
+|`( )`|	Parentheses ( ) can group expressions.|
+|`\|`|	A vertical bar | can perform logical OR.|
+|`&`|	An ampersand & can perform logical AND.|
+|`(cn=*)`|	Input values that try to bypass authentication or authorisation checks by injecting conditions that always evaluate to true can be used. For example, `(cn=*) or (objectClass=*)` can be used as input values for a username or password fields.|
+
+- LDAP injection attacks are similar to SQL injection attacks but target the LDAP directory service instead of a database.
+
