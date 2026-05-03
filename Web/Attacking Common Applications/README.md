@@ -15,7 +15,7 @@
 - [IIS Tilde Enumeration](#iis-tilde-enumeration)
 - [LDAP](#ldap)
   - [LDAP Injection](#ldap-injection)
-
+- [Other Notable Applications](#other-notable-applications)
 
 ## Joomla
 ### Enumeration
@@ -464,3 +464,16 @@ result: 0 Success
 
 - LDAP injection attacks are similar to SQL injection attacks but target the LDAP directory service instead of a database.
 
+## Other Notable Applications
+
+| Application | Abuse Info |
+|-------------|------------|
+| [Axis2](https://axis.apache.org/axis2/) | Can be abused similarly to Tomcat. Often runs on top of Tomcat. If RCE via Tomcat fails, check for weak/default admin credentials. You can upload a webshell as an AAR (Axis2 service file). Metasploit also has modules for exploitation. |
+| [WebSphere](https://www.ibm.com/products/websphere-application-server) | Has many historical vulnerabilities. If admin console credentials like `system:manager` work, you can deploy a WAR file (like Tomcat) and achieve RCE via webshell or reverse shell. |
+| [Elasticsearch](https://www.elastic.co/elasticsearch/) | Has had multiple vulnerabilities. Often found in exposed or forgotten installations. Though older issues exist, misconfigurations and exposed APIs can still be abused. |
+| [Zabbix](https://www.zabbix.com/) | Open-source monitoring system with issues like SQL injection, auth bypass, stored XSS, LDAP password disclosure, and RCE. Built-in features and APIs can be abused for RCE. |
+| [Nagios](https://www.nagios.org/) | Monitoring tool with past issues including RCE, privilege escalation, SQL injection, code injection, and XSS. Check for default creds like `nagiosadmin:PASSW0RD` and identify version. |
+| [WebLogic](https://www.oracle.com/middleware/technologies/weblogic.html) | Java EE application server with many CVEs (190+). Known for unauthenticated RCE and Java deserialization vulnerabilities spanning many years. |
+| Wikis / Intranets (e.g., [MediaWiki](https://www.mediawiki.org/wiki/MediaWiki)) | Internal wiki/intranet systems like SharePoint or MediaWiki may expose sensitive data. Search features and document repositories may leak credentials or internal information. |
+| [DotNetNuke (DNN)](https://www.dnnsoftware.com/) | .NET CMS with vulnerabilities like auth bypass, directory traversal, file upload bypass, stored XSS, and arbitrary file download. |
+| [vCenter](https://www.vmware.com/products/vcenter-server.html) | Used to manage ESXi environments. Check for weak credentials and critical vulnerabilities (e.g., CVE-2021-22005). Can lead to full environment compromise. Windows/Linux appliances may be present, and privilege escalation is often possible if access is gained. |
