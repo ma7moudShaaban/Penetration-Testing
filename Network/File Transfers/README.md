@@ -85,7 +85,8 @@
 
 ```
 
-> [!NOTE] IEX also accepts pipeline input. 
+> [!NOTE] 
+> IEX also accepts pipeline input. 
 
 
 ```powershell
